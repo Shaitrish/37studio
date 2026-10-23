@@ -37,7 +37,7 @@ func TestCallWithErrors(t *testing.T) {
 	}
 }
 
-// An app ID only switches logins to the buyer's own Meta app together with its secret, and agents never get the secret.
+// An app ID only switches logins to the user's own Meta app together with its secret, and agents never get the secret.
 func TestMetaApp(t *testing.T) {
 	t.Setenv("META_APP_ID", "111")
 	t.Setenv("META_APP_SECRET", "")

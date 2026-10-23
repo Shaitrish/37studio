@@ -7,8 +7,7 @@ import (
 	"testing"
 )
 
-// A queued video copies its source project's settings, shares the recording by hard link, gets the transcript, and
-// counts against the free trial.
+// A queued video copies its source project's settings, shares the recording by hard link and gets the transcript.
 func TestQueueClip(t *testing.T) {
 	dataDir = t.TempDir()
 	openDB()
@@ -38,9 +37,5 @@ func TestQueueClip(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(projectDir(id), "work", "transcript", "transcript.json")); err != nil {
 		t.Fatal("transcript not copied")
-	}
-	// Unlicensed: the source and this video used both trial videos.
-	if _, err := queueClip(1, "Q2", "Second.", "", "", 0); err == nil {
-		t.Fatal("a third project should need a license")
 	}
 }

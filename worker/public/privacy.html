@@ -25,9 +25,9 @@
     <a class="brand" href="/"><img src="/favicon.svg" alt="">37Studio <small>by Shaitrish</small></a>
     <nav aria-label="Pages">
       <a href="/#loop">How it works</a>
-      <a href="/#pricing">Pricing</a>
+      <a href="/#open">Open source</a>
       <a href="/setup">Setup guide</a>
-      <a href="/buy">Buy</a>
+      <a href="https://github.com/Shaitrish/37studio">GitHub</a>
       <a href="/privacy" aria-current="page" style="background:var(--soft)">Privacy</a>
     </nav>
     <div class="right"><a class="btn sm ink" href="/37studio.zip" download><svg><use href="#i-down"/></svg>Download</a></div>
@@ -50,8 +50,6 @@
     <a href="#local">What stays on your computer</a>
     <a href="#sends">What the app sends, and to whom</a>
     <a href="#ours">What passes through our server</a>
-    <a href="#buying">Buying a license</a>
-    <a href="#license">Your license</a>
     <a href="#meta">Facebook, Instagram and WhatsApp data</a>
     <a href="#site">This website</a>
     <a href="#delete">Deleting your data</a>
@@ -64,7 +62,7 @@
       <li>37Studio runs in Docker on your own computer. Your companies, footage, videos, messages, knowledge bases and keys are stored there, in the app's <code>data</code> folder.</li>
       <li>We, Shaitrish, have no account system, no analytics and no tracking in the app. We can't see your projects, customers or conversations.</li>
       <li>The app talks to the AI providers and social platforms <b>you</b> connect, using <b>your</b> accounts, to do the work you ask for.</li>
-      <li>A few small things pass through our server, studio.shaitrish.com: the update check, a license check every few hours, the Facebook sign-in step, and incoming WhatsApp messages if you connect WhatsApp. The last three use your license key. Each is described below.</li>
+      <li>A few small things can pass through our server, studio.shaitrish.com: the update check, the Facebook sign-in step, and incoming WhatsApp messages if you connect WhatsApp. Each is described below.</li>
       <li>We don't sell or share data with anyone.</li>
     </ul>
 
@@ -85,19 +83,14 @@
     </ul>
 
     <h2 id="ours">What passes through our server</h2>
-    <p>studio.shaitrish.com runs on Cloudflare. The app contacts it for three things only:</p>
+    <p>studio.shaitrish.com runs on Cloudflare. The app contacts it for three things only, and the code that does it is public in the <code>worker/</code> folder on <a href="https://github.com/Shaitrish/37studio">GitHub</a>:</p>
     <ol>
       <li><b>Update check.</b> Every few hours the app downloads a small file that says which version is the latest. Nothing about you or your work is sent with it.</li>
       <li><b>Facebook sign-in.</b> When you connect Facebook, Meta gives your computer a one-time code. Our server exchanges it for an access token, because that step needs a secret we can't put inside the app, and sends the token straight back to your computer. We don't keep the code or the token.</li>
       <li><b>WhatsApp messages</b>, only if you connect WhatsApp. Meta delivers incoming WhatsApp messages only to a public web address, which a computer at home doesn't have. So Meta sends them to our server, which holds them until your copy of 37Studio collects them, using your number's own WhatsApp token. Messages are deleted automatically after 30 days. No one else can read them through our server.</li>
     </ol>
+    <p>With your own Meta app, Facebook sign-in runs on your computer and skips our server. With your own relay (the code's <code>worker/</code> folder, deployed to your own Cloudflare account), WhatsApp messages skip it too. To skip the update check, set <code>STUDIO37_UPDATE_URL</code> to another address.</p>
     <p>Like any website host, Cloudflare may keep standard request logs, such as IP addresses and times, for security and reliability.</p>
-
-    <h2 id="buying">Buying a license</h2>
-    <p>Payments in Bangladesh are processed by SSLCommerz, which handles your bKash, Nagad, Rocket or card details; we never see them. We keep your name, email, phone number, plan and transaction ID so we can issue your license, find it again if you lose it, and answer questions about your payment. For bank transfers we keep the receipt you email us.</p>
-
-    <h2 id="license">Your license</h2>
-    <p>Your license key is checked on your computer. When the app starts and every hour, and when you connect Facebook or collect WhatsApp messages, the app also sends the key to our server, which makes sure it hasn't been revoked; it isn't stored. We keep a record of the name and email we issued each license to, and nothing else.</p>
 
     <h2 id="meta">Facebook, Instagram and WhatsApp data</h2>
     <p>37Studio uses data from Meta's platforms only to do what you ask: list the Pages and accounts you manage, publish the posts you approve, and show and answer your Pages' messages and comments. That data is stored only on your computer. We don't use it for advertising, we don't sell it, and we don't share it with anyone.</p>
@@ -110,7 +103,6 @@
       <li><b>Everything 37Studio stores:</b> delete the app's <code>data</code> folder, or the whole 37Studio folder.</li>
       <li><b>A connected account:</b> disconnect it on the company's Social tab. To remove 37Studio's access on Facebook's side: Facebook → Settings → <b>Business integrations</b> → remove 37Studio.</li>
       <li><b>WhatsApp messages on our server:</b> they expire after 30 days. To have them deleted sooner, email us with the phone number.</li>
-      <li><b>Your license record:</b> email us and we'll delete your name and email.</li>
     </ul>
     <p>Data you sent to AI providers or social platforms is governed by their policies; delete it in your accounts with them.</p>
 

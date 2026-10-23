@@ -56,9 +56,6 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == "transcribe" {
 		os.Exit(transcribeCLI(os.Args[2:]))
 	}
-	if len(os.Args) > 1 && os.Args[1] == "license" {
-		os.Exit(licenseCLI(os.Args[2:]))
-	}
 	var err error
 	if dataDir, err = filepath.Abs(dataDir); err != nil {
 		log.Fatal(err)
@@ -71,7 +68,6 @@ func main() {
 	go postLoop()
 	go autopilotLoop()
 	go clipLoop()
-	go licenseLoop()
 	go inboxLoop()
 
 	mux := http.NewServeMux()
@@ -124,8 +120,6 @@ func main() {
 	mux.HandleFunc("POST /api/projects/{id}/template", api(saveTemplate))
 	mux.HandleFunc("GET /api/keys", api(listKeys))
 	mux.HandleFunc("PUT /api/keys", api(putKeys))
-	mux.HandleFunc("GET /api/license", api(getLicense))
-	mux.HandleFunc("PUT /api/license", api(putLicense))
 	mux.HandleFunc("GET /api/update", api(checkUpdate))
 	mux.HandleFunc("GET /api/autopilots", api(listAutopilots))
 	mux.HandleFunc("POST /api/autopilots", api(saveAutopilot))
@@ -190,13 +184,7 @@ func bad(msg string) error     { return apiErr{http.StatusBadRequest, msg} }
 
 func api(fn func(r *http.Request) (any, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var v any
-		var err error
-		if r.URL.Path != "/api/license" && r.URL.Path != "/api/update" && revoked() {
-			err = apiErr{http.StatusForbidden, "This 37Studio license was cancelled, so the app is switched off. Contact jahangir@shaitrish.com."}
-		} else {
-			v, err = fn(r)
-		}
+		v, err := fn(r)
 		w.Header().Set("Content-Type", "application/json")
 		if err != nil {
 			code := http.StatusInternalServerError

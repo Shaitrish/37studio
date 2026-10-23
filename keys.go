@@ -21,7 +21,7 @@ var keyNames = []struct{ Name, Label, Hint string }{
 	{"CLAUDE_CODE_OAUTH_TOKEN", "Claude subscription token", "Instead of an API key, uses your Claude Pro/Max plan. In the 37Studio folder run `docker compose exec studio claude setup-token`, sign in, and paste the token here. Claude Desktop's sign-in doesn't carry over."},
 	{"GEMINI_API_KEY", "Gemini API key", "aistudio.google.com → API keys. Image and video generation, smarter website scans."},
 	{"ELEVENLABS_API_KEY", "ElevenLabs API key", "elevenlabs.io → Developers → API keys. Voiceover, sound effects and music."},
-	// Optional: the buyer's own Meta app instead of the shared one (Company → Social → Use your own Meta app).
+	// Optional: the user's own Meta app instead of the shared one (Company → Social → Use your own Meta app).
 	{"META_APP_ID", "Meta app ID", "Your own Meta app, for Facebook and Instagram. Used only together with its secret."},
 	{"META_APP_SECRET", "Meta app secret", "developers.facebook.com → your app → App settings → Basic."},
 	{"META_CONFIG_ID", "Meta login configuration ID", "Facebook Login for Business → Configurations. Needed for Instagram video uploads."},

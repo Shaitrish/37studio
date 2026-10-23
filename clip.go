@@ -56,9 +56,6 @@ func queueClip(parent int64, title, brief, from, to string, seconds int) (int64,
 	if err != nil {
 		return 0, errors.New("run this inside a project (STUDIO37_PROJECT is not set)")
 	}
-	if !licensed() && trialLeft() == 0 {
-		return 0, fmt.Errorf("the free trial covers %d videos and they're used up; a license (Settings → License) makes more", trialProjects)
-	}
 	span := "the parts of the recording this brief describes"
 	if from != "" || to != "" {
 		span = fmt.Sprintf("%s to %s of the recording", or(from, "the start"), or(to, "the end"))
@@ -76,7 +73,6 @@ func queueClip(parent int64, title, brief, from, to string, seconds int) (int64,
 	}
 	db.Exec("update projects set parent_id=?, clip_stage='queued' where id=?", parent, id)
 	useTemplate(id, p["template_id"]) // a series cut from a templated source keeps its look
-	db.Exec("insert into settings(key,value) values('projects_made','1') on conflict(key) do update set value=cast(value as integer)+1")
 	dir, src := projectDir(id), projectDir(parent)
 	for _, d := range []string{"input", "work/transcript", "out/drafts"} {
 		os.MkdirAll(filepath.Join(dir, d), 0o755)
@@ -131,7 +127,7 @@ func clipTick() {
 	defer clipMu.Unlock()
 	var busy int
 	db.QueryRow("select count(*) from projects where clip_stage in ('building','rendering')").Scan(&busy)
-	if busy > 0 || autopilotBusy() || revoked() {
+	if busy > 0 || autopilotBusy() {
 		return
 	}
 	var id int64

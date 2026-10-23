@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// Cost, key storage, license and path-safety checks; run with `go test`.
+// Cost, key storage and path-safety checks; run with `go test`.
 func TestQuoteAndPaths(t *testing.T) {
 	dataDir = t.TempDir()
 	openDB()
@@ -33,9 +33,6 @@ func TestQuoteAndPaths(t *testing.T) {
 		t.Errorf("seal/unseal: %q %v", v, err)
 	}
 
-	if _, err := parseLicense("37S1.e30.AAAA"); err == nil {
-		t.Error("forged license accepted")
-	}
 	if !newer("0.10.0", "0.9.9") || newer("0.3.0", "0.3.0") {
 		t.Error("version compare")
 	}

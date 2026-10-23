@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { CheckCircleIcon, XCircleIcon } from "@phosphor-icons/react";
-import { api, fail, languageName, Meta, money, setDisplay, toast, useApi, Voice, License, licenseURL, licenseDaysLeft, date } from "../api";
+import { api, fail, languageName, Meta, money, repoURL, setDisplay, toast, useApi, Voice } from "../api";
 import { Field, Seg } from "../ui";
 
 export default function Settings() {
@@ -44,7 +44,7 @@ export default function Settings() {
       <div className="page-head">
         <div className="spacer">
           <h1>Settings</h1>
-          <p>Keys, AI providers, voice, rendering, currency and your license.</p>
+          <p>Keys, AI providers, voice, rendering, currency and updates.</p>
         </div>
         <button className="btn primary" disabled={!dirty} onClick={save}>Save changes</button>
       </div>
@@ -92,11 +92,11 @@ export default function Settings() {
       </Section>
 
       <Section title="Currency" sub="Costs are recorded in USD, which is what AI providers charge, and shown in this currency.">
-        <Field label="Currency" hint="BDT for taka, or USD">{input("currency", { maxLength: 3 })}</Field>
-        <Field label="Exchange rate" hint="taka per 1 USD">{input("fx_rate", { type: "number", min: 0, step: 0.01 })}</Field>
+        <Field label="Currency" hint="a code such as USD, EUR, GBP, INR or BDT">{input("currency", { maxLength: 3 })}</Field>
+        <Field label="Exchange rate" hint="units of that currency per 1 USD (1 for USD)">{input("fx_rate", { type: "number", min: 0, step: 0.01 })}</Field>
       </Section>
 
-      <LicenseSection />
+      <UpdatesSection />
     </div>
   );
 }
@@ -161,41 +161,18 @@ function KeysSection() {
 
 interface Update { current: string; latest?: string; notes?: string; url?: string; newer?: boolean; error?: string }
 
-function LicenseSection() {
-  const { data: lic, setData } = useApi<License>("/license");
+function UpdatesSection() {
   const { data: upd } = useApi<Update>("/update");
-  const [key, setKey] = useState("");
-  const activate = () => api<{ valid: boolean; name?: string }>("/license", { method: "PUT", body: { key } })
-    .then((l) => { setData(l); setKey(""); toast(`Activated for ${l.name}`); }, fail);
   return (
     <div className="card">
-      <div className="card-h" style={{ display: "block" }}><h2>License & updates</h2></div>
+      <div className="card-h" style={{ display: "block" }}><h2>Updates</h2></div>
       <div className="card-b stack" style={{ gap: 12 }}>
-        {lic?.valid ? (
-          <p className="row wrap" style={{ gap: 8 }}><CheckCircleIcon size={16} color="var(--success)" /> Licensed to <strong>{lic.name}</strong>{lic.email && <span className="muted">· {lic.email}</span>}
-            <span className="muted">· {lic.expires ? `until ${date(lic.expires)}` : "no end date"}</span>
-            {(licenseDaysLeft(lic) ?? 99) <= 14 && <a href={licenseURL} target="_blank" rel="noreferrer">Renew</a>}</p>
-        ) : (<>
-          <p className="small muted" style={{ margin: 0 }}>
-            {lic?.unchecked
-              ? <>37Studio couldn't check the license for {lic.name} with studio.shaitrish.com for a week. Connect to the internet and restart 37Studio; it checks every hour. </>
-              : lic?.revoked
-              ? <>The license for {lic.name} was cancelled. Your work is all still here. To talk about it, email <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a>. </>
-              : lic?.expired
-              ? <>Your license for {lic.name} ended on {date(lic.expired)}. Renew it to keep making videos, publishing and using Autopilot and auto-replies; your work is all still here. </>
-              : <>Free trial: {lic?.trial_left ?? 0} of {lic?.trial ?? 2} videos left. A license (6 months or a year) unlocks unlimited videos, Autopilot, publishing and inbox auto-replies. </>}
-            <a href={licenseURL} target="_blank" rel="noreferrer">{lic?.expired ? "Renew" : "Get a license"}</a>
-          </p>
-          <div className="row wrap">
-            <input className="input mono spacer" value={key} onChange={(e) => setKey(e.target.value)} placeholder="Paste your license key (37S1.…)" aria-label="License key" style={{ minWidth: 260 }} />
-            <button className="btn primary" disabled={!key.trim()} onClick={activate}>Activate</button>
-          </div>
-        </>)}
         <p className="small muted">
           37Studio {upd?.current}
           {upd?.newer ? <> · <strong>version {upd.latest} is available.</strong> Close 37Studio and open it again from the launcher to update.{upd.notes && <> {upd.notes}</>}</> :
             upd?.error ? " · couldn't check for updates right now" : upd?.latest ? " · up to date" : ""}
         </p>
+        <p className="small muted">37Studio is free and open source under the MIT License. Report a bug, suggest a feature or send a pull request on <a href={repoURL} target="_blank" rel="noreferrer">GitHub</a>.</p>
       </div>
     </div>
   );

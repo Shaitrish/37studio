@@ -46,7 +46,7 @@ const (
 )
 
 // Copies share Shaitrish's 37Studio Meta app by default. Its secret never ships: they finish the login through the auth
-// Worker on studio.shaitrish.com (worker/), which holds it. A buyer can instead enter their own app's ID and secret
+// Worker on studio.shaitrish.com (worker/), which holds it. Anyone can instead enter their own app's ID and secret
 // (Settings → Keys, or Social → Use your own Meta app). It is then the admin's own app in Development mode, so their
 // Pages work without waiting for Meta to review ours, and logins never touch the Worker.
 const sharedMetaApp, sharedMetaConfig = "2057436148296558", "1117077147715456"
@@ -192,9 +192,7 @@ func metaUserToken(code string) (string, error) {
 		AccessToken string `json:"access_token"`
 	}
 	if !ownMetaApp() {
-		req := jsonReq("POST", authURL+"/oauth/meta/token", map[string]string{"code": code, "redirect_uri": redirectURI("meta")}, "")
-		req.Header.Set("X-37Studio-License", setting("license")) // the Worker only finishes logins for licensed copies
-		err := call(req, &tok)
+		err := call(jsonReq("POST", authURL+"/oauth/meta/token", map[string]string{"code": code, "redirect_uri": redirectURI("meta")}, ""), &tok)
 		return tok.AccessToken, err
 	}
 	id, _ := metaApp()
@@ -530,9 +528,6 @@ func listPosts(id int64) []map[string]any {
 
 // createPosts queues one post per picked account: {file, at?, accounts: [id], captions: {platform: text, youtube_title}, privacy: {youtube, tiktok}}.
 func createPosts(r *http.Request) (any, error) {
-	if err := needLicense("Publishing"); err != nil {
-		return nil, err
-	}
 	var b struct {
 		File     string            `json:"file"`
 		At       string            `json:"at"`
@@ -638,7 +633,7 @@ func postLoop() {
 }
 
 func runDuePosts() {
-	if revoked() || !postMu.TryLock() {
+	if !postMu.TryLock() {
 		return
 	}
 	defer postMu.Unlock()

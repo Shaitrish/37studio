@@ -65,9 +65,7 @@ func waSync(a inboxAccount) error {
 	var res struct {
 		Messages []waMsg `json:"messages"`
 	}
-	req := get(authURL+"/whatsapp/messages?"+url.Values{"phone": {a.accountID}, "after": {fmt.Sprint(after)}}.Encode(), "Bearer "+a.tok)
-	req.Header.Set("X-37Studio-License", setting("license"))
-	if err := call(req, &res); err != nil {
+	if err := call(get(authURL+"/whatsapp/messages?"+url.Values{"phone": {a.accountID}, "after": {fmt.Sprint(after)}}.Encode(), "Bearer "+a.tok), &res); err != nil {
 		return err
 	}
 	for _, m := range res.Messages {

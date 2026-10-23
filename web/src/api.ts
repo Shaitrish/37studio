@@ -60,16 +60,11 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
     body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
   });
   const data = await res.json().catch(() => null);
-  // 402: the trial is used up or the feature needs a license; main.tsx opens the activate dialog.
-  if (res.status === 402) dispatchEvent(new CustomEvent("license-required", { detail: data?.error }));
   if (!res.ok) throw new Error(data?.error ?? res.statusText);
   return data as T;
 }
 
-export interface License { valid: boolean; name?: string; email?: string; expires?: string; expired?: string; revoked?: boolean; unchecked?: boolean; trial_left?: number; trial?: number; url?: string }
-/** Days until a 6- or 12-month license ends (the end date is the last day it works). */
-export const licenseDaysLeft = (l?: License) => (l?.expires ? Math.ceil((new Date(l.expires + "T23:59:59").getTime() - Date.now()) / 864e5) : undefined);
-export const licenseURL = "https://studio.shaitrish.com/#pricing";
+export const repoURL = "https://github.com/Shaitrish/37studio";
 
 /** Multipart upload via XHR: fetch() can't report upload progress, and lectures are gigabytes. */
 export function upload(path: string, files: File[], onProgress?: (pct: number) => void, field?: (f: File) => string): Promise<void> {
@@ -117,7 +112,7 @@ export const money = (n: number, currency = "USD") =>
   new Intl.NumberFormat(currency === "BDT" ? "en-IN" : "en-US", { style: "currency", currency, currencyDisplay: "narrowSymbol", maximumFractionDigits: 2 }).format(n || 0);
 
 // Costs are stored in USD (what providers bill); everything is shown in the display currency from Settings.
-let display = { currency: "BDT", fx: 123 };
+let display = { currency: "USD", fx: 1 };
 export const setDisplay = (s: Record<string, string>) => { display = { currency: s.currency || "USD", fx: Number(s.fx_rate) || 1 }; };
 export const cash = (usdAmount: number) => money(usdAmount * display.fx, display.currency);
 
@@ -154,5 +149,4 @@ type ToastFn = (msg: string, err?: boolean) => void;
 let toastFn: ToastFn = () => {};
 export const setToast = (fn: ToastFn) => { toastFn = fn; };
 export const toast: ToastFn = (msg, err) => toastFn(msg, err);
-// A missing or expired license already opens the Activate dialog, so it doesn't also need a red toast.
-export const fail = (e: unknown) => { const m = e instanceof Error ? e.message : String(e); if (!/needs (a 37Studio|an active) license/.test(m)) toast(m, true); };
+export const fail = (e: unknown) => toast(e instanceof Error ? e.message : String(e), true);

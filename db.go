@@ -302,9 +302,9 @@ var settingDefaults = map[string]string{
 	"render_gpu":          "false",
 	"render_fast_capture": "false",
 	"render_draft_fps":    "15",
-	"currency":            "BDT",
-	"timezone":            "Asia/Dhaka",
-	"fx_rate":             "123",
+	"currency":            "USD",
+	"timezone":            "UTC", // replaced by the browser's zone when an autopilot plan is saved
+	"fx_rate":             "1",
 }
 
 func setting(k string) string {

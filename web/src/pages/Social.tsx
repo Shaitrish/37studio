@@ -159,7 +159,7 @@ function ConnectWhatsApp({ tenantId, onDone }: { tenantId: number; onDone: () =>
   );
 }
 
-/** The buyer's own Meta app. Until Meta approves 37Studio's app for everyone, Facebook only lets people listed on an app
+/** The user's own Meta app. Until Meta approves 37Studio's app for everyone, Facebook only lets people listed on an app
  *  sign in to it; on their own app they are the admin. Saved as keys (Settings → Keys), so it applies to every company. */
 function OwnMetaApp({ current, redirect, onDone }: { current: string; redirect: string; onDone: () => void }) {
   const [f, setF] = useState({ META_APP_ID: current, META_APP_SECRET: "", META_CONFIG_ID: "" });

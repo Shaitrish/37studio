@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Set up 37Studio on Windows, Mac or Linux</title>
-<meta name="description" content="Step-by-step setup for 37Studio: install Docker Desktop, start the app, add your license and Claude key, connect Facebook and Instagram, and keep it running.">
+<meta name="description" content="Step-by-step setup for 37Studio: install Docker Desktop, start the app, add your Claude key, connect Facebook and Instagram, and keep it running.">
 <meta property="og:title" content="Set up 37Studio">
 <meta property="og:image" content="https://studio.shaitrish.com/og.png">
 <meta name="theme-color" content="#fbfaf8">
@@ -28,9 +28,9 @@
     <a class="brand" href="/"><img src="/favicon.svg" alt="">37Studio <small>by Shaitrish</small></a>
     <nav aria-label="Pages">
       <a href="/#loop">How it works</a>
-      <a href="/#pricing">Pricing</a>
+      <a href="/#open">Open source</a>
       <a href="/setup" aria-current="page" style="background:var(--soft)">Setup guide</a>
-      <a href="/buy">Buy</a>
+      <a href="https://github.com/Shaitrish/37studio">GitHub</a>
       <a href="/privacy">Privacy</a>
     </nav>
     <div class="right"><a class="btn sm ink" href="/37studio.zip" download><svg><use href="#i-down"/></svg>Download</a></div>
@@ -43,7 +43,7 @@
   <div class="wrap">
     <span class="eyebrow">Setup guide</span>
     <h1 style="margin-top:14px">Set up 37Studio</h1>
-    <p class="lead">About 30 minutes, most of it waiting for downloads. Follow the steps for your computer. If anything looks different from what's described here, message us on WhatsApp and we'll set it up with you.</p>
+    <p class="lead">About 30 minutes, most of it waiting for downloads. Follow the steps for your computer. If anything looks different from what's described here, ask on <a href="https://github.com/Shaitrish/37studio/issues">GitHub</a>.</p>
   </div>
 </section>
 
@@ -53,8 +53,7 @@
     <a href="#docker">1. Install Docker Desktop</a>
     <a href="#download">2. Download 37Studio</a>
     <a href="#start">3. Start it</a>
-    <a href="#keys">4. License and AI keys</a>
-    <a href="#buy">Buying a license</a>
+    <a href="#keys">4. AI keys</a>
     <a href="#company">5. Add a company</a>
     <a href="#social">6. Connect social accounts</a>
     <a href="#replies">7. Inbox replies</a>
@@ -68,7 +67,7 @@
     <div class="req">
       <div><b>A computer</b>Windows 10 (22H2) or 11, a Mac with Apple Silicon (M1–M4) or Intel, or a 64-bit Linux.</div>
       <div><b>Memory and disk</b>16 GB RAM recommended, and at least 20 GB free disk for the app and your footage.</div>
-      <div><b>A license key, or not yet</b>You can make two videos before buying. When you're ready, <a href="/buy">buy a license</a>: the key starts with <code>37S1.</code>.</div>
+      <div><b>Nothing to buy</b>37Studio is free and open source. You pay the AI providers only for what you use.</div>
       <div><b>Claude</b>A Claude Pro or Max plan, or an Anthropic API key. Gemini and ElevenLabs keys are optional.</div>
     </div>
     <p>Pick your computer once; the steps below follow it.</p>
@@ -134,12 +133,8 @@ sudo usermod -aG docker $USER</pre>
     </div>
     <p>37Studio only accepts connections from your own computer. Nobody else on your Wi-Fi can open it.</p>
 
-    <h2 id="keys">4. Add your license and AI keys</h2>
-    <p>Open <b>Settings</b> in the sidebar.</p>
-    <ol>
-      <li><b>License:</b> paste your <code>37S1.</code> key and click Activate. Without one you can make two videos to try 37Studio; publishing, Autopilot, auto-replies and connecting Facebook need the license. See <a href="#buy">Buying a license</a> below.</li>
-      <li><b>Claude:</b> choose one of the options below and paste it under <b>Keys</b>.</li>
-    </ol>
+    <h2 id="keys">4. Add your AI keys</h2>
+    <p>Open <b>Settings</b> in the sidebar, choose one of the Claude options below and paste it under <b>Keys</b>.</p>
     <h3>Option A: your Claude Pro or Max plan</h3>
     <p>Already signed in to <b>Claude Desktop</b> or claude.ai? That sign-in can't be shared with 37Studio, but the same account works here. Open a terminal in the 37Studio folder (Windows 11: right-click inside the folder → <b>Open in Terminal</b>; Windows 10: Shift + right-click → <b>Open PowerShell window here</b>; Mac: right-click the folder → <b>New Terminal at Folder</b>) and run:</p>
     <pre class="cmd">docker compose exec studio claude setup-token</pre>
@@ -157,15 +152,6 @@ sudo usermod -aG docker $USER</pre>
     </ul>
     <p>Keys are encrypted on your computer and only ever sent to the provider they belong to.</p>
 
-    <h3 id="buy">Buying a license</h3>
-    <p>Six months for ৳5,000 or a year for ৳8,000, with every feature and every update while it runs.</p>
-    <ul>
-      <li><b>In Bangladesh:</b> on the <a href="/buy">buy page</a>, pick a plan, enter your name, email and phone, and pay with bKash, Nagad, Rocket or a card through SSLCommerz. Your key appears on the next page as soon as the payment goes through. Copy it, keep the page, and paste the key in Settings.</li>
-      <li><b>From abroad:</b> send $40 (6 months) or $65 (1 year) by bank transfer. The account details are on the <a href="/buy#abroad">buy page</a>; Wise is usually the cheapest way. Email the receipt to <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a> and we send your key within one working day.</li>
-      <li><b>Renewing:</b> Settings shows when your license ends and reminds you two weeks before. Buy again the same way and paste the new key; nothing else changes and your work stays where it is.</li>
-      <li><b>Lost your key?</b> Message us with the order number from your payment page, or the email you paid with.</li>
-    </ul>
-
     <h2 id="company">5. Add your first company</h2>
     <ol>
       <li><b>Companies → Add from website</b>, paste the company's website and click <b>Scan website</b>.</li>
@@ -180,13 +166,8 @@ sudo usermod -aG docker $USER</pre>
       <li>Tick the Pages and Instagram accounts that belong to this company. Instagram must be a Business or Creator account linked to the Page.</li>
       <li>For the Inbox to read Instagram messages: in the Instagram app, <b>Settings → Messages and story replies → Connected tools → Allow access to messages</b>.</li>
     </ol>
-    <div class="note"><b>Until Meta approves 37Studio for everyone,</b> do one of these first:
-      <ul>
-        <li>Send us the Facebook profile you'll sign in with, and we'll add it to the app. It takes a minute on our side.</li>
-        <li>Or use your own Meta app. On the Social tab, click <b>Use your own Meta app</b> and follow the five steps there, about 15 minutes. You're the admin of your own app, so your Pages and Instagram work straight away for posting and comments.</li>
-      </ul>
-      Either way, Messenger and Instagram messages from customers appear only after Meta approves the app.</div>
-    <p><b>WhatsApp</b> is in beta and needs a number on the WhatsApp Business API. Message us and we'll connect it with you.</p>
+    <div class="note"><b>Until Meta approves 37Studio's shared app for everyone,</b> use your own Meta app: on the Social tab, click <b>Use your own Meta app</b> and follow the five steps there, about 15 minutes. You're the admin of your own app, so your Pages and Instagram work straight away for posting and comments. Messenger and Instagram messages from customers appear once Meta approves your app for those permissions.</div>
+    <p><b>WhatsApp</b> is in beta and needs a number on the WhatsApp Business API. Meta delivers WhatsApp messages only to a public web address, so with your own Meta app you also deploy the small relay in the code's <code>worker/</code> folder to Cloudflare's free plan; the <a href="https://github.com/Shaitrish/37studio#whatsapp">README</a> shows how.</p>
 
     <h2 id="replies">7. Choose how replies go out</h2>
     <p>On the same Social tab, under <b>Inbox replies</b>:</p>
@@ -218,15 +199,15 @@ sudo usermod -aG docker $USER</pre>
     <h3>"Docker Desktop did not start"</h3>
     <p>Open Docker Desktop yourself and wait for <b>Engine running</b>; the first start after a reboot can take a couple of minutes. Then run the start file again.</p>
     <h3>The page doesn't open, or port 8080 is in use</h3>
-    <p>Another program is using port 8080. Close it and run the start file again, or message us.</p>
+    <p>Another program is using port 8080. Close it and run the start file again.</p>
     <h3>Videos render slowly on a Mac</h3>
     <p>Give Docker more memory and CPU under <b>Settings → Resources</b>, and close heavy apps while rendering.</p>
     <h3>The agent says there's no Claude key</h3>
     <p>Add one under <b>Settings → Keys</b> (step 4). If you use a subscription token and it stopped working, make a new one with <code>claude setup-token</code>.</p>
     <h3>Facebook sign-in fails</h3>
-    <p>Make sure we've added your Facebook profile to the app, or that you sign in as the admin of your own Meta app (step 6). The profile must also manage the Page.</p>
+    <p>Sign in with a Facebook profile that is an admin of your own Meta app (step 6), or has a role on the app you use. The profile must also manage the Page.</p>
 
-    <div class="note" style="margin-top:40px"><b>Stuck?</b> Message us on <a href="https://wa.me/8801635191148?text=Hi%2C%20I%20need%20help%20setting%20up%2037Studio" target="_blank" rel="noopener">WhatsApp</a> or email <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a>. We can set it up with you over a screen share, in Bangla or English.</div>
+    <div class="note" style="margin-top:40px"><b>Stuck?</b> Search or open an issue on <a href="https://github.com/Shaitrish/37studio/issues">GitHub</a>. If you'd rather have it set up for you over a screen share, message us on <a href="https://wa.me/8801635191148?text=Hi%2C%20I%27d%20like%20help%20setting%20up%2037Studio" target="_blank" rel="noopener">WhatsApp</a> or email <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a>.</div>
   </article>
 </div>
 </main>
@@ -235,7 +216,7 @@ sudo usermod -aG docker $USER</pre>
   <div class="wrap">
     <div>
       <a class="brand" href="/"><img src="/favicon.svg" alt="">37Studio <small>by Shaitrish</small></a>
-      <p style="margin-top:12px">Made in Dhaka by <a href="https://shaitrish.com" style="text-decoration:underline;text-underline-offset:3px">Shaitrish</a>.<br>Shekhertek 12, Mohammadpur, Dhaka 1207 · Trade licence TRAD/DNCC/022960/2025</p>
+      <p style="margin-top:12px">Made in Dhaka by <a href="https://shaitrish.com" style="text-decoration:underline;text-underline-offset:3px">Shaitrish</a>.<br>Open source under the <a href="https://github.com/Shaitrish/37studio/blob/main/LICENSE" style="text-decoration:underline;text-underline-offset:3px">MIT License</a>.</p>
     </div>
     <div class="links">
       <a href="/">Home</a>

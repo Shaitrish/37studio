@@ -105,9 +105,8 @@ a second Facebook/Instagram account as the "customer".
 
 > 37Studio is a desktop application (Windows, Mac, Linux) that runs on the customer's own computer; it is not a hosted
 > website, so there is no login for you to use. The screencasts show the complete flows. If you'd like to try it, download
-> it from https://studio.shaitrish.com, start it with the included launcher, and enter this license key in Settings:
-> `<issue one with: go run . license --name "Meta App Review">`. Then follow the steps in the videos. Facebook Login uses
-> your own test Page.
+> it from https://studio.shaitrish.com (or see the source at https://github.com/Shaitrish/37studio), start it with the
+> included launcher, and follow the steps in the videos. Facebook Login uses your own test Page.
 
 ## 4. Data handling questions
 
@@ -123,7 +122,7 @@ a second Facebook/Instagram account as the "customer".
 ## 5. After approval
 
 1. Publish → switch the app to **Live**.
-2. Apps no longer need customers added as testers; tell new buyers to connect directly.
+2. People no longer need to be added as testers; anyone can connect with the shared app directly.
 3. WhatsApp for customers' own numbers is a separate program: becoming a **Tech Provider** (Embedded Signup), with its own
    App Review for `whatsapp_business_management` and `whatsapp_business_messaging` and two screen recordings (sending a
    message, creating a template).

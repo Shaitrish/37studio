@@ -70,9 +70,6 @@ func saveAutopilot(r *http.Request) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := needLicense("Autopilot"); err != nil {
-		return nil, err
-	}
 	if _, ok := b["brief"]; (ok || pathID(r) == 0) && strings.TrimSpace(str(b["brief"])) == "" {
 		return nil, bad("say what the videos should be about")
 	}
@@ -116,9 +113,6 @@ func deleteAutopilot(r *http.Request) (any, error) {
 
 // runAutopilot makes one video now; its posts go out as soon as they are approved (or at once without approval).
 func runAutopilot(r *http.Request) (any, error) {
-	if err := needLicense("Autopilot"); err != nil {
-		return nil, err
-	}
 	ap, err := row("select * from autopilots where id=?", pathID(r))
 	if err != nil {
 		return nil, err
@@ -167,7 +161,7 @@ func autopilotLoop() {
 
 // autopilotTick starts the next due video. ponytail: one at a time across all companies; a PC renders one well, not three badly.
 func autopilotTick() {
-	if autopilotBusy() || !licensed() {
+	if autopilotBusy() {
 		return
 	}
 	aps, _ := rows("select * from autopilots where enabled=1 order by id")

@@ -4,17 +4,11 @@
 //   GET  /webhooks/meta         Meta's webhook check (hub.challenge)
 //   POST /webhooks/meta         Meta's webhooks: WhatsApp messages are held in D1 for 30 days
 //   GET  /whatsapp/messages     a copy pulls its number's messages; its WhatsApp token proves the number is its own
-//   POST /pay/start, /pay/return, /pay/ipn, GET /pay/order    buying a license (pay.js; the form is public/buy.html)
-//   anything else               static files in public/ (download page, launcher bundle)
-// Secrets (set with `npx wrangler secret put NAME`): META_APP_SECRET, META_VERIFY_TOKEN. Vars in wrangler.toml: META_APP_ID,
-// REVOKED_LICENSES (comma-separated first 16 characters of a key's signature, for leaked keys).
-// The Facebook login and the WhatsApp relay only serve licensed copies: a patched app can't get past this.
-
-import { buy, orderPage, payBack } from "./pay.js";
+//   anything else               static files in public/ (product page, setup guide, launcher bundle)
+// Secrets (set with `npx wrangler secret put NAME`): META_APP_SECRET, META_VERIFY_TOKEN. Var in wrangler.toml: META_APP_ID.
+// To run your own relay, deploy this with your own Meta app and D1 database, and point copies at it with STUDIO37_AUTH_URL.
 
 const GRAPH = "https://graph.facebook.com/v26.0";
-const LICENSE_PUB = "/4H+3jLcxlI0cnvC94wpnc4Doqa2iActEj2Nq5XoKn8="; // same key as edition.go
-const NEED_LICENSE = "This needs a 37Studio license. Add your key in Settings, or get one at https://studio.shaitrish.com/#pricing";
 const KEEP_MS = 30 * 864e5;
 
 export default {
@@ -23,17 +17,11 @@ export default {
     if (url.pathname === "/oauth/meta/token" && req.method === "POST") return metaToken(req, env);
     if (url.pathname === "/webhooks/meta") return webhook(req, env, url);
     if (url.pathname === "/whatsapp/messages" && req.method === "GET") return waMessages(req, env, url);
-    // Every copy asks this at start and every hour, so revoking a key switches the app itself off, not only these endpoints.
-    if (url.pathname === "/license/check") return Response.json({ revoked: revoked(req, env) });
-    if (url.pathname === "/pay/start" && req.method === "POST") return buy(req, env); // /buy itself is the static form page
-    if ((url.pathname === "/pay/return" || url.pathname === "/pay/ipn") && req.method === "POST") return payBack(req, env, url.pathname === "/pay/ipn");
-    if (url.pathname === "/pay/order") return orderPage(env, url);
     return env.ASSETS.fetch(req);
   },
 };
 
 async function metaToken(req, env) {
-  if (!(await licensed(req, env))) return json({ error: { message: NEED_LICENSE } }, 402);
   const { code, redirect_uri } = await req.json().catch(() => ({}));
   // Only local installs log in through here; anything else is someone else's redirect.
   if (!code || !/^http:\/\/(localhost|127\.0\.0\.1):\d+\/api\/oauth\/meta\/callback$/.test(redirect_uri || "")) {
@@ -84,34 +72,11 @@ async function waMessages(req, env, url) {
   const phone = url.searchParams.get("phone") || "";
   const after = Number(url.searchParams.get("after")) || 0;
   const token = (req.headers.get("authorization") || "").replace(/^Bearer /, "");
-  if (!(await licensed(req, env))) return json({ error: { message: NEED_LICENSE } }, 402);
   if (!/^\d+$/.test(phone) || !token || !(await canRead(token, phone))) {
     return json({ error: { message: "this WhatsApp token can't read that number" } }, 403);
   }
   const { results } = await env.DB.prepare("select seq, body from wa where phone=? and seq>? order by seq limit 500").bind(phone, after).all();
   return json({ messages: results.map((r) => ({ seq: r.seq, ...JSON.parse(r.body) })) });
-}
-
-// licensed checks the X-37Studio-License header: 37S1.<payload>.<signature>, both base64url, Ed25519-signed,
-// not revoked and not past its end date.
-function revoked(req, env) {
-  const sig = (req.headers.get("x-37studio-license") || "").trim().split(".")[2] || "";
-  return sig.length >= 16 && (env.REVOKED_LICENSES || "").split(",").map((s) => s.trim()).includes(sig.slice(0, 16));
-}
-
-async function licensed(req, env) {
-  const parts = (req.headers.get("x-37studio-license") || "").trim().split(".");
-  if (parts.length !== 3 || parts[0] !== "37S1" || revoked(req, env)) return false;
-  try {
-    const b64 = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), (c) => c.charCodeAt(0));
-    const key = await crypto.subtle.importKey("raw", b64(LICENSE_PUB), { name: "Ed25519" }, false, ["verify"]);
-    if (!(await crypto.subtle.verify({ name: "Ed25519" }, key, b64(parts[2]), b64(parts[1])))) return false;
-    // 6- and 12-month plans carry their last day; checked with our clock, so changing the PC's date doesn't help.
-    const { expires, test } = JSON.parse(new TextDecoder().decode(b64(parts[1])));
-    return !test && (!expires || Date.now() < Date.parse(expires + "T23:59:59Z"));
-  } catch {
-    return false;
-  }
 }
 
 // ponytail: per-isolate memory, so a fresh isolate asks Meta again; fine at one pull a minute per number.

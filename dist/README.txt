@@ -10,11 +10,10 @@
    To keep it in your taskbar or Dock: Chrome/Edge menu -> "Install 37Studio", or Safari -> File -> Add to Dock.
 4. Settings: add your Claude key (Anthropic API key, or a Claude subscription token from `claude setup-token`).
    Gemini and ElevenLabs keys are optional. Keys are encrypted and stay on this computer.
-5. Make two videos free. Then buy a license at https://studio.shaitrish.com/buy (6 months or 1 year; bKash, Nagad
-   or card in Bangladesh, bank transfer from abroad) and paste the key in Settings -> License.
 
+37Studio is free and open source (MIT License): https://github.com/Shaitrish/37studio
 Full step-by-step guide for Windows, Mac and Linux: https://studio.shaitrish.com/setup
-Help: WhatsApp +880 1635 191148 or jahangir@shaitrish.com
+Help: https://github.com/Shaitrish/37studio/issues
 
 Inbox auto-replies and Autopilot work while 37Studio runs. After the first start it comes back by itself whenever Docker
 Desktop starts (Docker Desktop -> Settings -> General -> "Start Docker Desktop when you sign in"). To answer messages at
