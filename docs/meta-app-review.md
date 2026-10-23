@@ -6,7 +6,7 @@ App: **37Studio**, ID 2057436148296558, business portfolio **Shaitrish**.
 ## 0. Before you submit
 
 1. **Business Verification** of the Shaitrish portfolio: Business settings → Security centre → Start verification. Use the
-   trade licence (TRADIDNCC/022960/2025), the business address and a phone number or email on the shaitrish.com domain.
+   trade licence (TRAD/DNCC/022960/2025), the business address and a phone number or email on the shaitrish.com domain.
    Meta requires a verified business for Advanced Access to the messaging permissions ("Your app must be owned by a verified
    business"). Usually a few working days.
 2. **Basic settings** (App settings → Basic):
