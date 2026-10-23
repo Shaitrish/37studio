@@ -136,6 +136,8 @@ func main() {
 	mux.HandleFunc("POST /api/social/pending/{key}", api(savePending))
 	mux.HandleFunc("DELETE /api/social/{id}", api(disconnectSocial))
 	mux.HandleFunc("POST /api/tenants/{id}/whatsapp", api(connectWhatsApp))
+	mux.HandleFunc("POST /api/tenants/{id}/bluesky", api(connectBluesky))
+	mux.HandleFunc("POST /api/tenants/{id}/mastodon", api(connectMastodon))
 	mux.HandleFunc("POST /api/projects/{id}/captions", api(writeCaptions))
 	mux.HandleFunc("POST /api/projects/{id}/posts", api(createPosts))
 	mux.HandleFunc("POST /api/posts/{id}/retry", api(retryPost))

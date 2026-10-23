@@ -25,6 +25,17 @@ var keyNames = []struct{ Name, Label, Hint string }{
 	{"META_APP_ID", "Meta app ID", "Your own Meta app, for Facebook and Instagram. Used only together with its secret."},
 	{"META_APP_SECRET", "Meta app secret", "developers.facebook.com → your app → App settings → Basic."},
 	{"META_CONFIG_ID", "Meta login configuration ID", "Facebook Login for Business → Configurations. Needed for Instagram video uploads."},
+	// Each platform's own developer app, for Company → Social (README → Platform setup).
+	{"GOOGLE_CLIENT_ID", "Google OAuth client ID", "YouTube: console.cloud.google.com → Credentials → OAuth client ID (Web application)."},
+	{"GOOGLE_CLIENT_SECRET", "Google OAuth client secret", "The same OAuth client's secret."},
+	{"TIKTOK_CLIENT_KEY", "TikTok client key", "developers.tiktok.com → your app (Desktop platform, Login Kit and Content Posting API)."},
+	{"TIKTOK_CLIENT_SECRET", "TikTok client secret", "The same TikTok app's secret."},
+	{"LINKEDIN_CLIENT_ID", "LinkedIn client ID", "linkedin.com/developers → your app → Auth. Products: Sign In with LinkedIn using OpenID Connect, Share on LinkedIn."},
+	{"LINKEDIN_CLIENT_SECRET", "LinkedIn client secret", "The same LinkedIn app's primary client secret."},
+	{"X_CLIENT_ID", "X OAuth 2.0 client ID", "developer.x.com → your app → Keys and tokens → OAuth 2.0 Client ID."},
+	{"X_CLIENT_SECRET", "X OAuth 2.0 client secret", "The same app's OAuth 2.0 Client Secret."},
+	{"PINTEREST_APP_ID", "Pinterest app ID", "developers.pinterest.com → My apps → your app."},
+	{"PINTEREST_APP_SECRET", "Pinterest app secret", "The same Pinterest app's secret key."},
 }
 
 func knownKey(name string) bool {

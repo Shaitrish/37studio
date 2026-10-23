@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { ArrowClockwiseIcon, ArrowSquareOutIcon, FacebookLogoIcon, Icon, InstagramLogoIcon, LinkBreakIcon, ShareNetworkIcon, SparkleIcon, TiktokLogoIcon, TrashIcon, WhatsappLogoIcon, YoutubeLogoIcon } from "@phosphor-icons/react";
+import {
+  ArrowClockwiseIcon, ArrowSquareOutIcon, ButterflyIcon, FacebookLogoIcon, Icon, InstagramLogoIcon, LinkBreakIcon, LinkedinLogoIcon, MastodonLogoIcon,
+  PinterestLogoIcon, ShareNetworkIcon, SparkleIcon, TiktokLogoIcon, TrashIcon, WhatsappLogoIcon, XLogoIcon, YoutubeLogoIcon,
+} from "@phosphor-icons/react";
 import { ago, api, Captions, date, fail, parseTime, Platform, Post, Project, SocialAccount, toast, useApi } from "../api";
 import { Empty, Field, Modal, Seg, Status } from "../ui";
 
@@ -8,13 +11,41 @@ const platforms: Record<Platform, { label: string; Icon: Icon; limit: number }> 
   instagram: { label: "Instagram", Icon: InstagramLogoIcon, limit: 2200 },
   tiktok: { label: "TikTok", Icon: TiktokLogoIcon, limit: 2200 },
   youtube: { label: "YouTube", Icon: YoutubeLogoIcon, limit: 4900 },
+  linkedin: { label: "LinkedIn", Icon: LinkedinLogoIcon, limit: 3000 },
+  x: { label: "X", Icon: XLogoIcon, limit: 280 },
+  pinterest: { label: "Pinterest", Icon: PinterestLogoIcon, limit: 800 },
+  bluesky: { label: "Bluesky", Icon: ButterflyIcon, limit: 300 },
+  mastodon: { label: "Mastodon", Icon: MastodonLogoIcon, limit: 500 },
   whatsapp: { label: "WhatsApp", Icon: WhatsappLogoIcon, limit: 4096 }, // Inbox only: videos never post here
 };
 const providers = [
   { id: "meta", label: "Facebook & Instagram", Icon: FacebookLogoIcon },
   { id: "google", label: "YouTube", Icon: YoutubeLogoIcon },
   { id: "tiktok", label: "TikTok", Icon: TiktokLogoIcon },
+  { id: "linkedin", label: "LinkedIn", Icon: LinkedinLogoIcon },
+  { id: "x", label: "X", Icon: XLogoIcon },
+  { id: "pinterest", label: "Pinterest", Icon: PinterestLogoIcon },
 ];
+// Bluesky and Mastodon have no app to register: an app password or token, checked when it's pasted.
+const pasted = {
+  bluesky: {
+    sub: "Videos post from your own Bluesky account. Use an app password, not your login password.",
+    help: <>On bsky.app open <b>Settings → Privacy and security → App passwords</b>, add one (for example "37Studio") and paste it here.</>,
+    fields: [
+      { k: "handle", label: "Handle", placeholder: "yourname.bsky.social" },
+      { k: "password", label: "App password", placeholder: "xxxx-xxxx-xxxx-xxxx", secret: true },
+      { k: "service", label: "Server", placeholder: "https://bsky.social", hint: "only if your account lives on your own PDS" },
+    ],
+  },
+  mastodon: {
+    sub: "Videos post from your own account on any Mastodon server.",
+    help: <>On your server open <b>Preferences → Development → New application</b>, name it 37Studio, keep only the scopes <code>read:accounts</code>, <code>write:media</code> and <code>write:statuses</code>, submit, then copy <b>Your access token</b>.</>,
+    fields: [
+      { k: "server", label: "Server", placeholder: "mastodon.social" },
+      { k: "token", label: "Access token", placeholder: "", secret: true },
+    ],
+  },
+};
 const tiktokPrivacy = [
   ["", "Choose who can see it"], ["PUBLIC_TO_EVERYONE", "Everyone"], ["FOLLOWER_OF_CREATOR", "Followers"],
   ["MUTUAL_FOLLOW_FRIENDS", "Friends"], ["SELF_ONLY", "Only me"], ["INBOX", "Send to TikTok drafts"],
@@ -51,6 +82,7 @@ export function SocialTab({ tenantId }: { tenantId: number }) {
     api(`/social/${a.id}`, { method: "DELETE" }).then(reload, fail);
   const missing = providers.filter((p) => data && !data.ready[p.id]);
   const [whatsapp, setWhatsapp] = useState(false);
+  const [paste, setPaste] = useState<keyof typeof pasted>();
   const [metaApp, setMetaApp] = useState(false);
   return (
     <div className="stack">
@@ -74,10 +106,14 @@ export function SocialTab({ tenantId }: { tenantId: number }) {
         <div className="card-b row wrap" style={{ borderTop: "1px solid var(--border)" }}>
           {providers.map((p) => (
             <button key={p.id} className="btn" disabled={!data?.ready[p.id]} onClick={() => connect(p.id)}
-              title={data?.ready[p.id] ? "Sign in, then pick the accounts that belong to this company" : "Not set up in this copy yet"}>
+              title={data?.ready[p.id] ? "Sign in, then pick the accounts that belong to this company" : "Add its app credentials in Settings → Keys first"}>
               <p.Icon size={15} /> Connect {p.label}
             </button>
           ))}
+          {(Object.keys(pasted) as (keyof typeof pasted)[]).map((k) => {
+            const P = platforms[k];
+            return <button key={k} className="btn" onClick={() => setPaste(k)} title="Connect with an app password or token"><P.Icon size={15} /> Connect {P.label}</button>;
+          })}
           <button className="btn" onClick={() => setWhatsapp(true)} title="For the Inbox: answer customers' WhatsApp messages">
             <WhatsappLogoIcon size={15} /> Connect WhatsApp
           </button>
@@ -105,11 +141,15 @@ export function SocialTab({ tenantId }: { tenantId: number }) {
       </div>
 
       {missing.length > 0 && (
-        <p className="small faint">{missing.map((p) => p.label).join(" and ")}: not set up in this copy yet (README → Social publishing).</p>
+        <p className="small faint">{missing.map((p) => p.label).join(", ")}: add your own app's credentials in <a href="#/settings">Settings → Keys</a> first (README → Platform setup).</p>
       )}
-      <p className="small faint">Facebook Groups and personal profiles can't be posted to by any app: Meta removed group posting in 2024 and profile posting in 2018. Pages, Instagram, YouTube and TikTok work.</p>
+      <p className="small faint">
+        Facebook Groups and personal profiles can't be posted to by any app: Meta removed group posting in 2024 and profile posting in 2018.
+        Threads only accepts videos from a public web address, which a copy on your computer doesn't have.
+      </p>
 
       {whatsapp && <ConnectWhatsApp tenantId={tenantId} onDone={() => { setWhatsapp(false); reload(); }} />}
+      {paste && <ConnectPasted tenantId={tenantId} kind={paste} onDone={() => { setPaste(undefined); reload(); }} />}
       {metaApp && data && <OwnMetaApp current={data.meta_app} redirect={data.redirect.replace("{provider}", "meta")} onDone={() => { setMetaApp(false); reload(); }} />}
       {pendingKey && <PickAccounts k={pendingKey} onDone={() => { location.hash = `/clients/${tenantId}/social`; reload(); }} />}
     </div>
@@ -154,6 +194,31 @@ function ConnectWhatsApp({ tenantId, onDone }: { tenantId: number; onDone: () =>
         <Field label="Phone number ID"><input className="input" inputMode="numeric" value={f.phone_id} onChange={set("phone_id")} /></Field>
         <Field label="WhatsApp Business Account ID"><input className="input" inputMode="numeric" value={f.waba_id} onChange={set("waba_id")} /></Field>
         <Field label="Access token"><input className="input" type="password" autoComplete="off" value={f.token} onChange={set("token")} /></Field>
+      </div>
+    </Modal>
+  );
+}
+
+function ConnectPasted({ tenantId, kind, onDone }: { tenantId: number; kind: keyof typeof pasted; onDone: () => void }) {
+  const c = pasted[kind];
+  const [f, setF] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
+  const save = () => {
+    setBusy(true);
+    api(`/tenants/${tenantId}/${kind}`, { body: f }).then(() => { toast(`${platforms[kind].label} connected`); onDone(); }, (e) => { fail(e); setBusy(false); });
+  };
+  const ready = c.fields.every((x) => "hint" in x || f[x.k]?.trim());
+  return (
+    <Modal title={`Connect ${platforms[kind].label}`} sub={c.sub} onClose={onDone}
+      footer={<><button className="btn" onClick={onDone}>Cancel</button><button className="btn primary" disabled={busy || !ready} onClick={save}>{busy ? "Checking…" : "Connect"}</button></>}>
+      <div className="stack">
+        <p className="small muted" style={{ margin: 0 }}>{c.help}</p>
+        {c.fields.map((x) => (
+          <Field key={x.k} label={x.label} hint={"hint" in x ? x.hint : undefined}>
+            <input className="input" type={"secret" in x ? "password" : "text"} autoComplete="off" placeholder={x.placeholder}
+              value={f[x.k] ?? ""} onChange={(e) => setF({ ...f, [x.k]: e.target.value.trim() })} />
+          </Field>
+        ))}
       </div>
     </Modal>
   );
@@ -304,7 +369,12 @@ export function PublishModal({ p, onClose, onQueued }: { p: Project; onClose: ()
                 <SparkleIcon size={14} /> {busy === "ai" ? "Writing…" : "Write with AI"}
               </button>
             </div>
-            {plats.map((pl) => pl === "youtube" ? (
+            {plats.map((pl) => pl === "pinterest" ? (
+              <div key={pl} className="stack" style={{ gap: 8 }}>
+                <Field label="Pinterest title" hint={`${(caps.pinterest_title ?? "").length}/100`}><input className="input" maxLength={100} {...cap("pinterest_title")} /></Field>
+                <Field label="Pinterest description" hint={`${(caps.pinterest ?? "").length}/800`}><textarea className="textarea" rows={3} maxLength={800} {...cap("pinterest")} /></Field>
+              </div>
+            ) : pl === "youtube" ? (
               <div key={pl} className="stack" style={{ gap: 8 }}>
                 <Field label="YouTube title" hint={`${(caps.youtube_title ?? "").length}/100`}><input className="input" maxLength={100} {...cap("youtube_title")} /></Field>
                 <Field label="YouTube description"><textarea className="textarea" rows={3} {...cap("youtube")} /></Field>

@@ -33,13 +33,13 @@ export interface Template {
   kind: string; aspect: string; seconds: number; thumb?: string; created_at: string;
 }
 export interface LibraryItem { file: FileInfo; project_id: number; title: string; tenant_id: number; tenant_name: string }
-export type Platform = "facebook" | "instagram" | "youtube" | "tiktok" | "whatsapp";
+export type Platform = "facebook" | "instagram" | "youtube" | "tiktok" | "linkedin" | "x" | "pinterest" | "bluesky" | "mastodon" | "whatsapp";
 export interface SocialAccount { id: number; tenant_id: number; platform: Platform; account_id: string; name: string; picture: string; created_at: string }
 export interface Post {
   id: number; project_id: number; account_id: number; platform: Platform; account_name: string; file: string; title: string; caption: string;
   privacy: string; status: "approval" | "scheduled" | "posting" | "posted" | "failed"; publish_at: string; url: string; error: string; created_at: string;
 }
-export type Captions = Partial<Record<Platform | "youtube_title", string>>;
+export type Captions = Partial<Record<Platform | "youtube_title" | "pinterest_title", string>>;
 export interface AssetMeta { caption?: string; section?: string; context?: string; source?: string; use?: string }
 export interface Campaign {
   id: number; tenant_id: number; tenant_name: string; name: string; brief: string; video_count: number; created_at: string;

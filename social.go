@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
@@ -22,13 +21,14 @@ import (
 	"time"
 )
 
-// Social publishing: connect a client's Facebook Pages, Instagram, YouTube and TikTok accounts once (OAuth),
-// then post finished videos to any mix of them at once, now or on a schedule. Tokens stay in the local DB.
+// Social publishing: connect a company's accounts once, then post finished videos to any mix of them at once, now or
+// on a schedule. Tokens stay in the local DB.
 //
-// Providers (one OAuth app each, from .env) and the account kinds they yield:
+// Providers (one OAuth app each, keys from Settings → Keys or .env) and the account kinds they yield:
 //   meta   -> facebook (Pages) + instagram (Business/Creator accounts linked to those Pages)
 //   google -> youtube
 //   tiktok -> tiktok
+// LinkedIn, X, Pinterest, Bluesky and Mastodon are in platforms.go.
 
 var (
 	publicURL = strings.TrimRight(env("STUDIO37_PUBLIC_URL", "http://localhost:8080"), "/") // where OAuth providers send the browser back
@@ -65,11 +65,20 @@ func providerReady(p string) bool {
 	if p == "meta" {
 		return ownMetaApp() || authURL != ""
 	}
-	keys := map[string][2]string{"meta": {"META_APP_ID", "META_APP_SECRET"}, "google": {"GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"}, "tiktok": {"TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET"}}[p]
+	keys := map[string][2]string{"google": {"GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"}, "tiktok": {"TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET"},
+		"linkedin": {"LINKEDIN_CLIENT_ID", "LINKEDIN_CLIENT_SECRET"}, "x": {"X_CLIENT_ID", "X_CLIENT_SECRET"}, "pinterest": {"PINTEREST_APP_ID", "PINTEREST_APP_SECRET"}}[p]
 	return keys[0] != "" && os.Getenv(keys[0]) != "" && os.Getenv(keys[1]) != ""
 }
 
-func redirectURI(provider string) string { return publicURL + "/api/oauth/" + provider + "/callback" }
+// redirectURI is where a platform sends the browser back after sign-in. X refuses localhost callbacks, so it gets
+// 127.0.0.1, the same server: the OAuth state lives here, not in a cookie, so the change of host doesn't matter.
+func redirectURI(provider string) string {
+	base := publicURL
+	if provider == "x" {
+		base = strings.Replace(base, "://localhost", "://127.0.0.1", 1)
+	}
+	return base + "/api/oauth/" + provider + "/callback"
+}
 
 // ---- OAuth: start -> provider consent -> callback -> the editor picks which accounts belong to the client
 
@@ -142,6 +151,17 @@ func oauthStart(w http.ResponseWriter, r *http.Request) {
 		u = "https://www.tiktok.com/v2/auth/authorize/?" + url.Values{"client_key": {os.Getenv("TIKTOK_CLIENT_KEY")}, "redirect_uri": {redirectURI(prov)},
 			"response_type": {"code"}, "state": {key}, "scope": {"user.info.basic,video.publish,video.upload"},
 			"code_challenge": {hex.EncodeToString(sum[:])}, "code_challenge_method": {"S256"}}.Encode()
+	case "linkedin":
+		u = "https://www.linkedin.com/oauth/v2/authorization?" + url.Values{"client_id": {os.Getenv("LINKEDIN_CLIENT_ID")}, "redirect_uri": {redirectURI(prov)},
+			"response_type": {"code"}, "state": {key}, "scope": {linkedinScopes()}}.Encode()
+	case "x":
+		sum := sha256.Sum256([]byte(st.pkc)) // standard PKCE: base64url, unlike TikTok's hex
+		u = "https://x.com/i/oauth2/authorize?" + url.Values{"client_id": {os.Getenv("X_CLIENT_ID")}, "redirect_uri": {redirectURI(prov)},
+			"response_type": {"code"}, "state": {key}, "scope": {"tweet.read tweet.write users.read media.write offline.access"},
+			"code_challenge": {base64.RawURLEncoding.EncodeToString(sum[:])}, "code_challenge_method": {"S256"}}.Encode()
+	case "pinterest":
+		u = "https://www.pinterest.com/oauth/?" + url.Values{"client_id": {os.Getenv("PINTEREST_APP_ID")}, "redirect_uri": {redirectURI(prov)},
+			"response_type": {"code"}, "state": {key}, "scope": {"boards:read,pins:read,pins:write,user_accounts:read"}}.Encode()
 	}
 	http.Redirect(w, r, u, http.StatusFound)
 }
@@ -168,13 +188,20 @@ func oauthCallback(w http.ResponseWriter, r *http.Request) {
 			pc.Accounts, err = youtubeAccounts(q.Get("code"))
 		case "tiktok":
 			pc.Accounts, err = tiktokAccounts(q.Get("code"), st.pkc)
+		case "linkedin":
+			pc.Accounts, err = linkedinAccounts(q.Get("code"))
+		case "x":
+			pc.Accounts, err = xAccounts(q.Get("code"), st.pkc)
+		case "pinterest":
+			pc.Accounts, err = pinterestAccounts(q.Get("code"))
 		}
 		if err != nil {
 			pc.Error = err.Error()
 		} else if len(pc.Accounts) == 0 {
 			pc.Error = map[string]string{
-				"meta":   "No Facebook Pages came back. You need a role on the Page (or the client must add your business as a partner), and must tick it on Facebook's screen.",
-				"google": "That Google account has no YouTube channel.",
+				"meta":      "No Facebook Pages came back. You need a role on the Page (or the client must add your business as a partner), and must tick it on Facebook's screen.",
+				"google":    "That Google account has no YouTube channel.",
+				"pinterest": "That Pinterest account has no boards yet. Create one on Pinterest, then connect again.",
 			}[prov]
 		}
 	}
@@ -335,7 +362,7 @@ func tiktokAccounts(code, verifier string) ([]socialAccount, error) {
 func listSocial(r *http.Request) (any, error) {
 	accts, err := rows("select id,tenant_id,platform,account_id,name,picture,created_at from social_accounts where tenant_id=? order by platform,name", pathID(r))
 	ready := map[string]any{}
-	for _, p := range []string{"meta", "google", "tiktok"} {
+	for _, p := range []string{"meta", "google", "tiktok", "linkedin", "x", "pinterest"} {
 		ready[p] = providerReady(p)
 	}
 	var mode string
@@ -397,7 +424,7 @@ func disconnectSocial(r *http.Request) (any, error) {
 
 // ---- captions: the project agent writes work/social.json when asked in chat; the Publish dialog can also ask Claude directly.
 
-const socialSpec = `{"facebook": "post text", "instagram": "caption with 3-8 hashtags at the end", "tiktok": "short punchy caption with 3-5 hashtags", "youtube_title": "title under 70 characters", "youtube": "description: 2-4 lines, then #Shorts for vertical videos plus 3-5 hashtags"}`
+const socialSpec = `{"facebook": "post text", "instagram": "caption with 3-8 hashtags at the end", "tiktok": "short punchy caption with 3-5 hashtags", "youtube_title": "title under 70 characters", "youtube": "description: 2-4 lines, then #Shorts for vertical videos plus 3-5 hashtags", "linkedin": "professional post: a hook line, 2-4 short lines of value, 3 hashtags", "x": "one punchy post under 240 characters with 1-2 hashtags", "pinterest_title": "searchable title under 90 characters", "pinterest": "description under 450 characters with natural keywords", "bluesky": "conversational post under 250 characters with 1-2 hashtags", "mastodon": "post under 450 characters with 2-4 CamelCase hashtags"}`
 
 func socialCaptions(id int64) map[string]any {
 	var m map[string]any
@@ -582,8 +609,8 @@ func createPosts(r *http.Request) (any, error) {
 		a, _ := row("select platform,name from social_accounts where id=?", aid)
 		pl := str(a["platform"])
 		title := ""
-		if pl == "youtube" {
-			title = caption("youtube_title")
+		if pl == "youtube" || pl == "pinterest" {
+			title = caption(pl + "_title")
 		}
 		if _, err := tx.Exec(`insert into posts(project_id,account_id,platform,account_name,file,title,caption,privacy,publish_at) values(?,?,?,?,?,?,?,?,?)`,
 			id, aid, pl, a["name"], b.File, title, caption(pl), b.Privacy[pl], at.Format(time.DateTime)); err != nil {
@@ -679,12 +706,30 @@ func publish(p map[string]any) (remote, link string, err error) {
 		return postYouTube(tok, file, str(p["title"]), str(p["caption"]), or(str(p["privacy"]), "public"))
 	case "tiktok":
 		return postTikTok(tok, file, str(p["caption"]), str(p["privacy"]))
+	case "linkedin":
+		return postLinkedIn(str(a["account_id"]), tok, file, str(p["caption"]))
+	case "x":
+		return postX(tok, file, str(p["caption"]))
+	case "pinterest":
+		return postPinterest(str(a["account_id"]), tok, file, str(p["title"]), str(p["caption"]))
+	case "bluesky":
+		return postBluesky(str(a["account_id"]), tok, str(a["refresh"]), file, str(p["caption"]))
+	case "mastodon":
+		return postMastodon(str(a["refresh"]), tok, file, str(p["caption"]))
 	}
 	return "", "", fmt.Errorf("unknown platform %v", a["platform"])
 }
 
-// accessToken returns a usable token: Meta Page tokens never expire; Google and TikTok trade the stored refresh token.
+// accessToken returns a usable token: Meta Page tokens never expire; the others trade the stored refresh token.
+// Bluesky's "token" is its app password and Mastodon's never expires, so both are used as they are.
 func accessToken(a map[string]any) (string, error) {
+	old := str(a["refresh"])
+	rotate := func(t oauthTok, err error) (string, error) { // platforms may rotate the refresh token; Pinterest boards share one
+		if err == nil {
+			db.Exec("update social_accounts set token=?, refresh=? where platform=? and refresh=?", t.AccessToken, or(t.RefreshToken, old), a["platform"], old)
+		}
+		return t.AccessToken, err
+	}
 	switch str(a["platform"]) {
 	case "youtube":
 		var t struct {
@@ -699,6 +744,19 @@ func accessToken(a map[string]any) (string, error) {
 			db.Exec("update social_accounts set token=?, refresh=? where id=?", t.AccessToken, or(t.RefreshToken, str(a["refresh"])), a["id"]) // TikTok may rotate it
 		}
 		return t.AccessToken, err
+	case "x": // tokens last 2 hours
+		return rotate(basicTokenCall(xAPI+"/2/oauth2/token", os.Getenv("X_CLIENT_ID"), os.Getenv("X_CLIENT_SECRET"),
+			url.Values{"grant_type": {"refresh_token"}, "refresh_token": {old}, "client_id": {os.Getenv("X_CLIENT_ID")}}))
+	case "pinterest": // tokens last 30 days
+		return rotate(basicTokenCall(pinterestAPI+"/v5/oauth/token", os.Getenv("PINTEREST_APP_ID"), os.Getenv("PINTEREST_APP_SECRET"),
+			url.Values{"grant_type": {"refresh_token"}, "refresh_token": {old}}))
+	case "linkedin": // 60-day tokens; LinkedIn hands out refresh tokens only to some apps, and the rest reconnect
+		if old != "" {
+			var t oauthTok
+			err := call(form("POST", "https://www.linkedin.com/oauth/v2/accessToken", url.Values{"grant_type": {"refresh_token"}, "refresh_token": {old},
+				"client_id": {os.Getenv("LINKEDIN_CLIENT_ID")}, "client_secret": {os.Getenv("LINKEDIN_CLIENT_SECRET")}}, ""), &t)
+			return rotate(t, err)
+		}
 	}
 	return str(a["token"]), nil
 }
@@ -726,28 +784,16 @@ func postFacebook(page, tok, file, caption string) (string, string, error) {
 }
 
 func facebookVideo(page, tok, file, caption string) (string, string, error) {
-	pr, pw := io.Pipe()
-	mw := multipart.NewWriter(pw)
-	go func() { // stream the multipart body: final videos can be hundreds of MB
-		mw.WriteField("description", caption)
-		part, _ := mw.CreateFormFile("source", filepath.Base(file))
-		f, err := os.Open(file)
-		if err == nil {
-			_, err = io.Copy(part, f)
-			f.Close()
-		}
-		if err == nil {
-			err = mw.Close()
-		}
-		pw.CloseWithError(err)
-	}()
-	req, _ := http.NewRequest("POST", "https://graph-video.facebook.com/"+graphVer+"/"+page+"/videos", pr)
-	req.Header.Set("Content-Type", mw.FormDataContentType())
-	req.Header.Set("Authorization", "Bearer "+tok)
+	f, err := os.Open(file)
+	if err != nil {
+		return "", "", err
+	}
+	defer f.Close()
+	req := multipartReq("https://graph-video.facebook.com/"+graphVer+"/"+page+"/videos", map[string]string{"description": caption}, "source", filepath.Base(file), f, "Bearer "+tok)
 	var res struct {
 		ID string `json:"id"`
 	}
-	err := callWith(upClient, req, &res)
+	err = callWith(upClient, req, &res)
 	return res.ID, "https://www.facebook.com/" + page + "/videos/" + res.ID, err
 }
 
@@ -991,8 +1037,10 @@ func callWith(c *http.Client, req *http.Request, out any) error {
 
 func apiMessage(raw []byte) string {
 	var e struct {
-		Error json.RawMessage `json:"error"`
-		Desc  string          `json:"error_description"`
+		Error   json.RawMessage `json:"error"`
+		Desc    string          `json:"error_description"`
+		Message string          `json:"message"` // LinkedIn, Bluesky
+		Detail  string          `json:"detail"`  // X
 	}
 	json.Unmarshal(raw, &e)
 	var inner struct {
@@ -1004,7 +1052,7 @@ func apiMessage(raw []byte) string {
 	}
 	var s string
 	json.Unmarshal(e.Error, &s)
-	return or(e.Desc, or(s, tail(string(raw), 300)))
+	return or(e.Desc, or(e.Message, or(e.Detail, or(s, tail(string(raw), 300)))))
 }
 
 func videoSize(p string) (w, h int) {

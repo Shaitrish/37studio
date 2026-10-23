@@ -280,8 +280,8 @@ func autopilotAdvance(id int64) {
 				continue // disconnected since the plan was made
 			}
 			pl, title := str(a["platform"]), ""
-			if pl == "youtube" {
-				title = or(str(caps["youtube_title"]), str(p["title"]))
+			if pl == "youtube" || pl == "pinterest" {
+				title = or(str(caps[pl+"_title"]), str(p["title"]))
 			}
 			privacy := map[string]string{"youtube": "public", "tiktok": "SELF_ONLY"}[pl] // unaudited TikTok apps may only post privately
 			db.Exec(`insert into posts(project_id,account_id,platform,account_name,file,title,caption,privacy,status,publish_at) values(?,?,?,?,?,?,?,?,?,?)`,

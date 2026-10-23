@@ -157,7 +157,7 @@ Prefer these over hyperframes tts or stock audio. Keep music under the voice (du
 ## Social captions
 When the editor asks for post captions, write them to work/social.json, in the video's language, as one JSON object:
 {social}
-The app's Publish dialog loads that file, so the editor can review and post to the company's Facebook, Instagram, TikTok and YouTube from there.
+The app's Publish dialog loads that file, so the editor can review it and post to the company's connected accounts from there. Fill in only the keys for platforms you're asked about, or all of them when unsure.
 
 ## Rules
 Stay inside the project folder (the asset library and the company's project folder are the only other places you may read). Never modify input/. Don't install global software.`
@@ -345,10 +345,11 @@ func claudeCmd(dir string, q Quality, system, addDir, prompt string, extra ...st
 	return cmd
 }
 
-// agentEnv is this process's environment for an agent, minus the Meta app secret: it only signs logins, and an agent
-// that reads web pages shouldn't hold it. `37studio gen` still needs the AI provider keys, so those stay.
+// agentEnv is this process's environment for an agent, minus the platform app secrets (META_APP_SECRET, X_CLIENT_SECRET
+// and the like): they only sign logins, and an agent that reads web pages shouldn't hold them. `37studio gen` still
+// needs the AI provider keys, so those stay.
 func agentEnv(extra ...string) []string {
-	return append(slices.DeleteFunc(os.Environ(), func(kv string) bool { return strings.HasPrefix(kv, "META_APP_SECRET=") }), extra...)
+	return append(slices.DeleteFunc(os.Environ(), func(kv string) bool { k, _, _ := strings.Cut(kv, "="); return strings.HasSuffix(k, "_SECRET") }), extra...)
 }
 
 var (

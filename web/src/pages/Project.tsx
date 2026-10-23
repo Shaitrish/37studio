@@ -127,7 +127,7 @@ export default function ProjectPage({ id }: { id: number }) {
             <BookmarkSimpleIcon size={15} /> Save as template
           </button>
           <button className="btn" disabled={!finals.some((f) => f.kind === "video")} onClick={() => setPublishing(true)}
-            title={finals.some((f) => f.kind === "video") ? "Post to the company's Facebook, Instagram, TikTok and YouTube" : "Export a final video first"}>
+            title={finals.some((f) => f.kind === "video") ? "Post to the company's connected social accounts" : "Export a final video first"}>
             <ShareNetworkIcon size={15} /> Publish
           </button>
           <button className="btn primary" disabled={!p.composition || p.running} onClick={() => act("render", { quality: "high" }, "Export started; it appears in Versions")}
