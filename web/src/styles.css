@@ -537,3 +537,7 @@ label.cbtn { cursor: pointer; }
 .toggles .chip { padding: 5px 11px; }
 .chip.on { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
 .approve-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-radius: var(--radius); background: var(--warn-soft); }
+
+/* assistant: the chat fills the page */
+.assistant .chat { position: static; height: calc(100vh - 170px); min-height: 420px; }
+.assistant .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }

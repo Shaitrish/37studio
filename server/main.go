@@ -70,6 +70,13 @@ func main() {
 	go clipLoop()
 	go inboxLoop()
 
+	mux := routes()
+	log.Printf("37studio listening on %s, data in %s", addr, dataDir)
+	log.Fatal(http.ListenAndServe(addr, basicAuth(mux)))
+}
+
+// routes is the whole HTTP surface: the JSON API, the MCP endpoint (the same API as tools), files and the UI.
+func routes() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/meta", api(getMeta))
 	mux.HandleFunc("GET /api/settings", api(getSettings))
@@ -147,6 +154,13 @@ func main() {
 	mux.HandleFunc("POST /api/inbox/draft", api(draftReply))
 	mux.HandleFunc("POST /api/inbox/reply", api(sendReply))
 
+	mux.HandleFunc("GET /api/assistant", api(getAssistant))
+	mux.HandleFunc("POST /api/assistant/messages", api(postAssistant))
+	mux.HandleFunc("POST /api/assistant/stop", api(stopAssistant))
+	mux.HandleFunc("DELETE /api/assistant", api(resetAssistant))
+	mux.Handle("POST /mcp", mcpHandler(mux))
+	mux.Handle("GET /mcp", mcpHandler(mux)) // answers 405: no event stream
+
 	mux.Handle("GET /files/", http.StripPrefix("/files", filesHandler()))
 	web := http.FileServer(http.Dir(webDir))
 	mux.Handle("GET /", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -155,9 +169,7 @@ func main() {
 		}
 		web.ServeHTTP(w, r)
 	}))
-
-	log.Printf("37studio listening on %s, data in %s", addr, dataDir)
-	log.Fatal(http.ListenAndServe(addr, basicAuth(mux)))
+	return mux
 }
 
 // basicAuth guards the whole app when STUDIO37_PASSWORD is set (any username).

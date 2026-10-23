@@ -38,7 +38,7 @@ func getCosts(r *http.Request) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	byTenant, _ := rows("select u.tenant_id, coalesce(t.name,'(deleted)') name, sum(u.cost) cost, count(distinct nullif(u.project_id,0)) projects from usage u left join tenants t on t.id=u.tenant_id group by u.tenant_id order by cost desc")
+	byTenant, _ := rows("select u.tenant_id, case when u.tenant_id=0 then 'Assistant' else coalesce(t.name,'(deleted)') end name, sum(u.cost) cost, count(distinct nullif(u.project_id,0)) projects from usage u left join tenants t on t.id=u.tenant_id group by u.tenant_id order by cost desc")
 	byMonth, _ := rows("select substr(created_at,1,7) month, provider, sum(cost) cost from usage group by 1,2 order by 1")
 	var total, month float64
 	db.QueryRow("select coalesce(sum(cost),0), coalesce(sum(case when created_at >= date('now','start of month') then cost end),0) from usage").Scan(&total, &month)

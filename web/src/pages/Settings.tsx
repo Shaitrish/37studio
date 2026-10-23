@@ -96,6 +96,7 @@ export default function Settings() {
         <Field label="Exchange rate" hint="units of that currency per 1 USD (1 for USD)">{input("fx_rate", { type: "number", min: 0, step: 0.01 })}</Field>
       </Section>
 
+      <McpSection password={!!meta?.env.password} />
       <UpdatesSection />
     </div>
   );
@@ -177,3 +178,25 @@ function UpdatesSection() {
     </div>
   );
 }
+
+/** Other agents (Claude Code, Claude Desktop, Cursor…) can run 37Studio through its MCP server: the tools the Assistant uses. */
+function McpSection({ password }: { password: boolean }) {
+  const url = `${location.origin}/mcp`;
+  const cmd = `claude mcp add --transport http 37studio ${url}` + (password ? ` --header "Authorization: Basic <base64 of 37studio:your-password>"` : "");
+  return (
+    <div className="card">
+      <div className="card-h" style={{ display: "block" }}>
+        <h2>Connect other AI agents (MCP)</h2>
+        <p className="small muted">Claude Code, Claude Desktop, Cursor and other MCP clients on this computer can manage companies, campaigns, videos, publishing and settings here, with the same tools as the Assistant.</p>
+      </div>
+      <div className="card-b stack" style={{ gap: 10 }}>
+        <Field label="Server URL"><input className="input mono" readOnly value={url} onFocus={(e) => e.target.select()} /></Field>
+        <Field label="Claude Code" hint="run in a terminal"><input className="input mono" readOnly value={cmd} onFocus={(e) => e.target.select()} /></Field>
+        <p className="small faint" style={{ margin: 0 }}>
+          It accepts connections from this computer only{password ? ", with the app's password" : ""}. Agents connected here can spend on your AI keys and post to your accounts, so connect only ones you trust.
+        </p>
+      </div>
+    </div>
+  );
+}
+

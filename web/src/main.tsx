@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  ChartPieSliceIcon, ChatsCircleIcon, FilmSlateIcon, FilmStripIcon, GearSixIcon, IconContext, MegaphoneIcon, MonitorIcon, MoonIcon, SidebarSimpleIcon,
+  ChartPieSliceIcon, ChatCircleDotsIcon, ChatsCircleIcon, FilmSlateIcon, FilmStripIcon, GearSixIcon, IconContext, MegaphoneIcon, MonitorIcon, MoonIcon, SidebarSimpleIcon,
   SquaresFourIcon, SunIcon, UsersThreeIcon,
 } from "@phosphor-icons/react";
 import "@hyperframes/player";
@@ -18,10 +18,12 @@ import Campaigns, { CampaignPage } from "./pages/Campaigns";
 import Settings from "./pages/Settings";
 import Inbox from "./pages/Inbox";
 import Library from "./pages/Library";
+import Assistant from "./pages/Assistant";
 
 const nav = [
   { group: "Studio", items: [
     { path: "/", label: "Overview", icon: SquaresFourIcon },
+    { path: "/assistant", label: "Assistant", icon: ChatCircleDotsIcon },
     { path: "/projects", label: "Projects", icon: FilmSlateIcon },
     { path: "/library", label: "Library", icon: FilmStripIcon },
     { path: "/campaigns", label: "Campaigns", icon: MegaphoneIcon },
@@ -76,6 +78,7 @@ function App() {
       case "costs": return <Costs />;
       case "inbox": return <Inbox />;
       case "settings": return <Settings />;
+      case "assistant": return <Assistant />;
       default: return <Overview />;
     }
   })();

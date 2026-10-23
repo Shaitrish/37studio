@@ -291,20 +291,21 @@ func launch(id int64, cmd *exec.Cmd, done func(error)) error {
 	return nil
 }
 
-func stopRun(r *http.Request) (any, error) {
-	id := pathID(r)
+func stopRun(r *http.Request) (any, error) { return nil, stopProc(pathID(r)) }
+
+func stopProc(id int64) error {
 	procMu.Lock()
 	cmd := procs[id]
 	procMu.Unlock()
 	if cmd == nil {
-		return nil, bad("nothing is running")
+		return bad("nothing is running")
 	}
 	addEvent(id, "info", map[string]string{"text": "Stopped by editor."})
-	return nil, syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+	return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 }
 
 func addEvent(pid int64, kind string, v any) {
-	if pid <= 0 { // company-level runs (website scans) have no chat
+	if pid < 0 { // company-level runs (website scans) have no chat; 0 is the assistant
 		return
 	}
 	b, _ := json.Marshal(v)

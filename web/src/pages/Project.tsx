@@ -394,6 +394,8 @@ function BriefCard({ p, meta, reload, onDelete }: { p: Project; meta?: Meta; rel
 
 const quickReplies = ["Looks good, render the final", "Make the hook punchier", "Make it shorter", "Try a different hook moment", "Bigger, bolder captions"];
 
+const toolLabel = (name: string) => name.replace(/^mcp__37studio__/, "").replaceAll("_", " ");
+
 const toolIcon = (name: string) =>
   name === "Bash" ? TerminalWindowIcon :
   ["Edit", "Write", "MultiEdit", "NotebookEdit"].includes(name) ? PencilLineIcon :
@@ -403,7 +405,7 @@ const toolIcon = (name: string) =>
   name.startsWith("Web") ? GlobeIcon :
   name === "TodoWrite" ? ListChecksIcon : WrenchIcon;
 
-type Parsed = { id: number; kind: string; b: any };
+export type Parsed = { id: number; kind: string; b: any };
 
 // Absolute project paths are noise for an editor: show "comp/index.html", not "/home/…/projects/1/comp/index.html".
 const tidy = (s = "") => s.replace(/\/\S*?\/(projects|tenants)\/\d+\//g, "");
@@ -557,7 +559,7 @@ function Chat({ p, events, qualities, onSend, onStop }: {
   );
 }
 
-function ToolGroup({ tools, open }: { tools: Parsed[]; open: boolean }) {
+export function ToolGroup({ tools, open }: { tools: Parsed[]; open: boolean }) {
   const last = [...tools].reverse().find((t) => t.kind === "tool") ?? tools[tools.length - 1];
   const steps = tools.filter((t) => t.kind === "tool").length;
   return (
@@ -572,7 +574,7 @@ function ToolGroup({ tools, open }: { tools: Parsed[]; open: boolean }) {
           if (t.kind === "tool_error") return <div key={t.id} className="msg-tool err" title="The agent saw this and retried"><span className="mono">{tidy(t.b.text)}</span></div>;
           const I = toolIcon(t.b.name);
           return (
-            <div key={t.id} className="msg-tool"><I size={13} /><b>{t.b.name}</b><span className="mono ellipsis" title={t.b.summary}>{tidy(t.b.summary)}</span></div>
+            <div key={t.id} className="msg-tool"><I size={13} /><b>{toolLabel(t.b.name)}</b><span className="mono ellipsis" title={t.b.summary}>{tidy(t.b.summary)}</span></div>
           );
         })}
       </div>
@@ -582,7 +584,7 @@ function ToolGroup({ tools, open }: { tools: Parsed[]; open: boolean }) {
 
 const imageLine = /^\[image: (chat\/[^\]]+)\]$/;
 
-function EventView({ e, pid }: { e: Parsed; pid: number }) {
+export function EventView({ e, pid }: { e: Parsed; pid: number }) {
   switch (e.kind) {
     case "user": {
       const lines: string[] = e.b.text.split("\n");
@@ -647,10 +649,12 @@ function Md({ text }: { text: string }) {
 }
 
 function inline(s: string): ReactNode[] {
-  return s.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((part, i) =>
-    part.length > 4 && part.startsWith("**") && part.endsWith("**") ? <strong key={i}>{part.slice(2, -2)}</strong> :
-    part.length > 2 && part.startsWith("`") && part.endsWith("`") ? <code key={i}>{part.slice(1, -1)}</code> : part
-  );
+  return s.split(/(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\((?:#\/|https?:\/\/)[^)\s]+\))/g).map((part, i) => {
+    const link = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (link) return <a key={i} href={link[2]} {...(link[2].startsWith("#") ? {} : { target: "_blank", rel: "noreferrer" })}>{link[1]}</a>;
+    return part.length > 4 && part.startsWith("**") && part.endsWith("**") ? <strong key={i}>{part.slice(2, -2)}</strong> :
+    part.length > 2 && part.startsWith("`") && part.endsWith("`") ? <code key={i}>{part.slice(1, -1)}</code> : part;
+  });
 }
 
 /**
