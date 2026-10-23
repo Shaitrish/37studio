@@ -62,6 +62,7 @@ type license struct {
 	Email   string `json:"email"`
 	Issued  string `json:"issued"`
 	Expires string `json:"expires,omitempty"` // last day it works (6- or 12-month plans); empty = never
+	Test    bool   `json:"test,omitempty"`    // issued by the payment sandbox: proves the checkout works, unlocks nothing
 }
 
 var errExpired = errors.New("expired")
@@ -81,6 +82,9 @@ func parseLicense(key string) (*license, error) {
 	var l license
 	if err := json.Unmarshal(payload, &l); err != nil {
 		return nil, err
+	}
+	if l.Test {
+		return nil, errors.New("that is a test key from the payment sandbox, not a license")
 	}
 	// ponytail: checked against this computer's clock; the Worker checks the same date with its own clock.
 	if end, err := time.Parse(time.DateOnly, l.Expires); l.Expires != "" && (err != nil || time.Now().After(end.AddDate(0, 0, 1))) {

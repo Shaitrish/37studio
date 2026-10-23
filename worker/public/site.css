@@ -337,3 +337,23 @@ pre.cmd { background: var(--ink); color: #f4f3f6; border-radius: 12px; padding: 
 @media (min-width: 640px) { .req { grid-template-columns: 1fr 1fr; } }
 .req div { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 14.5px; color: var(--fg2); }
 .req b { display: block; color: var(--ink); }
+
+/* buy page and order pages */
+.keybox { width: 100%; font: 13px/1.6 "Geist Mono", monospace; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--ink); resize: none; word-break: break-all; }
+.buy { display: grid; gap: 20px; }
+@media (min-width: 900px) { .buy { grid-template-columns: 7fr 5fr; align-items: start; } }
+.choice-row { display: grid; gap: 10px; }
+@media (min-width: 560px) { .choice-row { grid-template-columns: 1fr 1fr; } }
+.pick { position: relative; display: block; border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; background: var(--card); cursor: pointer; }
+.pick input { position: absolute; opacity: 0; }
+.pick b { display: block; font-size: 17px; }
+.pick span { color: var(--muted); font-size: 14px; }
+.pick em { font-style: normal; color: var(--ember-ink); font-size: 13px; font-weight: 500; }
+.pick:has(input:checked) { border-color: var(--ember); box-shadow: 0 0 0 3px rgba(212,80,42,.15); }
+.field { display: grid; gap: 6px; margin-top: 14px; font-size: 14px; font-weight: 500; }
+.field input { font: 15px Geist, sans-serif; padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); }
+.field input:focus { outline: 2px solid var(--ember); outline-offset: 1px; }
+.bank { display: grid; gap: 0; margin-top: 10px; }
+.bank div { display: grid; grid-template-columns: 140px 1fr; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); font-size: 14.5px; }
+.bank dt { color: var(--muted); }
+.bank dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }

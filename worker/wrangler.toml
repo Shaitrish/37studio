@@ -11,6 +11,8 @@ binding = "ASSETS"
 META_APP_ID = "2057436148296558"
 # Leaked or refunded keys: the first 16 characters after the last dot of each key, comma-separated. Redeploy after editing.
 REVOKED_LICENSES = ""
+# "live" charges real money through SSLCommerz; anything else uses its sandbox (pay.js).
+SSLCZ_MODE = "sandbox"
 
 # WhatsApp messages from Meta's webhook, held until each copy pulls them (schema.sql)
 [[d1_databases]]

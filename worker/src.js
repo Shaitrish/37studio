@@ -4,10 +4,13 @@
 //   GET  /webhooks/meta         Meta's webhook check (hub.challenge)
 //   POST /webhooks/meta         Meta's webhooks: WhatsApp messages are held in D1 for 30 days
 //   GET  /whatsapp/messages     a copy pulls its number's messages; its WhatsApp token proves the number is its own
+//   POST /pay/start, /pay/return, /pay/ipn, GET /pay/order    buying a license (pay.js; the form is public/buy.html)
 //   anything else               static files in public/ (download page, launcher bundle)
 // Secrets (set with `npx wrangler secret put NAME`): META_APP_SECRET, META_VERIFY_TOKEN. Vars in wrangler.toml: META_APP_ID,
 // REVOKED_LICENSES (comma-separated first 16 characters of a key's signature, for leaked keys).
 // The Facebook login and the WhatsApp relay only serve licensed copies: a patched app can't get past this.
+
+import { buy, orderPage, payBack } from "./pay.js";
 
 const GRAPH = "https://graph.facebook.com/v26.0";
 const LICENSE_PUB = "/4H+3jLcxlI0cnvC94wpnc4Doqa2iActEj2Nq5XoKn8="; // same key as edition.go
@@ -20,6 +23,9 @@ export default {
     if (url.pathname === "/oauth/meta/token" && req.method === "POST") return metaToken(req, env);
     if (url.pathname === "/webhooks/meta") return webhook(req, env, url);
     if (url.pathname === "/whatsapp/messages" && req.method === "GET") return waMessages(req, env, url);
+    if (url.pathname === "/pay/start" && req.method === "POST") return buy(req, env); // /buy itself is the static form page
+    if ((url.pathname === "/pay/return" || url.pathname === "/pay/ipn") && req.method === "POST") return payBack(req, env, url.pathname === "/pay/ipn");
+    if (url.pathname === "/pay/order") return orderPage(env, url);
     return env.ASSETS.fetch(req);
   },
 };
@@ -95,8 +101,8 @@ async function licensed(req, env) {
     const key = await crypto.subtle.importKey("raw", b64(LICENSE_PUB), { name: "Ed25519" }, false, ["verify"]);
     if (!(await crypto.subtle.verify({ name: "Ed25519" }, key, b64(parts[2]), b64(parts[1])))) return false;
     // 6- and 12-month plans carry their last day; checked with our clock, so changing the PC's date doesn't help.
-    const { expires } = JSON.parse(new TextDecoder().decode(b64(parts[1])));
-    return !expires || Date.now() < Date.parse(expires + "T23:59:59Z");
+    const { expires, test } = JSON.parse(new TextDecoder().decode(b64(parts[1])));
+    return !test && (!expires || Date.now() < Date.parse(expires + "T23:59:59Z"));
   } catch {
     return false;
   }

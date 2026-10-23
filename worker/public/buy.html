@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buy 37Studio</title>
+<meta name="description" content="Buy a 37Studio license: 6 months for ৳5,000 or a year for ৳8,000. Pay by bKash, Nagad or card in Bangladesh, or by bank transfer from abroad.">
+<meta name="theme-color" content="#fbfaf8">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav scrolled" id="top">
+  <div class="wrap">
+    <a class="brand" href="/"><img src="/favicon.svg" alt="">37Studio <small>by Shaitrish</small></a>
+    <nav aria-label="Pages">
+      <a href="/#loop">How it works</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/setup">Setup guide</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+    <div class="right"><a class="btn sm ink" href="/37studio.zip" download><svg><use href="#i-down"/></svg>Download</a></div>
+  </div>
+</header>
+
+<main>
+<section class="doc-hero">
+  <div class="wrap">
+    <span class="eyebrow">Buy a license</span>
+    <h1 style="margin-top:14px">Get 37Studio</h1>
+    <p class="lead">Six months for ৳5,000 or a year for ৳8,000, with every feature and every update while it runs. Pay in Bangladesh and your license key appears right away.</p>
+  </div>
+</section>
+
+<div class="wrap" style="padding-top:48px;padding-bottom:96px">
+  <div class="buy">
+    <form class="card" style="padding:28px" method="post" action="/pay/start" id="buy">
+      <h2 style="font-size:24px">Pay from Bangladesh</h2>
+      <p class="muted" style="margin-top:6px;font-size:15px">bKash, Nagad, Rocket, cards and internet banking, through SSLCommerz.</p>
+      <div class="choice-row" style="margin-top:18px">
+        <label class="pick"><input type="radio" name="plan" value="6m" checked><b>6 months</b><span>৳5,000 · every feature</span></label>
+        <label class="pick"><input type="radio" name="plan" value="12m"><b>1 year</b><span>৳8,000 · </span><em>save ৳2,000</em></label>
+      </div>
+      <label class="field">Name on the license<input name="name" required maxlength="80" autocomplete="name" placeholder="Your name or your business"></label>
+      <label class="field">Email<input name="email" type="email" required maxlength="120" autocomplete="email" placeholder="you@example.com"></label>
+      <label class="field">Phone<input name="phone" type="tel" required pattern="\+?[0-9 -]{8,16}" autocomplete="tel" placeholder="01XXXXXXXXX"></label>
+      <button class="btn ink" type="submit" style="margin-top:20px;width:100%;justify-content:center" id="pay">Pay ৳5,000</button>
+      <p class="muted" style="margin-top:12px;font-size:13.5px">Your key shows on the next page as soon as the payment goes through. By buying you agree to the <a href="/terms">terms</a>.</p>
+    </form>
+
+    <div class="card" style="padding:28px" id="abroad">
+      <h2 style="font-size:24px">Paying from outside Bangladesh</h2>
+      <p class="muted" style="margin-top:6px;font-size:15px">Send <b>$40</b> for 6 months or <b>$65</b> for a year by bank transfer. Wise is usually the cheapest way; a SWIFT wire works too. Please cover the transfer fees so the full amount arrives.</p>
+      <dl class="bank">
+        <div><dt>Account name</dt><dd>MD JAHANGIR HOSSAIN</dd></div>
+        <div><dt>Account number</dt><dd>2066883550001</dd></div>
+        <div><dt>Bank</dt><dd>BRAC Bank PLC</dd></div>
+        <div><dt>Branch</dt><dd>Shyamoli Branch, Dhaka</dd></div>
+        <div><dt>SWIFT / BIC</dt><dd>BRAKBDDH</dd></div>
+        <div><dt>Routing number</dt><dd>060264307 (for transfers inside Bangladesh)</dd></div>
+        <div><dt>Beneficiary address</dt><dd>H23, Shekhertek 12, Mohammadpur, Dhaka 1207, Bangladesh</dd></div>
+      </dl>
+      <p style="margin-top:16px;font-size:15px;color:var(--fg2)">Then email the receipt with your name, email and plan to
+        <a href="mailto:jahangir@shaitrish.com?subject=37Studio%20license%20payment&body=Name%20on%20the%20license%3A%0AEmail%3A%0APlan%20(6%20months%20or%201%20year)%3A%0A%0A(Attach%20your%20transfer%20receipt)" style="color:var(--ember-ink)">jahangir@shaitrish.com</a>.
+        We send your license key within one working day.</p>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="brand" href="/"><img src="/favicon.svg" alt="">37Studio <small>by Shaitrish</small></a>
+      <p style="margin-top:12px">Made in Dhaka by <a href="https://shaitrish.com" style="text-decoration:underline;text-underline-offset:3px">Shaitrish</a>.</p>
+    </div>
+    <div class="links">
+      <a href="/">Home</a>
+      <a href="/setup">Setup guide</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="/terms">Terms</a>
+      <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a>
+    </div>
+  </div>
+</footer>
+<script>
+  // The button shows the price of the plan that's picked.
+  const pay = document.getElementById("pay");
+  document.querySelectorAll('input[name=plan]').forEach((r) => r.addEventListener("change", () => (pay.textContent = r.value === "12m" ? "Pay ৳8,000" : "Pay ৳5,000")));
+  if (location.hash === "#yearly") document.querySelector('input[value="12m"]').click();
+</script>
+</body>
+</html>
