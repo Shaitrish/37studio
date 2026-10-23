@@ -171,6 +171,14 @@
   .plan .big { font: 600 44px/1 Geist, sans-serif; letter-spacing: -0.04em; margin: 18px 0 6px; }
   .plan .ctas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
   .plan.dark .btn { border-color: #3a3744; background: #1f1c27; color: #fff; }
+  .plans { display: grid; gap: 10px; margin: 18px 0 14px; }
+  .planrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; border: 1px solid #3a3744; border-radius: 14px; padding: 14px 16px; }
+  .planrow b { display: block; font-size: 18px; font-weight: 600; }
+  .planrow span { font-size: 13.5px; color: #c9c6d1; }
+  .planrow .save { color: #f0a487; font-weight: 500; }
+  .planrow.best { border-color: var(--ember); background: rgba(212,80,42,.1); }
+  .amt { font: 600 28px/1.1 Geist, sans-serif; letter-spacing: -0.03em; text-align: right; white-space: nowrap; }
+  .amt small { display: block; font-size: 12.5px; font-weight: 400; letter-spacing: 0; color: #c9c6d1; margin-top: 3px; }
   .plan.dark .btn.ember { background: var(--ember); border-color: var(--ember); }
   .plan.dark .btn.ember:hover { background: #e05a33; }
   .dl { list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 16px; counter-reset: d; }

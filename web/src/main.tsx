@@ -6,7 +6,7 @@ import {
 } from "@phosphor-icons/react";
 import "@hyperframes/player";
 import "./styles.css";
-import { api, fail, License, licenseURL, setDisplay, setToast, toast, useApi } from "./api";
+import { api, fail, License, licenseDaysLeft, licenseURL, setDisplay, setToast, toast, useApi } from "./api";
 import { Mark, Modal } from "./ui";
 import Overview from "./pages/Overview";
 import Projects from "./pages/Projects";
@@ -65,7 +65,7 @@ function LicenseDialog({ message, onClose, onActivated }: { message: string; onC
       footer={<><button className="btn" onClick={onClose}>Not now</button>
         <a className="btn primary" href={licenseURL} target="_blank" rel="noreferrer">Get a license</a></>}>
       <div className="stack">
-        <p className="muted" style={{ margin: 0 }}>A one-time license unlocks unlimited videos, Autopilot, publishing and inbox auto-replies, with every future update included.</p>
+        <p className="muted" style={{ margin: 0 }}>A license for 6 months or a year unlocks unlimited videos, Autopilot, publishing and inbox auto-replies, with every update along the way.</p>
         <div className="row wrap">
           <input className="input mono spacer" value={key} onChange={(e) => setKey(e.target.value)} placeholder="Already have a key? Paste it here (37S1.…)" aria-label="License key" style={{ minWidth: 240 }} />
           <button className="btn" disabled={!key.trim()} onClick={activate}>Activate</button>
@@ -155,7 +155,8 @@ function App() {
               <SidebarSimpleIcon size={18} /> <span className="nav-label">Expand</span>
             </a>
             {upd?.newer && <a className="who" href="#/settings" style={{ color: "var(--primary)" }}>Version {upd.latest} available</a>}
-            <a className="who" href="#/settings">{lic?.valid ? <><span className="dot" />{lic.name}</> : `Free trial · ${lic?.trial_left ?? 0} of ${lic?.trial ?? 2} videos left`}</a>
+            <a className="who" href="#/settings">{lic?.valid ? <><span className="dot" />{lic.name}{(licenseDaysLeft(lic) ?? 99) <= 14 && ` · ends in ${licenseDaysLeft(lic)} days`}</>
+              : lic?.expired ? "License ended · renew in Settings" : `Free trial · ${lic?.trial_left ?? 0} of ${lic?.trial ?? 2} videos left`}</a>
           </div>
         </aside>
         <main className="main">{page}</main>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { CheckCircleIcon, XCircleIcon } from "@phosphor-icons/react";
-import { api, fail, languageName, Meta, money, setDisplay, toast, useApi, Voice, License, licenseURL } from "../api";
+import { api, fail, languageName, Meta, money, setDisplay, toast, useApi, Voice, License, licenseURL, licenseDaysLeft, date } from "../api";
 import { Field, Seg } from "../ui";
 
 export default function Settings() {
@@ -172,11 +172,15 @@ function LicenseSection() {
       <div className="card-h" style={{ display: "block" }}><h2>License & updates</h2></div>
       <div className="card-b stack" style={{ gap: 12 }}>
         {lic?.valid ? (
-          <p className="row" style={{ gap: 8 }}><CheckCircleIcon size={16} color="var(--success)" /> Licensed to <strong>{lic.name}</strong>{lic.email && <span className="muted">· {lic.email}</span>}</p>
+          <p className="row wrap" style={{ gap: 8 }}><CheckCircleIcon size={16} color="var(--success)" /> Licensed to <strong>{lic.name}</strong>{lic.email && <span className="muted">· {lic.email}</span>}
+            <span className="muted">· {lic.expires ? `until ${date(lic.expires)}` : "no end date"}</span>
+            {(licenseDaysLeft(lic) ?? 99) <= 14 && <a href={licenseURL} target="_blank" rel="noreferrer">Renew</a>}</p>
         ) : (<>
           <p className="small muted" style={{ margin: 0 }}>
-            Free trial: {lic?.trial_left ?? 0} of {lic?.trial ?? 2} videos left. A license unlocks unlimited videos, Autopilot, publishing and
-            inbox auto-replies. <a href={licenseURL} target="_blank" rel="noreferrer">Get a license</a>
+            {lic?.expired
+              ? <>Your license for {lic.name} ended on {date(lic.expired)}. Renew it to keep making videos, publishing and using Autopilot and auto-replies; your work is all still here. </>
+              : <>Free trial: {lic?.trial_left ?? 0} of {lic?.trial ?? 2} videos left. A license (6 months or a year) unlocks unlimited videos, Autopilot, publishing and inbox auto-replies. </>}
+            <a href={licenseURL} target="_blank" rel="noreferrer">{lic?.expired ? "Renew" : "Get a license"}</a>
           </p>
           <div className="row wrap">
             <input className="input mono spacer" value={key} onChange={(e) => setKey(e.target.value)} placeholder="Paste your license key (37S1.…)" aria-label="License key" style={{ minWidth: 260 }} />

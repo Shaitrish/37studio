@@ -47,17 +47,24 @@ func trialLeft() int {
 
 // needLicense is the 402 the UI turns into the "Activate 37Studio" dialog.
 func needLicense(what string) error {
-	if licensed() {
+	l, err := parseLicense(setting("license"))
+	if err == nil {
 		return nil
+	}
+	if errors.Is(err, errExpired) {
+		return apiErr{http.StatusPaymentRequired, what + " needs an active license. Yours ended on " + l.Expires + "; renew it at " + licenseURL}
 	}
 	return apiErr{http.StatusPaymentRequired, what + " needs a 37Studio license. Add your key in Settings, or get one at " + licenseURL}
 }
 
 type license struct {
-	Name   string `json:"name"`
-	Email  string `json:"email"`
-	Issued string `json:"issued"`
+	Name    string `json:"name"`
+	Email   string `json:"email"`
+	Issued  string `json:"issued"`
+	Expires string `json:"expires,omitempty"` // last day it works (6- or 12-month plans); empty = never
 }
+
+var errExpired = errors.New("expired")
 
 // parseLicense checks a key of the form 37S1.<payload>.<signature> (both base64url) against licensePub.
 func parseLicense(key string) (*license, error) {
@@ -72,15 +79,26 @@ func parseLicense(key string) (*license, error) {
 		return nil, errors.New("that license key is not valid")
 	}
 	var l license
-	return &l, json.Unmarshal(payload, &l)
+	if err := json.Unmarshal(payload, &l); err != nil {
+		return nil, err
+	}
+	// ponytail: checked against this computer's clock; the Worker checks the same date with its own clock.
+	if end, err := time.Parse(time.DateOnly, l.Expires); l.Expires != "" && (err != nil || time.Now().After(end.AddDate(0, 0, 1))) {
+		return &l, fmt.Errorf("this license %w on %s; renew it at %s", errExpired, l.Expires, licenseURL)
+	}
+	return &l, nil
 }
 
 func getLicense(r *http.Request) (any, error) {
 	l, err := parseLicense(setting("license"))
 	if err != nil {
-		return map[string]any{"valid": false, "trial_left": trialLeft(), "trial": trialProjects, "url": licenseURL}, nil
+		out := map[string]any{"valid": false, "trial_left": trialLeft(), "trial": trialProjects, "url": licenseURL}
+		if errors.Is(err, errExpired) {
+			out["name"], out["expired"] = l.Name, l.Expires
+		}
+		return out, nil
 	}
-	return map[string]any{"valid": true, "name": l.Name, "email": l.Email}, nil
+	return map[string]any{"valid": true, "name": l.Name, "email": l.Email, "expires": l.Expires}, nil
 }
 
 func putLicense(r *http.Request) (any, error) {
@@ -100,15 +118,21 @@ func licenseCLI(args []string) int {
 	fs := flag.NewFlagSet("license", flag.ExitOnError)
 	name := fs.String("name", "", "buyer's name")
 	email := fs.String("email", "", "buyer's email")
+	months := fs.Int("months", 0, "plan length: 6 or 12 (0 = never expires, for your own copies)")
 	keyFile := fs.String("key", filepath.Join(os.Getenv("HOME"), ".config", "37studio", "license-private.key"), "signing key")
 	fs.Parse(args)
 	raw, err := os.ReadFile(*keyFile)
 	priv, err2 := base64.StdEncoding.DecodeString(strings.TrimSpace(string(raw)))
 	if err != nil || err2 != nil || len(priv) != ed25519.PrivateKeySize || *name == "" {
-		fmt.Fprintln(os.Stderr, "usage: 37studio license --name NAME [--email EMAIL]  (needs the private key at", *keyFile+")")
+		fmt.Fprintln(os.Stderr, "usage: 37studio license --name NAME [--email EMAIL] [--months 6|12]  (needs the private key at", *keyFile+")")
 		return 1
 	}
-	payload, _ := json.Marshal(license{*name, *email, time.Now().Format(time.DateOnly)})
+	l := license{Name: *name, Email: *email, Issued: time.Now().Format(time.DateOnly)}
+	if *months > 0 {
+		l.Expires = time.Now().AddDate(0, *months, 0).Format(time.DateOnly)
+		fmt.Fprintln(os.Stderr, "valid until", l.Expires)
+	}
+	payload, _ := json.Marshal(l)
 	fmt.Printf("37S1.%s.%s\n", base64.RawURLEncoding.EncodeToString(payload), base64.RawURLEncoding.EncodeToString(ed25519.Sign(priv, payload)))
 	return 0
 }

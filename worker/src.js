@@ -84,7 +84,8 @@ async function waMessages(req, env, url) {
   return json({ messages: results.map((r) => ({ seq: r.seq, ...JSON.parse(r.body) })) });
 }
 
-// licensed checks the X-37Studio-License header: 37S1.<payload>.<signature>, both base64url, Ed25519-signed.
+// licensed checks the X-37Studio-License header: 37S1.<payload>.<signature>, both base64url, Ed25519-signed,
+// not revoked and not past its end date.
 async function licensed(req, env) {
   const parts = (req.headers.get("x-37studio-license") || "").trim().split(".");
   if (parts.length !== 3 || parts[0] !== "37S1") return false;
@@ -92,7 +93,10 @@ async function licensed(req, env) {
   try {
     const b64 = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), (c) => c.charCodeAt(0));
     const key = await crypto.subtle.importKey("raw", b64(LICENSE_PUB), { name: "Ed25519" }, false, ["verify"]);
-    return await crypto.subtle.verify({ name: "Ed25519" }, key, b64(parts[2]), b64(parts[1]));
+    if (!(await crypto.subtle.verify({ name: "Ed25519" }, key, b64(parts[2]), b64(parts[1])))) return false;
+    // 6- and 12-month plans carry their last day; checked with our clock, so changing the PC's date doesn't help.
+    const { expires } = JSON.parse(new TextDecoder().decode(b64(parts[1])));
+    return !expires || Date.now() < Date.parse(expires + "T23:59:59Z");
   } catch {
     return false;
   }
