@@ -19,6 +19,8 @@ Videos made, posted and answered, with your own keys and no monthly bill.</p>
   <a href="https://studio.shaitrish.com/donate">Donate</a>
 </p>
 
+[![37Studio in 14 seconds: one person, many clients, every Page posted](https://studio.shaitrish.com/intro.gif)](https://studio.shaitrish.com/#intro)
+
 ![The project page: the editor agent's chat beside a live preview of a reel](worker/public/shots/project.webp)
 
 37Studio makes videos for a business and runs its social accounts, from one app on your own computer. Add a company from its website and it builds a brand library and a knowledge base. Brief a video and Claude Code, the editor agent, builds it as a [HyperFrames](https://github.com/heygen-com/hyperframes) composition in that brand, checks its own frames and renders it on your machine. Publish it to the company's accounts with a caption written for each platform, now, on a schedule or on Autopilot. Messages and comments land in one inbox with replies drafted from the knowledge base.
