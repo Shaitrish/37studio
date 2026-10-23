@@ -53,6 +53,8 @@ export default function ProjectPage({ id }: { id: number }) {
   }, [p?.running, !!p?.render, reload]);
 
   useEffect(() => { if (p?.composition && !shownComp) setShownComp(p.composition); }, [p?.composition]);
+  const hasVideos = !!p?.children?.length;
+  useEffect(() => { if (hasVideos) setTab((t) => (t === "brief" ? "videos" : t)); }, [hasVideos]);
 
   if (error) return <div className="page"><Empty icon={<FilmSlateIcon size={28} />} title="Project not found"><a className="btn" href="#/projects">Back to projects</a></Empty></div>;
   if (!p) return null;
@@ -92,6 +94,7 @@ export default function ProjectPage({ id }: { id: number }) {
             <a href="#/projects">Projects</a><CaretRightIcon size={14} />
             <a href={`#/clients/${p.tenant_id}`}>{p.tenant_name}</a>
             {p.campaign_id && <><CaretRightIcon size={14} /><a href={`#/campaigns/${p.campaign_id}`}>{p.campaign_name}</a></>}
+            {p.parent_id && <><CaretRightIcon size={14} /><a href={`#/projects/${p.parent_id}`} title="The project this video was cut from">{p.parent_title}</a></>}
           </div>
           <div className="row">
             <h1 className="ellipsis" title={p.title}>{p.title}</h1>
@@ -169,10 +172,21 @@ export default function ProjectPage({ id }: { id: number }) {
 
           <div className="card tabbed">
             <div className="tabs" style={{ padding: "0 8px" }}>
-              {[["brief", "Brief"], ["sources", "Media"], ["generate", `Generate${p.generated?.length ? ` (${p.generated.length})` : ""}`], ["posts", `Posts${p.posts?.length ? ` (${p.posts.length})` : ""}`], ["cost", `Cost · ${cash(p.quote.cost)}`]].map(([k, l]) => (
+              {[...(p.children?.length ? [["videos", `Videos (${p.children.length})`]] : []), ["brief", "Brief"], ["sources", "Media"], ["generate", `Generate${p.generated?.length ? ` (${p.generated.length})` : ""}`], ["posts", `Posts${p.posts?.length ? ` (${p.posts.length})` : ""}`], ["cost", `Cost · ${cash(p.quote.cost)}`]].map(([k, l]) => (
                 <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{l}</button>
               ))}
             </div>
+            {tab === "videos" && (
+              <div className="filelist">
+                <p className="small faint" style={{ margin: 0, padding: "10px 14px" }}>Cut from this source and queued by the agent. The app makes and exports them one at a time; finished ones are also in the Library.</p>
+                {p.children?.map((c) => (
+                  <a className="item" key={c.id} href={`#/projects/${c.id}`}>
+                    <span className="spacer ellipsis">{c.title}</span>
+                    <Status value={projectStatus({ ...c, running: false })} />
+                  </a>
+                ))}
+              </div>
+            )}
             {tab === "brief" && <BriefCard p={p} meta={meta} reload={reload} onDelete={remove} />}
             {tab === "sources" && <>
               <Sources p={p} reload={reload} />

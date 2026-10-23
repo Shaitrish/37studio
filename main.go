@@ -50,6 +50,9 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == "gen" {
 		os.Exit(genCLI(os.Args[2:]))
 	}
+	if len(os.Args) > 1 && os.Args[1] == "clip" {
+		os.Exit(clipCLI(os.Args[2:]))
+	}
 	if len(os.Args) > 1 && os.Args[1] == "transcribe" {
 		os.Exit(transcribeCLI(os.Args[2:]))
 	}
@@ -67,6 +70,7 @@ func main() {
 	db.Exec(`update tenants set scan_status='failed', scan_note='Interrupted by a server restart.' where scan_status='running'`)
 	go postLoop()
 	go autopilotLoop()
+	go clipLoop()
 	go inboxLoop()
 
 	mux := http.NewServeMux()
@@ -110,6 +114,7 @@ func main() {
 	mux.HandleFunc("DELETE /api/projects/{id}/studio", api(closeStudio))
 
 	mux.HandleFunc("GET /api/costs", api(getCosts))
+	mux.HandleFunc("GET /api/library", api(listLibrary))
 	mux.HandleFunc("GET /api/keys", api(listKeys))
 	mux.HandleFunc("PUT /api/keys", api(putKeys))
 	mux.HandleFunc("GET /api/license", api(getLicense))

@@ -20,7 +20,11 @@ export interface Project {
   generated?: (FileInfo & { provider: string; item: string; cost: number })[]; comp_assets?: FileInfo[]; outputs?: FileInfo[]; drafts?: FileInfo[]; composition?: string;
   posts?: Post[]; social?: Captions | null;
   autopilot_id?: number | null; autopilot_slot?: string; autopilot_stage?: string;
+  // Several videos from one source (clip.go): the source lists its videos; each video names its source.
+  parent_id?: number | null; parent_title?: string; clip_stage?: "" | "queued" | "building" | "rendering" | "done" | "failed";
+  children?: Pick<Project, "id" | "title" | "status" | "clip_stage">[];
 }
+export interface LibraryItem { file: FileInfo; project_id: number; title: string; tenant_id: number; tenant_name: string }
 export type Platform = "facebook" | "instagram" | "youtube" | "tiktok" | "whatsapp";
 export interface SocialAccount { id: number; tenant_id: number; platform: Platform; account_id: string; name: string; picture: string; created_at: string }
 export interface Post {

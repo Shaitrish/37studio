@@ -224,6 +224,12 @@ func getProject(r *http.Request) (any, error) {
 		})
 		p["composition"] = fmt.Sprintf("%s/comp/index.html?v=%d", base, v)
 	}
+	p["children"], _ = rows("select id,title,status,clip_stage from projects where parent_id=? order by id", id)
+	if parent := p["parent_id"]; parent != nil {
+		if t, err := row("select title from projects where id=?", parent); err == nil {
+			p["parent_title"] = t["title"]
+		}
+	}
 	p["generated"] = generatedFiles(id, base)
 	p["comp_assets"] = listFiles(filepath.Join(dir, "comp", "assets"), base+"/comp/assets", true)
 	p["quote"] = quote(p)

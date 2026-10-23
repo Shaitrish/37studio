@@ -29,6 +29,7 @@ export function Modal({ title, sub, onClose, children, footer, size }: {
 
 const statusStyle: Record<string, [string, string]> = {
   draft: ["", "Draft"],
+  queued: ["blue", "Queued"],
   running: ["violet running", "Agent working"],
   review: ["amber", "In review"],
   delivered: ["green", "Delivered"],
@@ -49,7 +50,9 @@ export function Status({ value }: { value: string }) {
   return <span className={`pill ${cls}`}><span className="dot" />{label}</span>;
 }
 
-export const projectStatus = (p: Project) => (p.running ? "running" : p.status);
+// A video queued from a source shows its place in the queue until it's exported; "failed" too, so it stands out.
+export const projectStatus = (p: Pick<Project, "running" | "status" | "clip_stage">) =>
+  p.running ? "running" : p.clip_stage && p.clip_stage !== "done" ? p.clip_stage : p.status;
 
 export function Empty({ icon, title, children }: { icon: ReactNode; title: string; children?: ReactNode }) {
   return <div className="empty">{icon}<strong>{title}</strong>{children}</div>;

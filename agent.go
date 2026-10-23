@@ -125,6 +125,11 @@ Copy what you use into comp/assets/; never modify the library.
    npx hyperframes@{hf} catalog --query "<what the beat should show>" --json    then    npx hyperframes@{hf} add <name> --json
    Restyle what you install with the company's design.md colors and fonts so it looks like their brand, not the stock demo. Load /hyperframes-registry for wiring. Hand-build only when nothing fits.
 
+## Several videos from one source
+When the brief or the editor asks for several videos from one recording (one per solved question, topic or tip in a long class, say), don't build them in this project. Transcribe it, then plan the videos: for each, a title, the source range and the hook, numbered. Unless the brief says to go ahead, end your turn with that list and let the editor confirm or change it. Then queue each one:
+   37studio clip --title "<title>" --from HH:MM:SS --to HH:MM:SS --brief "<what it covers, the hook, the call to action, anything specific>"
+Each becomes its own project with this one's company, campaign, format, length and quality (--seconds sets another length). The app builds and exports them one after another, and the editor finds them in this project's Videos tab and in the Library. The new agent sees only its brief, the footage and the transcript, so make each brief complete. Finish with the numbered list you queued. A video that was itself queued from a source never queues more.
+
 ## The editor edits by hand too
 The editor can open comp/ in HyperFrames Studio, the timeline editor, and move, trim or split clips, change text, timing and audio themselves. Their edits are already on disk when your turn starts.
 - Start every turn in comp/ with: npx hyperframes@{hf} history --since mine --who agent   (what they changed since your last turn). Build on their edits; never revert them unless asked.
@@ -382,7 +387,7 @@ func drainQueue(id int64) {
 	delete(queued, id)
 	delete(queuedQ, id)
 	queueMu.Unlock()
-	defer func() { go autopilotAdvance(id) }() // every agent turn and render ends here
+	defer func() { go autopilotAdvance(id); go clipAdvance(id) }() // every agent turn and render ends here
 	if len(msgs) > 0 {
 		addEvent(id, "info", map[string]string{"text": "Sending what you typed while the agent was working."})
 		if err := startRun(id, strings.Join(msgs, "\n\n"), quality, false); err != nil {

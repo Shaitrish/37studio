@@ -7,7 +7,7 @@ import { presetIcon } from "./Projects";
 /** Answers collected one question at a time. */
 interface A {
   tenant?: number; campaign?: string; campaignText?: string; kind?: string; aspect?: string;
-  seconds?: number; brief?: string; files?: File[]; quality?: string; focus?: string; language?: string;
+  seconds?: number; brief?: string; files?: File[]; quality?: string; focus?: string; language?: string; count?: string;
 }
 type Opt = { value: string; label: string; sub?: string; icon?: ReactNode };
 interface Step {
@@ -29,6 +29,11 @@ const platforms: Opt[] = [
 ];
 const lengths = [15, 30, 45, 60, 90, 180];
 const secs = (n: number) => (n >= 60 ? `${n / 60} min` : `${n} seconds`);
+const counts: Opt[] = [
+  { value: "1", label: "One video" }, { value: "3", label: "3 videos" }, { value: "5", label: "5 videos" }, { value: "10", label: "10 videos" },
+  { value: "all", label: "As many as it has", sub: "e.g. one per solved question or topic" },
+];
+const many = (a: A) => !!a.count && a.count !== "1";
 
 export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: () => void; tenantId?: number; campaignId?: number }) {
   const { data: meta } = useApi<Meta>("/meta");
@@ -91,12 +96,16 @@ export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: ()
       show: (x) => platforms.find((p) => p.value === x.aspect)?.label ?? x.aspect ?? "",
     },
     {
-      key: "seconds", ask: "How long should it be?", skip: (x) => x.kind === "thumbnail",
+      key: "count", ask: "One video, or several from the same footage?", skip: (x) => x.kind === "thumbnail",
+      options: () => counts, show: (x) => counts.find((c) => c.value === x.count)?.label ?? "One video",
+    },
+    {
+      key: "seconds", ask: (x) => (many(x) ? "How long should each video be?" : "How long should it be?"), skip: (x) => x.kind === "thumbnail",
       options: () => lengths.map((n) => ({ value: String(n), label: secs(n), sub: n === preset?.seconds ? "suggested" : undefined })),
       show: (x) => secs(x.seconds ?? 0),
     },
     {
-      key: "brief", ask: (x) => (x.kind === "thumbnail" ? "What should the thumbnails say or show?" : "What's the video about?"),
+      key: "brief", ask: (x) => (x.kind === "thumbnail" ? "What should the thumbnails say or show?" : many(x) ? "What should the videos be about?" : "What's the video about?"),
       text: {
         placeholder: "Topic, the moment you want as the hook, the call to action, anything to avoid. No footage? Paste a landing page URL and the agent builds from it.",
         skip: "Let the agent decide from the knowledge base",
@@ -139,8 +148,10 @@ export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: ()
         const c = await api<Campaign>("/campaigns", { body: { tenant_id: a.tenant, name: campaignName || "New campaign", brief: a.campaignText } });
         campaign_id = c.id;
       }
+      // Several videos: the agent plans them from the footage and queues one project per video (clip.go).
+      const split = many(a) ? `Make ${a.count === "all" ? "a separate video for every strong moment in this footage (for example each solved question or topic)" : `${a.count} separate videos from this footage`}, each about ${secs(a.seconds ?? 60)}. Plan them from the transcript, then queue them without waiting for me.\n\n` : "";
       const p = await api<Project>("/projects", {
-        body: { tenant_id: a.tenant, campaign_id, title: title.trim() || "Untitled", kind: a.kind, aspect: a.aspect, seconds: a.kind === "thumbnail" ? 0 : a.seconds, quality: a.quality, brief: a.brief ?? "", focus: a.focus ?? "", language: a.language ?? "" },
+        body: { tenant_id: a.tenant, campaign_id, title: title.trim() || "Untitled", kind: a.kind, aspect: a.aspect, seconds: a.kind === "thumbnail" ? 0 : a.seconds, quality: a.quality, brief: split + (a.brief ?? ""), focus: a.focus ?? "", language: a.language ?? "" },
       });
       if (a.files?.length) {
         setBusy(`Uploading ${bytes(a.files.reduce((n, f) => n + f.size, 0))}…`);

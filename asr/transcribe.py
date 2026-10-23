@@ -100,7 +100,8 @@ def main():
     os.makedirs(a.out, exist_ok=True)
 
     st = os.stat(a.media)
-    key = hashlib.sha1(f"{os.path.abspath(a.media)}|{st.st_size}|{int(st.st_mtime)}|{model}|{a.language}".encode()).hexdigest()
+    # Not the path: videos queued from one class share its recording by hard link, and with it this transcript.
+    key = hashlib.sha1(f"{st.st_size}|{int(st.st_mtime)}|{model}|{a.language}".encode()).hexdigest()
     meta_path = os.path.join(a.out, "meta.json")
     if os.path.exists(meta_path) and os.path.exists(os.path.join(a.out, "transcript.json")):
         meta = json.load(open(meta_path))

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  ChartPieSliceIcon, ChatsCircleIcon, FilmSlateIcon, GearSixIcon, IconContext, MegaphoneIcon, MonitorIcon, MoonIcon, SidebarSimpleIcon,
+  ChartPieSliceIcon, ChatsCircleIcon, FilmSlateIcon, FilmStripIcon, GearSixIcon, IconContext, MegaphoneIcon, MonitorIcon, MoonIcon, SidebarSimpleIcon,
   SquaresFourIcon, SunIcon, UsersThreeIcon,
 } from "@phosphor-icons/react";
 import "@hyperframes/player";
@@ -17,11 +17,13 @@ import Costs from "./pages/Costs";
 import Campaigns, { CampaignPage } from "./pages/Campaigns";
 import Settings from "./pages/Settings";
 import Inbox from "./pages/Inbox";
+import Library from "./pages/Library";
 
 const nav = [
   { group: "Studio", items: [
     { path: "/", label: "Overview", icon: SquaresFourIcon },
     { path: "/projects", label: "Projects", icon: FilmSlateIcon },
+    { path: "/library", label: "Library", icon: FilmStripIcon },
     { path: "/campaigns", label: "Campaigns", icon: MegaphoneIcon },
     { path: "/clients", label: "Companies", icon: UsersThreeIcon },
   ] },
@@ -90,6 +92,7 @@ function App() {
       case "projects": return id ? <ProjectPage key={n} id={n} /> : <Projects />;
       case "clients": return id ? <ClientPage key={n} id={n} tab={sub} /> : <Clients />;
       case "campaigns": return id ? <CampaignPage key={n} id={n} /> : <Campaigns />;
+      case "library": return <Library />;
       case "costs": return <Costs />;
       case "inbox": return <Inbox />;
       case "settings": return <Settings />;

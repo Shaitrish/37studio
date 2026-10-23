@@ -179,6 +179,8 @@ func openDB() {
 		"alter table projects add column autopilot_id integer",
 		"alter table projects add column autopilot_slot text not null default ''",
 		"alter table projects add column autopilot_stage text not null default ''",
+		"alter table projects add column parent_id integer",
+		"alter table projects add column clip_stage text not null default ''",
 		"alter table tenants add column inbox_mode text not null default 'off'",
 	} {
 		db.Exec(m)
