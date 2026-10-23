@@ -141,7 +141,7 @@ sudo usermod -aG docker $USER</pre>
       <li><b>Claude:</b> choose one of the options below and paste it under <b>Keys</b>.</li>
     </ol>
     <h3>Option A: your Claude Pro or Max plan</h3>
-    <p>Open a terminal in the 37Studio folder (Windows: in the folder, Shift + right-click → <b>Open PowerShell window here</b>; Mac: right-click the folder → <b>New Terminal at Folder</b>) and run:</p>
+    <p>Already signed in to <b>Claude Desktop</b> or claude.ai? That sign-in can't be shared with 37Studio, but the same account works here. Open a terminal in the 37Studio folder (Windows 11: right-click inside the folder → <b>Open in Terminal</b>; Windows 10: Shift + right-click → <b>Open PowerShell window here</b>; Mac: right-click the folder → <b>New Terminal at Folder</b>) and run:</p>
     <pre class="cmd">docker compose exec studio claude setup-token</pre>
     <p>It shows a link. Open it, sign in to Claude, and paste the code back into the terminal. It prints a token starting with <code>sk-ant-oat</code>: paste that into <b>Settings → Keys → Claude subscription token</b>. If Claude Code is already installed on your computer, <code>claude setup-token</code> there gives the same token.</p>
     <div class="note">Anthropic's terms apply to using a Claude subscription in other apps. An API key (option B) is the fully supported route.</div>

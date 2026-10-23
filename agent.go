@@ -380,6 +380,9 @@ func startRun(id int64, text, quality string, announce bool) error {
 	if q.Harness == "opencode" {
 		return startOpenCode(id, p, q, text, announce)
 	}
+	if err := claudeReady(); err != nil {
+		return err
+	}
 	sid := str(p["session_id"])
 	prompt := text
 	if sid == "" {
@@ -498,6 +501,9 @@ func parseStream(pid, tenant int64, model string, r io.Reader) (result string) {
 				pid, tenant, "anthropic", model, tokens, ev.Cost)
 			addEvent(pid, "result", map[string]any{"cost": ev.Cost, "turns": ev.Turns, "ms": ev.Duration, "model": model, "harness": "claude",
 				"tokens": tokens, "error": ev.IsError, "subtype": ev.Subtype})
+			if h := claudeHint(ev.Result); ev.IsError && h != "" {
+				addEvent(pid, "error", map[string]string{"text": h})
+			}
 			result = ev.Result
 		}
 	}

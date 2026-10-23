@@ -127,10 +127,16 @@ func siteURL(s string) (*url.URL, error) {
 }
 
 func setScan(id int64, status, note string) {
+	if h := claudeHint(note); status == "failed" && h != "" {
+		note = h
+	}
 	db.Exec("update tenants set scan_status=?, scan_note=? where id=?", status, note, id)
 }
 
 func startScan(id int64, site, notes string) error {
+	if err := claudeReady(); err != nil {
+		return err
+	}
 	dir := tenantRoot(id)
 	for _, d := range assetDirs {
 		os.MkdirAll(filepath.Join(tenantDir(id), d), 0o755)

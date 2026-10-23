@@ -469,6 +469,9 @@ Reply with only this JSON object, no code fence:
 
 // claudeOnce runs one tool-less Claude turn (Sonnet, low effort) in dir and returns the text, its cost and token count.
 func claudeOnce(dir, prompt string) (text string, cost, tokens float64, err error) {
+	if err := claudeReady(); err != nil {
+		return "", 0, 0, err
+	}
 	cmd := exec.Command(claudeBin, "-p", "--output-format", "json", "--model", qualityByID("draft").Model, "--effort", "low", "--tools", "",
 		"--strict-mcp-config", "--settings", `{"disableAllHooks":true}`)
 	cmd.Dir = dir
@@ -486,6 +489,9 @@ func claudeOnce(dir, prompt string) (text string, cost, tokens float64, err erro
 		} `json:"usage"`
 	}
 	if json.Unmarshal(out, &res) != nil || res.IsError {
+		if h := claudeHint(res.Result + string(out)); h != "" {
+			return "", res.Cost, 0, errors.New(h)
+		}
 		return "", res.Cost, 0, fmt.Errorf("claude failed: %v %s", runErr, tail(or(res.Result, string(out)), 300))
 	}
 	return strings.TrimSpace(res.Result), res.Cost, res.Usage.In + res.Usage.Out + res.Usage.CacheW + res.Usage.CacheR, nil
