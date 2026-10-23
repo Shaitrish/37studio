@@ -8,6 +8,8 @@ vidbit
 worker/.wrangler/
 worker/node_modules/
 worker/public/37studio.zip
+# the 23 MB intro video stays out of git; release.sh deploys the maintainer's copy
+worker/public/intro.mp4
 # backups: they hold tokens, keys and people's details
 *-backup.json
 *.tgz
