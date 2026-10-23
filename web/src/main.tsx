@@ -6,8 +6,8 @@ import {
 } from "@phosphor-icons/react";
 import "@hyperframes/player";
 import "./styles.css";
-import { api, setDisplay, setToast, useApi } from "./api";
-import { Mark } from "./ui";
+import { api, fail, License, licenseURL, setDisplay, setToast, toast, useApi } from "./api";
+import { Mark, Modal } from "./ui";
 import Overview from "./pages/Overview";
 import Projects from "./pages/Projects";
 import ProjectPage from "./pages/Project";
@@ -55,6 +55,26 @@ function useHash() {
   return value;
 }
 
+/** Opens when the server answers 402: the free trial is used up, or a feature needs a license. */
+function LicenseDialog({ message, onClose, onActivated }: { message: string; onClose: () => void; onActivated: () => void }) {
+  const [key, setKey] = useState("");
+  const activate = () => api<License>("/license", { method: "PUT", body: { key } })
+    .then((l) => { toast(`Activated for ${l.name}. Thank you!`); onActivated(); }, fail);
+  return (
+    <Modal title="Activate 37Studio" sub={message.split(" Add your key")[0]} onClose={onClose}
+      footer={<><button className="btn" onClick={onClose}>Not now</button>
+        <a className="btn primary" href={licenseURL} target="_blank" rel="noreferrer">Get a license</a></>}>
+      <div className="stack">
+        <p className="muted" style={{ margin: 0 }}>A one-time license unlocks unlimited videos, Autopilot, publishing and inbox auto-replies, with every future update included.</p>
+        <div className="row wrap">
+          <input className="input mono spacer" value={key} onChange={(e) => setKey(e.target.value)} placeholder="Already have a key? Paste it here (37S1.…)" aria-label="License key" style={{ minWidth: 240 }} />
+          <button className="btn" disabled={!key.trim()} onClick={activate}>Activate</button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 function App() {
   const hash = useHash();
   const [, section, id, sub] = hash.split("/");
@@ -92,7 +112,13 @@ function App() {
     addEventListener("keydown", onKey);
     return () => removeEventListener("keydown", onKey);
   }, []);
-  const { data: lic } = useApi<{ valid: boolean; name?: string }>("/license");
+  const { data: lic, reload: reloadLic } = useApi<License>("/license");
+  const [needLicense, setNeedLicense] = useState<string>();
+  useEffect(() => {
+    const on = (e: Event) => setNeedLicense((e as CustomEvent<string>).detail || "This needs a 37Studio license.");
+    addEventListener("license-required", on);
+    return () => removeEventListener("license-required", on);
+  }, []);
   const { data: upd } = useApi<{ newer?: boolean; latest?: string }>("/update");
   const ThemeIcon = themeIcon[theme];
   const nextTheme = themes[(themes.indexOf(theme) + 1) % themes.length];
@@ -129,11 +155,12 @@ function App() {
               <SidebarSimpleIcon size={18} /> <span className="nav-label">Expand</span>
             </a>
             {upd?.newer && <a className="who" href="#/settings" style={{ color: "var(--primary)" }}>Version {upd.latest} available</a>}
-            <a className="who" href="#/settings">{lic?.valid ? <><span className="dot" />{lic.name}</> : "Not activated: add your license"}</a>
+            <a className="who" href="#/settings">{lic?.valid ? <><span className="dot" />{lic.name}</> : `Free trial · ${lic?.trial_left ?? 0} of ${lic?.trial ?? 2} videos left`}</a>
           </div>
         </aside>
         <main className="main">{page}</main>
         {toast && <div className={`toast ${toast.err ? "err" : ""}`} role="status">{toast.msg}</div>}
+        {needLicense && <LicenseDialog message={needLicense} onClose={() => setNeedLicense(undefined)} onActivated={() => { setNeedLicense(undefined); reloadLic(); }} />}
       </div>
     </IconContext.Provider>
   );

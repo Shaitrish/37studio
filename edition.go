@@ -24,7 +24,34 @@ const version = "0.3.0"
 var updateURL = env("STUDIO37_UPDATE_URL", "https://studio.shaitrish.com/version.json")
 
 // licensePub verifies license keys. The private half lives only on the release machine (~/.config/37studio).
-const licensePub = "/4H+3jLcxlI0cnvC94wpnc4Doqa2iActEj2Nq5XoKn8="
+// A var so tests can sign with their own key pair; the Worker on studio.shaitrish.com holds the same public key.
+var licensePub = "/4H+3jLcxlI0cnvC94wpnc4Doqa2iActEj2Nq5XoKn8="
+
+// Without a license: two videos to try it, no Autopilot, auto-replies or publishing. Facebook and WhatsApp
+// also need it server side: the Worker refuses unlicensed copies, so patching this file doesn't unlock them.
+const trialProjects = 2
+
+const licenseURL = "https://studio.shaitrish.com/#pricing"
+
+func licensed() bool {
+	_, err := parseLicense(setting("license"))
+	return err == nil
+}
+
+// trialLeft counts projects ever made, so deleting one doesn't hand the trial back.
+func trialLeft() int {
+	var n int
+	db.QueryRow("select max((select count(*) from projects), coalesce((select cast(value as integer) from settings where key='projects_made'), 0))").Scan(&n)
+	return max(0, trialProjects-n)
+}
+
+// needLicense is the 402 the UI turns into the "Activate 37Studio" dialog.
+func needLicense(what string) error {
+	if licensed() {
+		return nil
+	}
+	return apiErr{http.StatusPaymentRequired, what + " needs a 37Studio license. Add your key in Settings, or get one at " + licenseURL}
+}
 
 type license struct {
 	Name   string `json:"name"`
@@ -51,7 +78,7 @@ func parseLicense(key string) (*license, error) {
 func getLicense(r *http.Request) (any, error) {
 	l, err := parseLicense(setting("license"))
 	if err != nil {
-		return map[string]any{"valid": false}, nil
+		return map[string]any{"valid": false, "trial_left": trialLeft(), "trial": trialProjects, "url": licenseURL}, nil
 	}
 	return map[string]any{"valid": true, "name": l.Name, "email": l.Email}, nil
 }

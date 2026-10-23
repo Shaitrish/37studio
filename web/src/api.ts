@@ -46,9 +46,14 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
     body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
   });
   const data = await res.json().catch(() => null);
+  // 402: the trial is used up or the feature needs a license; main.tsx opens the activate dialog.
+  if (res.status === 402) dispatchEvent(new CustomEvent("license-required", { detail: data?.error }));
   if (!res.ok) throw new Error(data?.error ?? res.statusText);
   return data as T;
 }
+
+export interface License { valid: boolean; name?: string; email?: string; trial_left?: number; trial?: number; url?: string }
+export const licenseURL = "https://studio.shaitrish.com/#pricing";
 
 /** Multipart upload via XHR: fetch() can't report upload progress, and lectures are gigabytes. */
 export function upload(path: string, files: File[], onProgress?: (pct: number) => void): Promise<void> {

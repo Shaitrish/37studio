@@ -70,6 +70,11 @@ func saveTenant(r *http.Request) (any, error) {
 	if id == 0 && strings.TrimSpace(str(b["name"])) == "" {
 		return nil, bad("name is required")
 	}
+	if m := str(b["inbox_mode"]); m == "draft" || m == "send" {
+		if err := needLicense("Inbox auto-replies"); err != nil {
+			return nil, err
+		}
+	}
 	if id, err = save("tenants", tenantCols, id, b); err != nil {
 		return nil, err
 	}
@@ -239,6 +244,11 @@ func saveProject(r *http.Request) (any, error) {
 		if strings.TrimSpace(str(b["title"])) == "" || b["tenant_id"] == nil {
 			return nil, bad("company and title are required")
 		}
+		if trialLeft() == 0 {
+			if err := needLicense(fmt.Sprintf("Your free trial covers %d videos. Making more", trialProjects)); err != nil {
+				return nil, err
+			}
+		}
 		p := presetByID(str(b["kind"]))
 		if b["aspect"] == nil {
 			b["aspect"] = p.Aspect
@@ -249,8 +259,12 @@ func saveProject(r *http.Request) (any, error) {
 	} else {
 		delete(b, "tenant_id")
 	}
+	isNew := id == 0
 	if id, err = save("projects", projectCols, id, b); err != nil {
 		return nil, err
+	}
+	if isNew {
+		db.Exec("insert into settings(key,value) values('projects_made','1') on conflict(key) do update set value=cast(value as integer)+1")
 	}
 	for _, d := range []string{"input", "work", "out/drafts"} {
 		os.MkdirAll(filepath.Join(projectDir(id), d), 0o755)

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { CheckCircleIcon, XCircleIcon } from "@phosphor-icons/react";
-import { api, fail, languageName, Meta, money, setDisplay, toast, useApi, Voice } from "../api";
+import { api, fail, languageName, Meta, money, setDisplay, toast, useApi, Voice, License, licenseURL } from "../api";
 import { Field, Seg } from "../ui";
 
 export default function Settings() {
@@ -162,7 +162,7 @@ function KeysSection() {
 interface Update { current: string; latest?: string; notes?: string; url?: string; newer?: boolean; error?: string }
 
 function LicenseSection() {
-  const { data: lic, setData } = useApi<{ valid: boolean; name?: string; email?: string }>("/license");
+  const { data: lic, setData } = useApi<License>("/license");
   const { data: upd } = useApi<Update>("/update");
   const [key, setKey] = useState("");
   const activate = () => api<{ valid: boolean; name?: string }>("/license", { method: "PUT", body: { key } })
@@ -173,12 +173,16 @@ function LicenseSection() {
       <div className="card-b stack" style={{ gap: 12 }}>
         {lic?.valid ? (
           <p className="row" style={{ gap: 8 }}><CheckCircleIcon size={16} color="var(--success)" /> Licensed to <strong>{lic.name}</strong>{lic.email && <span className="muted">· {lic.email}</span>}</p>
-        ) : (
+        ) : (<>
+          <p className="small muted" style={{ margin: 0 }}>
+            Free trial: {lic?.trial_left ?? 0} of {lic?.trial ?? 2} videos left. A license unlocks unlimited videos, Autopilot, publishing and
+            inbox auto-replies. <a href={licenseURL} target="_blank" rel="noreferrer">Get a license</a>
+          </p>
           <div className="row wrap">
             <input className="input mono spacer" value={key} onChange={(e) => setKey(e.target.value)} placeholder="Paste your license key (37S1.…)" aria-label="License key" style={{ minWidth: 260 }} />
             <button className="btn primary" disabled={!key.trim()} onClick={activate}>Activate</button>
           </div>
-        )}
+        </>)}
         <p className="small muted">
           37Studio {upd?.current}
           {upd?.newer ? <> · <strong>version {upd.latest} is available.</strong> Close 37Studio and open it again from the launcher to update.{upd.notes && <> {upd.notes}</>}</> :

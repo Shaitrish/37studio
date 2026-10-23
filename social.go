@@ -180,7 +180,9 @@ func metaUserToken(code string) (string, error) {
 	}
 	secret := os.Getenv("META_APP_SECRET")
 	if secret == "" {
-		err := call(jsonReq("POST", authURL+"/oauth/meta/token", map[string]string{"code": code, "redirect_uri": redirectURI("meta")}, ""), &tok)
+		req := jsonReq("POST", authURL+"/oauth/meta/token", map[string]string{"code": code, "redirect_uri": redirectURI("meta")}, "")
+		req.Header.Set("X-37Studio-License", setting("license")) // the Worker only finishes logins for licensed copies
+		err := call(req, &tok)
 		return tok.AccessToken, err
 	}
 	app := url.Values{"client_id": {metaAppID}, "client_secret": {secret}}
@@ -505,6 +507,9 @@ func listPosts(id int64) []map[string]any {
 
 // createPosts queues one post per picked account: {file, at?, accounts: [id], captions: {platform: text, youtube_title}, privacy: {youtube, tiktok}}.
 func createPosts(r *http.Request) (any, error) {
+	if err := needLicense("Publishing"); err != nil {
+		return nil, err
+	}
 	var b struct {
 		File     string            `json:"file"`
 		At       string            `json:"at"`

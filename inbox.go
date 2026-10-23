@@ -444,6 +444,9 @@ func inboxLoop() {
 }
 
 func inboxTick() {
+	if !licensed() {
+		return
+	}
 	ts, _ := rows("select id, inbox_mode from tenants where inbox_mode in ('draft','send')")
 	n := 0
 	for _, t := range ts {
