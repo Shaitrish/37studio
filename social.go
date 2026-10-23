@@ -327,7 +327,8 @@ func listSocial(r *http.Request) (any, error) {
 	}
 	var mode string
 	db.QueryRow("select inbox_mode from tenants where id=?", pathID(r)).Scan(&mode)
-	return map[string]any{"accounts": accts, "ready": ready, "inbox_mode": mode, "redirect": publicURL + "/api/oauth/{provider}/callback"}, err
+	return map[string]any{"accounts": accts, "ready": ready, "inbox_mode": mode, "replies": tenantDoc(pathID(r), "replies.md"),
+		"redirect": publicURL + "/api/oauth/{provider}/callback"}, err
 }
 
 func getPending(r *http.Request) (any, error) {

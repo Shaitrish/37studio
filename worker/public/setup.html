@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Set up 37Studio on Windows, Mac or Linux</title>
+<meta name="description" content="Step-by-step setup for 37Studio: install Docker Desktop, start the app, add your license and Claude key, connect Facebook and Instagram, and keep it running.">
+<meta property="og:title" content="Set up 37Studio">
+<meta property="og:image" content="https://studio.shaitrish.com/og.png">
+<meta name="theme-color" content="#fbfaf8">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></symbol>
+    <symbol id="i-wa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.2 19.8 5.3 16A8.3 8.3 0 1 1 8.4 19z"/><path d="M9.3 8.6c.3-.6.9-.6 1.2 0l.6 1.3c.1.3 0 .6-.2.8l-.4.4c.5 1.1 1.4 2 2.5 2.5l.4-.4c.2-.2.5-.3.8-.2l1.3.6c.6.3.6.9 0 1.2-1.6 1-5.2-1-6.2-3.6-.4-1-.4-1.9 0-2.6z"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav scrolled" id="top">
+  <div class="wrap">
+    <a class="brand" href="/"><img src="/favicon.svg" alt="">37Studio <small>by Shaitrish</small></a>
+    <nav aria-label="Pages">
+      <a href="/#loop">How it works</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/setup" aria-current="page" style="background:var(--soft)">Setup guide</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+    <div class="right"><a class="btn sm ink" href="/37studio.zip" download><svg><use href="#i-down"/></svg>Download</a></div>
+  </div>
+</header>
+
+<main>
+<section class="doc-hero">
+  <div class="dots" aria-hidden="true" style="position:absolute;inset:0;-webkit-mask-image:radial-gradient(ellipse at 85% 0%,#000,transparent 60%);mask-image:radial-gradient(ellipse at 85% 0%,#000,transparent 60%)"></div>
+  <div class="wrap">
+    <span class="eyebrow">Setup guide</span>
+    <h1 style="margin-top:14px">Set up 37Studio</h1>
+    <p class="lead">About 30 minutes, most of it waiting for downloads. Follow the steps for your computer. If anything looks different from what's described here, message us on WhatsApp and we'll set it up with you.</p>
+  </div>
+</section>
+
+<div class="wrap doc">
+  <nav class="toc" aria-label="On this page">
+    <a href="#before">Before you start</a>
+    <a href="#docker">1. Install Docker Desktop</a>
+    <a href="#download">2. Download 37Studio</a>
+    <a href="#start">3. Start it</a>
+    <a href="#keys">4. License and AI keys</a>
+    <a href="#company">5. Add a company</a>
+    <a href="#social">6. Connect social accounts</a>
+    <a href="#replies">7. Inbox replies</a>
+    <a href="#running">8. Keep it running</a>
+    <a href="#update">Updates and backups</a>
+    <a href="#trouble">Troubleshooting</a>
+  </nav>
+
+  <article class="prose">
+    <h2 id="before">Before you start</h2>
+    <div class="req">
+      <div><b>A computer</b>Windows 10 (22H2) or 11, a Mac with Apple Silicon (M1–M4) or Intel, or a 64-bit Linux.</div>
+      <div><b>Memory and disk</b>16 GB RAM recommended, and at least 20 GB free disk for the app and your footage.</div>
+      <div><b>Your license key</b>A line starting with <code>37S1.</code>, sent to you when you buy.</div>
+      <div><b>Claude</b>A Claude Pro or Max plan, or an Anthropic API key. Gemini and ElevenLabs keys are optional.</div>
+    </div>
+    <p>Pick your computer once; the steps below follow it.</p>
+    <div class="os-tabs" role="tablist" aria-label="Your computer">
+      <button role="tab" data-os="win" aria-selected="true">Windows</button>
+      <button role="tab" data-os="mac" aria-selected="false">Mac</button>
+      <button role="tab" data-os="linux" aria-selected="false">Linux</button>
+    </div>
+
+    <h2 id="docker">1. Install Docker Desktop</h2>
+    <p>37Studio runs inside Docker, which keeps the app and all its tools (Claude Code, the video renderer, ffmpeg, fonts) in one sealed box. Docker Desktop is free for personal use and for businesses with fewer than 250 employees and under $10 million in revenue.</p>
+    <div data-os-panel="win">
+      <ol>
+        <li>Download <b>Docker Desktop for Windows</b> from <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="noopener">docker.com</a>.</li>
+        <li>Run the installer and keep <b>Use WSL 2</b> ticked. Restart the computer when it asks.</li>
+        <li>Open Docker Desktop, accept the terms, and skip the sign-in. Wait until the bottom-left corner says <b>Engine running</b>.</li>
+      </ol>
+      <div class="note"><b>If Docker says WSL needs updating,</b> open PowerShell and run <code>wsl --update</code>, then open Docker Desktop again. <b>If it says virtualization is off,</b> restart into your BIOS (usually F2, F10 or Del at start-up) and turn on <b>Intel VT-x</b> or <b>AMD SVM</b>.</div>
+    </div>
+    <div data-os-panel="mac" hidden>
+      <ol>
+        <li>Check your chip: Apple menu → <b>About This Mac</b>. "Chip: Apple M…" means Apple Silicon; "Processor: Intel" means Intel.</li>
+        <li>Download the matching <b>Docker Desktop for Mac</b> from <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="noopener">docker.com</a>, open the .dmg and drag Docker into Applications.</li>
+        <li>Open Docker from Applications, allow what it asks for, accept the terms and skip the sign-in.</li>
+        <li>Docker → <b>Settings → Resources</b>: give it at least 8 GB of memory and half your CPU cores, then <b>Apply &amp; restart</b>.</li>
+      </ol>
+    </div>
+    <div data-os-panel="linux" hidden>
+      <p>Either install <a href="https://docs.docker.com/desktop/setup/install/linux/" target="_blank" rel="noopener">Docker Desktop for Linux</a>, or Docker Engine, which is lighter. On Ubuntu or Debian:</p>
+      <pre class="cmd">curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER</pre>
+      <p>Log out and back in so your user can run Docker without <code>sudo</code>, then check it with <code>docker run hello-world</code>.</p>
+    </div>
+
+    <h2 id="download">2. Download 37Studio</h2>
+    <ol>
+      <li><a href="/37studio.zip" download>Download 37studio.zip</a>. It's small; the app itself downloads on the first start.</li>
+      <li>Make a folder that will be 37Studio's home, for example <b>Documents/37Studio</b>, and unzip everything into it.</li>
+    </ol>
+    <div class="note"><b>Keep this folder.</b> 37Studio creates a <code>data</code> folder inside it with your companies, footage, videos, messages and settings. Moving to a new computer later is copying this folder.</div>
+
+    <h2 id="start">3. Start it</h2>
+    <div data-os-panel="win">
+      <ol>
+        <li>Double-click <b>start.bat</b>.</li>
+        <li>If Windows shows "Windows protected your PC", click <b>More info → Run anyway</b>. It only asks the first time.</li>
+        <li>A window shows "Checking for updates…". The first start downloads about 3 GB, so give it a few minutes. Later starts take seconds.</li>
+        <li>37Studio opens in its own Edge window at <code>http://localhost:8080</code>. To keep it on the taskbar: Edge menu → <b>Apps → Install this site as an app</b>.</li>
+      </ol>
+    </div>
+    <div data-os-panel="mac" hidden>
+      <ol>
+        <li>The first time only: right-click <b>start.command</b> → <b>Open</b> → <b>Open</b>. macOS asks because the file came from the internet. After that, double-click it.</li>
+        <li>A Terminal window shows "Checking for updates…". The first start downloads about 3 GB; later starts take seconds.</li>
+        <li>37Studio opens at <code>http://localhost:8080</code>, in its own Chrome window if you have Chrome. In Safari, <b>File → Add to Dock</b> keeps it in the Dock.</li>
+      </ol>
+    </div>
+    <div data-os-panel="linux" hidden>
+      <p>In a terminal, inside the folder:</p>
+      <pre class="cmd">chmod +x start.sh
+./start.sh</pre>
+      <p>The first start downloads about 3 GB. 37Studio then opens at <code>http://localhost:8080</code>.</p>
+    </div>
+    <p>37Studio only accepts connections from your own computer. Nobody else on your Wi-Fi can open it.</p>
+
+    <h2 id="keys">4. Add your license and AI keys</h2>
+    <p>Open <b>Settings</b> in the sidebar.</p>
+    <ol>
+      <li><b>License:</b> paste your <code>37S1.</code> key and click Activate. It's checked on your computer; nothing is sent anywhere.</li>
+      <li><b>Claude:</b> choose one of the options below and paste it under <b>Keys</b>.</li>
+    </ol>
+    <h3>Option A: your Claude Pro or Max plan</h3>
+    <p>Open a terminal in the 37Studio folder (Windows: in the folder, Shift + right-click → <b>Open PowerShell window here</b>; Mac: right-click the folder → <b>New Terminal at Folder</b>) and run:</p>
+    <pre class="cmd">docker compose exec studio claude setup-token</pre>
+    <p>It shows a link. Open it, sign in to Claude, and paste the code back into the terminal. It prints a token starting with <code>sk-ant-oat</code>: paste that into <b>Settings → Keys → Claude subscription token</b>. If Claude Code is already installed on your computer, <code>claude setup-token</code> there gives the same token.</p>
+    <div class="note">Anthropic's terms apply to using a Claude subscription in other apps. An API key (option B) is the fully supported route.</div>
+    <h3>Option B: an Anthropic API key</h3>
+    <p>At <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a>, add credit under Billing, create a key under <b>API keys</b>, and paste it into <b>Settings → Keys → Anthropic API key</b>. You pay Anthropic for what you use, and every project shows its cost.</p>
+    <h3>Optional: OpenCode for cheaper routine edits</h3>
+    <pre class="cmd">docker compose exec studio opencode auth login</pre>
+    <p>Then pick DeepSeek in a project's quality menu for small changes.</p>
+    <h3>Optional: Gemini and ElevenLabs</h3>
+    <ul>
+      <li><b>Gemini</b> (generated images and video clips): get a key at <a href="https://aistudio.google.com" target="_blank" rel="noopener">aistudio.google.com</a>.</li>
+      <li><b>ElevenLabs</b> (voiceover, sound effects, music): <a href="https://elevenlabs.io" target="_blank" rel="noopener">elevenlabs.io</a> → Developers → API keys. Then pick a voice in Settings → Voice.</li>
+    </ul>
+    <p>Keys are encrypted on your computer and only ever sent to the provider they belong to.</p>
+
+    <h2 id="company">5. Add your first company</h2>
+    <ol>
+      <li><b>Companies → Add from website</b>, paste the company's website and click <b>Scan website</b>.</li>
+      <li>In 5–10 minutes 37Studio collects the logo, colours, fonts and photos, and writes the knowledge base. The page updates by itself.</li>
+      <li>Read the <b>Knowledge</b> tab and correct anything wrong: prices, offers, phone numbers. Every video and reply uses it.</li>
+      <li>Click <b>New project</b>, answer the questions, and the agent starts. You can watch it work and ask for changes in the chat.</li>
+    </ol>
+
+    <h2 id="social">6. Connect social accounts</h2>
+    <ol>
+      <li>On the company's <b>Social</b> tab, click <b>Connect Facebook &amp; Instagram</b> and sign in with a Facebook account that manages the company's Pages.</li>
+      <li>Tick the Pages and Instagram accounts that belong to this company. Instagram must be a Business or Creator account linked to the Page.</li>
+      <li>For the Inbox to read Instagram messages: in the Instagram app, <b>Settings → Messages and story replies → Connected tools → Allow access to messages</b>.</li>
+    </ol>
+    <div class="note"><b>Until Meta approves 37Studio for everyone,</b> send us the Facebook profile you'll sign in with, and we'll add it to the app first. It takes a minute on our side.</div>
+    <p><b>WhatsApp</b> is in beta and needs a number on the WhatsApp Business API. Message us and we'll connect it with you.</p>
+
+    <h2 id="replies">7. Choose how replies go out</h2>
+    <p>On the same Social tab, under <b>Inbox replies</b>:</p>
+    <ul>
+      <li><b>Off:</b> you reply yourself in the Inbox, with a Draft with AI button.</li>
+      <li><b>Claude drafts, you approve:</b> drafts wait in the Inbox marked "Draft ready". One click sends. Recommended.</li>
+      <li><b>Claude replies on its own:</b> for when you trust it.</li>
+    </ul>
+    <p>Write the company's rules in <b>How Claude should reply</b>: sign-off, language, what never to promise, when to hand over to a person.</p>
+
+    <h2 id="running">8. Keep it running</h2>
+    <p>Autopilot and auto-replies work while 37Studio runs. Anything that arrives while the computer is off is picked up when it's back.</p>
+    <ul>
+      <li>Docker Desktop → <b>Settings → General → Start Docker Desktop when you sign in</b>. 37Studio then starts by itself.</li>
+      <li data-os-panel="win">To answer messages at night: <b>Settings → System → Power → When plugged in, put my device to sleep after: Never</b>.</li>
+      <li data-os-panel="mac" hidden>To answer messages at night: <b>System Settings → Energy</b> (or Battery → Options) → <b>Prevent automatic sleeping when the display is off</b>.</li>
+      <li data-os-panel="linux" hidden>Docker Engine restarts 37Studio after a reboot on its own; just keep the machine from suspending.</li>
+    </ul>
+
+    <h2 id="update">Updates and backups</h2>
+    <ul>
+      <li><b>Updates:</b> every start checks for a new version and installs it. The sidebar also says when one is out; run the start file again to get it.</li>
+      <li><b>Backups:</b> copy the <code>data</code> folder somewhere safe now and then.</li>
+      <li><b>New computer:</b> set up Docker there, copy the whole 37Studio folder across, and run the start file.</li>
+      <li><b>Uninstall:</b> Docker Desktop → Containers → delete <b>37studio</b>, then delete the folder. Deleting the folder deletes your data.</li>
+    </ul>
+
+    <h2 id="trouble">Troubleshooting</h2>
+    <h3>"Docker Desktop did not start"</h3>
+    <p>Open Docker Desktop yourself and wait for <b>Engine running</b>; the first start after a reboot can take a couple of minutes. Then run the start file again.</p>
+    <h3>The page doesn't open, or port 8080 is in use</h3>
+    <p>Another program is using port 8080. Close it and run the start file again, or message us.</p>
+    <h3>Videos render slowly on a Mac</h3>
+    <p>Give Docker more memory and CPU under <b>Settings → Resources</b>, and close heavy apps while rendering.</p>
+    <h3>The agent says there's no Claude key</h3>
+    <p>Add one under <b>Settings → Keys</b> (step 4). If you use a subscription token and it stopped working, make a new one with <code>claude setup-token</code>.</p>
+    <h3>Facebook sign-in fails</h3>
+    <p>Make sure we've added your Facebook profile to the app (step 6), and that the profile manages the Page.</p>
+
+    <div class="note" style="margin-top:40px"><b>Stuck?</b> Message us on <a href="https://wa.me/8801635191148?text=Hi%2C%20I%20need%20help%20setting%20up%2037Studio" target="_blank" rel="noopener">WhatsApp</a> or email <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a>. We can set it up with you over a screen share, in Bangla or English.</div>
+  </article>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="brand" href="/"><img src="/favicon.svg" alt="">37Studio <small>by Shaitrish</small></a>
+      <p style="margin-top:12px">Made in Dhaka by <a href="https://shaitrish.com" style="text-decoration:underline;text-underline-offset:3px">Shaitrish</a>.<br>Shekhertek 12, Mohammadpur, Dhaka 1207 · Trade licence TRADIDNCC/022960/2025</p>
+    </div>
+    <div class="links">
+      <a href="/">Home</a>
+      <a href="/privacy">Privacy</a>
+      <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a>
+      <a href="tel:+8801635191148">+880 1635 191148</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Show the steps for one computer; remembers the choice and guesses it the first time.
+  const tabs = [...document.querySelectorAll(".os-tabs button")];
+  function pick(os) {
+    tabs.forEach((t) => t.setAttribute("aria-selected", t.dataset.os === os));
+    document.querySelectorAll("[data-os-panel]").forEach((p) => (p.hidden = p.dataset.osPanel !== os));
+    try { localStorage.setItem("37studio:os", os); } catch {}
+  }
+  tabs.forEach((t) => t.addEventListener("click", () => pick(t.dataset.os)));
+  let os = null;
+  try { os = localStorage.getItem("37studio:os"); } catch {}
+  const ua = navigator.userAgent;
+  pick(os || (/Mac/.test(ua) ? "mac" : /Linux/.test(ua) && !/Android/.test(ua) ? "linux" : "win"));
+</script>
+</body>
+</html>

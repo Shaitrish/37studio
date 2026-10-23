@@ -330,7 +330,7 @@ const replyRules = `You answer %s for %s on %s (%s). Write only the reply, ready
 - Reply in the customer's language and script (Bangla stays in Bangla script).
 - %s
 - No markdown, no greeting boilerplate, at most one emoji.
-
+%s
 Knowledge base:
 %s
 %s
@@ -377,7 +377,12 @@ func draftFor(a inboxAccount, kind, id, context string) (string, error) {
 	if c := strings.TrimSpace(context); c != "" {
 		post = "\nThe comment is on this post:\n" + head(c, 1500) + "\n"
 	}
-	prompt := fmt.Sprintf(replyRules, what, a.client, a.platform, a.name, fallback, style,
+	// The company's own reply rules (Social tab) override the style lines, never the facts rule.
+	rules := ""
+	if r := strings.TrimSpace(tenantDoc(a.tenant, "replies.md")); r != "" {
+		rules = "\nThe company's own rules for replies. Follow them over the style lines above, but never break the facts rule:\n" + head(r, 4000) + "\n"
+	}
+	prompt := fmt.Sprintf(replyRules, what, a.client, a.platform, a.name, fallback, style, rules,
 		or(head(tenantDoc(a.tenant, "knowledge.md"), 30000), "(empty: say a team member will reply soon)"), post, convo.String(), a.name)
 	text, cost, tokens, err := claudeOnce(tenantRoot(a.tenant), prompt)
 	if err == nil || cost > 0 {

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>37Studio privacy policy</title>
+<meta name="description" content="37Studio runs on your own computer. We don't collect your data. Here is exactly what the app sends, to whom, and how to delete it.">
+<meta name="theme-color" content="#fbfaf8">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav scrolled" id="top">
+  <div class="wrap">
+    <a class="brand" href="/"><img src="/favicon.svg" alt="">37Studio <small>by Shaitrish</small></a>
+    <nav aria-label="Pages">
+      <a href="/#loop">How it works</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/setup">Setup guide</a>
+      <a href="/privacy" aria-current="page" style="background:var(--soft)">Privacy</a>
+    </nav>
+    <div class="right"><a class="btn sm ink" href="/37studio.zip" download><svg><use href="#i-down"/></svg>Download</a></div>
+  </div>
+</header>
+
+<main>
+<section class="doc-hero">
+  <div class="wrap">
+    <span class="eyebrow">Privacy policy</span>
+    <h1 style="margin-top:14px">Your data stays on your computer</h1>
+    <p class="lead">37Studio is software you run yourself. We don't run it for you, we can't see inside it, and we don't collect your data. This page lists everything the app sends anywhere, so you can check.</p>
+    <p class="muted" style="margin-top:14px;font-size:14px">Effective 23 October 2026</p>
+  </div>
+</section>
+
+<div class="wrap doc">
+  <nav class="toc" aria-label="On this page">
+    <a href="#summary">In short</a>
+    <a href="#local">What stays on your computer</a>
+    <a href="#sends">What the app sends, and to whom</a>
+    <a href="#ours">What passes through our server</a>
+    <a href="#license">Your license</a>
+    <a href="#meta">Facebook, Instagram and WhatsApp data</a>
+    <a href="#site">This website</a>
+    <a href="#delete">Deleting your data</a>
+    <a href="#contact">Contact</a>
+  </nav>
+
+  <article class="prose">
+    <h2 id="summary">In short</h2>
+    <ul>
+      <li>37Studio runs in Docker on your own computer. Your companies, footage, videos, messages, knowledge bases and keys are stored there, in the app's <code>data</code> folder.</li>
+      <li>We, Shaitrish, have no account system, no analytics and no tracking in the app. We can't see your projects, customers or conversations.</li>
+      <li>The app talks to the AI providers and social platforms <b>you</b> connect, using <b>your</b> accounts, to do the work you ask for.</li>
+      <li>Three small things pass through our server, studio.shaitrish.com: the update check, the Facebook sign-in step, and incoming WhatsApp messages if you connect WhatsApp. Each is described below.</li>
+      <li>We don't sell or share data with anyone.</li>
+    </ul>
+
+    <h2 id="local">What stays on your computer</h2>
+    <p>Everything you put into 37Studio and everything it makes: companies and their brand libraries, knowledge bases and reply rules, footage, finished videos and images, project chats, posts and their schedules, inbox history, costs and settings. API keys and tokens are encrypted on disk with a key that never leaves your computer.</p>
+    <p>The app only accepts connections from the computer it runs on, so nobody else on your network can open it.</p>
+
+    <h2 id="sends">What the app sends, and to whom</h2>
+    <p>To do its work, 37Studio sends data directly from your computer to services you choose and connect, under your own accounts and their own terms and privacy policies:</p>
+    <ul>
+      <li><b>Anthropic (Claude)</b>, through your Claude plan or API key: briefs, the company's knowledge base, project files the agent reads, and the conversations it drafts replies for.</li>
+      <li><b>OpenCode and its model providers</b>, only if you set it up and choose those models.</li>
+      <li><b>Google Gemini</b> and <b>ElevenLabs</b>, only if you add their keys: the prompts and text for images, video clips, voiceovers, sound effects and music.</li>
+      <li><b>Meta</b> (Facebook, Instagram, WhatsApp): the videos and captions you publish and the replies you send; 37Studio also reads your Pages' messages and comments to show them in the Inbox.</li>
+      <li><b>Websites you ask it to scan</b>, such as your company's own site, to build the brand library and knowledge base.</li>
+      <li><b>GitHub Container Registry</b>, when the app downloads itself or an update.</li>
+      <li><b>Public content networks</b> (Google Fonts, jsDelivr): the app's interface loads its typeface, and the video player its script, from them. These are ordinary file requests with nothing from your projects.</li>
+    </ul>
+
+    <h2 id="ours">What passes through our server</h2>
+    <p>studio.shaitrish.com runs on Cloudflare. The app contacts it for three things only:</p>
+    <ol>
+      <li><b>Update check.</b> Every few hours the app downloads a small file that says which version is the latest. Nothing about you or your work is sent with it.</li>
+      <li><b>Facebook sign-in.</b> When you connect Facebook, Meta gives your computer a one-time code. Our server exchanges it for an access token, because that step needs a secret we can't put inside the app, and sends the token straight back to your computer. We don't keep the code or the token.</li>
+      <li><b>WhatsApp messages</b>, only if you connect WhatsApp. Meta delivers incoming WhatsApp messages only to a public web address, which a computer at home doesn't have. So Meta sends them to our server, which holds them until your copy of 37Studio collects them, using your number's own WhatsApp token. Messages are deleted automatically after 30 days. No one else can read them through our server.</li>
+    </ol>
+    <p>Like any website host, Cloudflare may keep standard request logs, such as IP addresses and times, for security and reliability.</p>
+
+    <h2 id="license">Your license</h2>
+    <p>Your license key is checked on your computer, with no network call. We keep a record of the name and email we issued each license to, and nothing else.</p>
+
+    <h2 id="meta">Facebook, Instagram and WhatsApp data</h2>
+    <p>37Studio uses data from Meta's platforms only to do what you ask: list the Pages and accounts you manage, publish the posts you approve, and show and answer your Pages' messages and comments. That data is stored only on your computer. We don't use it for advertising, we don't sell it, and we don't share it with anyone.</p>
+
+    <h2 id="site">This website</h2>
+    <p>studio.shaitrish.com has no analytics, no ads and no cookies. It loads fonts from Google Fonts, so Google sees a request for them. If you remember a choice on the setup page, such as Windows or Mac, it's saved in your own browser.</p>
+
+    <h2 id="delete">Deleting your data</h2>
+    <ul>
+      <li><b>Everything 37Studio stores:</b> delete the app's <code>data</code> folder, or the whole 37Studio folder.</li>
+      <li><b>A connected account:</b> disconnect it on the company's Social tab. To remove 37Studio's access on Facebook's side: Facebook → Settings → <b>Business integrations</b> → remove 37Studio.</li>
+      <li><b>WhatsApp messages on our server:</b> they expire after 30 days. To have them deleted sooner, email us with the phone number.</li>
+      <li><b>Your license record:</b> email us and we'll delete your name and email.</li>
+    </ul>
+    <p>Data you sent to AI providers or social platforms is governed by their policies; delete it in your accounts with them.</p>
+
+    <h2 id="contact">Contact</h2>
+    <p>Shaitrish, Shekhertek 12, Mohammadpur, Dhaka 1207, Bangladesh. Trade licence TRADIDNCC/022960/2025.<br>Email <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a> or call <a href="tel:+8801635191148">+880 1635 191148</a>.</p>
+    <p>If we change this policy, we'll update this page and its date.</p>
+  </article>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="brand" href="/"><img src="/favicon.svg" alt="">37Studio <small>by Shaitrish</small></a>
+      <p style="margin-top:12px">Made in Dhaka by <a href="https://shaitrish.com" style="text-decoration:underline;text-underline-offset:3px">Shaitrish</a>.</p>
+    </div>
+    <div class="links">
+      <a href="/">Home</a>
+      <a href="/setup">Setup guide</a>
+      <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

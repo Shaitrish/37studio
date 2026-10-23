@@ -22,7 +22,7 @@ var (
 	tenantCols  = []string{"name", "contact", "email", "phone", "website", "teacher", "bio", "language", "brand_color", "accent_color", "font", "notes", "inbox_mode"}
 	projectCols = []string{"tenant_id", "campaign_id", "title", "kind", "aspect", "seconds", "quality", "brief", "focus", "language", "status"}
 	assetDirs   = []string{"logo", "people", "images", "graphics", "videos", "fonts", "audio", "design", "other"}
-	tenantDocs  = map[string]string{"knowledge": "knowledge.md", "design": "design.md"}
+	tenantDocs  = map[string]string{"knowledge": "knowledge.md", "design": "design.md", "replies": "replies.md"}
 )
 
 func tenantDir(id int64) string  { return filepath.Join(dataDir, "tenants", fmt.Sprint(id), "assets") }

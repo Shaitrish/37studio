@@ -19,7 +19,7 @@ const tiktokPrivacy = [
   ["", "Choose who can see it"], ["PUBLIC_TO_EVERYONE", "Everyone"], ["FOLLOWER_OF_CREATOR", "Followers"],
   ["MUTUAL_FOLLOW_FRIENDS", "Friends"], ["SELF_ONLY", "Only me"], ["INBOX", "Send to TikTok drafts"],
 ];
-interface SocialInfo { accounts: SocialAccount[]; ready: Record<string, boolean>; inbox_mode: string; redirect: string }
+interface SocialInfo { accounts: SocialAccount[]; ready: Record<string, boolean>; inbox_mode: string; replies: string; redirect: string }
 type Candidate = Pick<SocialAccount, "platform" | "account_id" | "name" | "picture">;
 
 function AccountLabel({ a }: { a: Pick<SocialAccount, "platform" | "name" | "picture"> }) {
@@ -95,6 +95,7 @@ export function SocialTab({ tenantId }: { tenantId: number }) {
             it's back, if the platform still allows a reply (24 hours for messages, and comments up to 2 days old). Claude uses only the
             company's knowledge base; when the answer isn't there, it says a team member will reply.
           </p>
+          {data && <ReplyRules tenantId={tenantId} value={data.replies} onSaved={reload} />}
         </div>
       </div>
 
@@ -105,6 +106,23 @@ export function SocialTab({ tenantId }: { tenantId: number }) {
 
       {whatsapp && <ConnectWhatsApp tenantId={tenantId} onDone={() => { setWhatsapp(false); reload(); }} />}
       {pendingKey && <PickAccounts k={pendingKey} onDone={() => { location.hash = `/clients/${tenantId}/social`; reload(); }} />}
+    </div>
+  );
+}
+
+/** The company's own rules for replies: Claude follows them in every draft and auto-reply, ahead of its default style. */
+function ReplyRules({ tenantId, value, onSaved }: { tenantId: number; value: string; onSaved: () => void }) {
+  const [text, setText] = useState(value);
+  useEffect(() => setText(value), [value]);
+  const save = () => api(`/tenants/${tenantId}`, { method: "PUT", body: { replies: text } }).then(() => { toast("Reply rules saved"); onSaved(); }, fail);
+  return (
+    <div className="stack" style={{ gap: 8 }}>
+      <Field label="How Claude should reply" hint="followed in every draft and auto-reply">
+        <textarea className="textarea" rows={5} value={text} onChange={(e) => setText(e.target.value)}
+          placeholder={"Sign off as \"Team Dhaka Bites\".\nReply in Bangla unless they write in English.\nNever promise delivery times on Fridays.\nComplaints and refunds: say our manager will call them today."} />
+      </Field>
+      <div className="row"><span className="small faint spacer">Facts still come only from the knowledge base.</span>
+        <button className="btn sm" disabled={text === value} onClick={save}>Save rules</button></div>
     </div>
   );
 }
