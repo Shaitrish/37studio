@@ -64,7 +64,7 @@ Vertical videos of 3–90 seconds post as Reels; anything else posts as a regula
 
 ### The shared 37Studio Meta app
 
-Without your own app, logins use Shaitrish's 37Studio app (its ID and login configuration are built in, `social.go`). Copies don't carry its secret; the relay at `STUDIO37_AUTH_URL` finishes the login. Until Meta approves that app in App Review, only people the maintainers add as testers can sign in with it. It is registered for `http://localhost:8080` only, so on a server use your own Meta app. The App Review submission pack is [meta-app-review.md](meta-app-review.md).
+Without your own app, logins use Shaitrish's 37Studio app (its ID and login configuration are built in, `server/social.go`). Copies don't carry its secret; the relay at `STUDIO37_AUTH_URL` finishes the login. Until Meta approves that app in App Review, only people the maintainers add as testers can sign in with it. It is registered for `http://localhost:8080` only, so on a server use your own Meta app. The App Review submission pack is [meta-app-review.md](meta-app-review.md).
 
 ## YouTube
 

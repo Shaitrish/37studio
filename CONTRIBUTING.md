@@ -42,6 +42,15 @@ cd web && npm run build     # type-checks and builds the UI
 
 If you changed `docker-compose.cloud.yml`, check it with `STUDIO37_DOMAIN=example.com STUDIO37_PASSWORD=x docker compose -f docker-compose.cloud.yml config`.
 
+## Where things are
+
+- `server/`: the Go backend and CLI, one package (`main`) built into the `37studio` binary. Tests sit next to the code as `*_test.go`.
+- `web/`: the React UI (Vite, TypeScript).
+- `worker/`: the Cloudflare Worker for studio.shaitrish.com: the website, the update file, the Meta sign-in relay, the WhatsApp relay and donations.
+- `dist/`: the launcher bundle people download. `docs/`: setup and architecture. `brand/`: logos.
+
+The Go file names below are in `server/`.
+
 ## Pull requests
 
 - **Small and focused.** One change per pull request is much easier to review. For anything big (a new platform, a new page, a schema change), open an issue first so we can agree on the shape.
@@ -67,7 +76,7 @@ Each platform follows the same pattern; LinkedIn, X and Pinterest (OAuth) and Bl
 
 ## Releasing
 
-Maintainers only: bump `version` in `update.go`, then `./release.sh "What changed"`. [docs/architecture.md](docs/architecture.md#releasing) has the details.
+Maintainers only: bump `version` in `server/update.go`, then `./release.sh "What changed"`. [docs/architecture.md](docs/architecture.md#releasing) has the details.
 
 ## License
 

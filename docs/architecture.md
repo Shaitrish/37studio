@@ -67,7 +67,7 @@ Each turn is one headless Claude Code run: `--output-format stream-json`, stream
 
 ## Transcription
 
-The agent transcribes speech with `37studio transcribe <file> --language <code> --out work/transcript`. It runs faster-whisper ([asr/transcribe.py](../asr/transcribe.py), embedded in the binary) on the user's computer, so it costs nothing and the audio stays local; paid APIs (ElevenLabs, Gemini) are used only when the editor asks for them.
+The agent transcribes speech with `37studio transcribe <file> --language <code> --out work/transcript`. It runs faster-whisper ([server/asr/transcribe.py](../server/asr/transcribe.py), embedded in the binary) on the user's computer, so it costs nothing and the audio stays local; paid APIs (ElevenLabs, Gemini) are used only when the editor asks for them.
 
 - **Model by hardware.** With an NVIDIA GPU visible it uses `large-v3` (float16). On a CPU it uses `large-v3-turbo` (int8), which is several times faster for a small accuracy loss. `--quality best` forces `large-v3`; `--quality fast`, or less than 4 GB of memory, uses `small`, which is weak on less common languages.
 - **Inside Docker every OS is the same Linux CPU path.** Docker Desktop on a Mac can't reach the Apple GPU, and the shipped compose files pass no NVIDIA GPU (the image also lacks the CUDA libraries), so the GPU branch only applies when the binary runs outside Docker. The model and thread count follow the container's memory and cores. On a 12-core laptop it ran at about 1.3× the recording's length (a 59-second Bangla clip took 80 seconds), so a 2-hour class takes 2–3 hours. The tool prints progress and an estimate. It runs detached and the command waits at most 9 minutes, so the job outlives one Bash call and the agent's turn; running the same command again joins it or reuses the finished transcript.
@@ -117,6 +117,8 @@ data/
 ```
 
 ## Code map
+
+The Go code is one package (`main`) in `server/`, built into the single `37studio` binary that serves the app and runs the agent's CLI commands.
 
 | File | What |
 | --- | --- |

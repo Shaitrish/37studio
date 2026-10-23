@@ -3,10 +3,10 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-  cmd = "go build -o ./tmp/37studio ."
+  cmd = "go build -o ./tmp/37studio ./server"
   entrypoint = ["./tmp/37studio"]
   include_ext = ["go"]
-  exclude_dir = ["data", "web", "tmp"]
+  exclude_dir = ["data", "web", "tmp", "worker", "dist", "docs"]
   exclude_regex = ["_test\\.go$"]
   send_interrupt = true
   kill_delay = "1s"

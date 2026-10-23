@@ -25,7 +25,7 @@ App: **37Studio**, ID 2057436148296558, business portfolio **Shaitrish**.
 4. **Redirect before going Live.** The app sends Facebook back to `http://localhost:8080/api/oauth/meta/callback`. That works
    in development mode. With the app Live and Strict Mode on, Meta only accepts redirect URIs saved in Facebook Login for
    Business → Settings, and that field didn't save `localhost` when we tried. Before switching to Live, route the redirect
-   through `https://studio.shaitrish.com/oauth/meta/callback` (the Worker forwards the code to the local copy). This is a small change in `social.go` and
+   through `https://studio.shaitrish.com/oauth/meta/callback` (the Worker forwards the code to the local copy). This is a small change in `server/social.go` and
    `worker/src.js`.
 
 ## 1. Permissions to request (Advanced Access)
