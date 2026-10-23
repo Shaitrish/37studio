@@ -64,6 +64,9 @@ func needLicense(what string) error {
 	if errors.Is(err, errRevoked) {
 		return apiErr{http.StatusPaymentRequired, what + " needs an active license, and yours was cancelled. Contact jahangir@shaitrish.com."}
 	}
+	if errors.Is(err, errUnchecked) {
+		return apiErr{http.StatusPaymentRequired, err.Error() + "."}
+	}
 	return apiErr{http.StatusPaymentRequired, what + " needs a 37Studio license. Add your key in Settings, or get one at " + licenseURL}
 }
 
@@ -77,6 +80,12 @@ type license struct {
 
 var errExpired = errors.New("expired")
 var errRevoked = errors.New("revoked")
+
+// A key must have been confirmed by studio.shaitrish.com within this long. The app needs the internet for Claude
+// anyway, so this costs honest users nothing, and blocking our server doesn't keep a revoked key alive.
+const licenseLease = 7 * 24 * time.Hour
+
+var errUnchecked = errors.New("37Studio couldn't check this license with studio.shaitrish.com for a week. Connect to the internet and restart 37Studio")
 
 // parseLicense checks a key of the form 37S1.<payload>.<signature> (both base64url) against licensePub.
 func parseLicense(key string) (*license, error) {
@@ -100,6 +109,9 @@ func parseLicense(key string) (*license, error) {
 	if r := setting("license_revoked"); r != "" && len(parts[2]) >= 16 && r == parts[2][:16] {
 		return &l, fmt.Errorf("this license was %w; contact jahangir@shaitrish.com", errRevoked)
 	}
+	if at, err := strconv.ParseInt(setting("license_checked"), 10, 64); err == nil && time.Since(time.Unix(at, 0)) > licenseLease {
+		return &l, errUnchecked
+	}
 	// ponytail: checked against this computer's clock; the Worker checks the same date with its own clock.
 	if end, err := time.Parse(time.DateOnly, l.Expires); l.Expires != "" && (err != nil || time.Now().After(end.AddDate(0, 0, 1))) {
 		return &l, fmt.Errorf("this license %w on %s; renew it at %s", errExpired, l.Expires, licenseURL)
@@ -116,6 +128,9 @@ func getLicense(r *http.Request) (any, error) {
 		}
 		if errors.Is(err, errRevoked) {
 			out["name"], out["revoked"] = l.Name, true
+		}
+		if errors.Is(err, errUnchecked) {
+			out["name"], out["unchecked"] = l.Name, true
 		}
 		return out, nil
 	}
@@ -138,6 +153,9 @@ func putLicense(r *http.Request) (any, error) {
 // licenseLoop asks studio.shaitrish.com whether this copy's key was revoked, at start and every hour. Only a
 // definite answer changes anything: offline, or with the server down, a paid key keeps working.
 func licenseLoop() {
+	if setting("license_checked") == "" { // the week's grace starts now for copies updated from before the check
+		db.Exec("insert into settings(key,value) values('license_checked',?) on conflict(key) do nothing", fmt.Sprint(time.Now().Unix()))
+	}
 	for {
 		checkRevoked()
 		time.Sleep(time.Hour)
@@ -163,6 +181,7 @@ func checkRevoked() {
 		v = parts[2][:16]
 	}
 	db.Exec("insert into settings(key,value) values('license_revoked',?) on conflict(key) do update set value=excluded.value", v)
+	db.Exec("insert into settings(key,value) values('license_checked',?) on conflict(key) do update set value=excluded.value", fmt.Sprint(time.Now().Unix()))
 }
 
 // licenseCLI issues keys on the release machine: 37studio license --name "Rafi" --email rafi@example.com

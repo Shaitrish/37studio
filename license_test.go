@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -93,5 +94,14 @@ func TestTrialAndLicense(t *testing.T) {
 	checkRevoked()
 	if err := newProject(); err != nil {
 		t.Fatalf("un-revoked license: %v", err)
+	}
+	// Not confirmed by the server for over a week (say, it was blocked): the key stops working until the next check.
+	db.Exec("update settings set value=? where key='license_checked'", fmt.Sprint(time.Now().Add(-8*24*time.Hour).Unix()))
+	if err := newProject(); !paid(err) {
+		t.Fatalf("license unchecked for 8 days: want 402, got %v", err)
+	}
+	checkRevoked()
+	if err := newProject(); err != nil {
+		t.Fatalf("after a successful check: %v", err)
 	}
 }

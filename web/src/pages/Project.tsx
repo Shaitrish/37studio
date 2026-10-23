@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpIcon, CheckCircleIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FileTextIcon, FilmStripIcon, GlobeIcon, ListChecksIcon, PencilLineIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MicrophoneSlashIcon, PaperclipIcon, MagnifyingGlassIcon, SlidersHorizontalIcon, SparkleIcon, SquareIcon, TerminalWindowIcon, TrashIcon, MagicWandIcon, WrenchIcon, XIcon } from "@phosphor-icons/react";
+import { ArrowUpIcon, CheckCircleIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FileTextIcon, FilmStripIcon, GlobeIcon, ListChecksIcon, PencilLineIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MicrophoneSlashIcon, PaperclipIcon, MagnifyingGlassIcon, SlidersHorizontalIcon, SparkleIcon, SquareIcon, TerminalWindowIcon, TrashIcon, MagicWandIcon, WrenchIcon, XIcon } from "@phosphor-icons/react";
 import { Quality } from "../api";
 import { api, bytes, ChatEvent, clock, fail, FileInfo, go, languageName, Meta, Project, toast, upload, cash, useApi } from "../api";
 import { DropZone, Empty, FileTile, KindIcon, Progress, Seg, Status, projectStatus } from "../ui";
@@ -46,11 +46,13 @@ export default function ProjectPage({ id }: { id: number }) {
     return () => { alive = false; clearTimeout(timer); };
   }, [id, reload]);
 
+  // A transcription carries on after the agent's turn, and a download runs before it starts: poll for those too.
+  const busy = !!p?.running || p?.transcript?.state === "running" || (!!p?.import && !p.import.done);
   useEffect(() => {
-    if (!p?.running) return;
-    const t = setInterval(reload, p?.render ? 1500 : 5000); // faster while a render reports progress
+    if (!busy) return;
+    const t = setInterval(reload, p?.render ? 1500 : 4000); // faster while a render reports progress
     return () => clearInterval(t);
-  }, [p?.running, !!p?.render, reload]);
+  }, [busy, !!p?.render, reload]);
 
   useEffect(() => { if (p?.composition && !shownComp) setShownComp(p.composition); }, [p?.composition]);
   const hasVideos = !!p?.children?.length;
@@ -165,6 +167,10 @@ export default function ProjectPage({ id }: { id: number }) {
               )}
             </div>
             {p.render && <RenderBar r={p.render} />}
+            {p.import && !p.import.done && (
+              <JobBar title="Downloading the video" pct={p.import.pct} line={p.import.line} onCancel={() => api(`/projects/${id}/import`, { method: "DELETE" }).then(reload, fail)} />
+            )}
+            {p.transcript?.state === "running" && <JobBar title="Transcribing" pct={p.transcript.pct ?? 0} line={p.transcript.line} onCancel={() => skipTranscript(p.id, reload)} />}
             <Versions p={p} finals={finals} drafts={drafts} current={current} onPick={setView}
               onDeleteFinal={delFile("out")} onDeleteDraft={delFile("out/drafts")}
               onDraft={() => act("render", { quality: "draft" }, "Draft render started")} />
@@ -277,8 +283,10 @@ function Sources({ p, reload }: { p: Project; reload: () => void }) {
           </div>
         ))}
       </div>
-      <div className="card-b">
-        {pct === undefined ? <DropZone compact onFiles={add} accept="video/*,audio/*,image/*" label="Add footage" /> : <Progress pct={pct} />}
+      <div className="card-b stack" style={{ gap: 12 }}>
+        {pct === undefined ? <DropZone compact onFiles={add} accept="video/*,audio/*,image/*,.srt,.vtt" label="Add footage, or subtitles (.srt) to skip transcribing" /> : <Progress pct={pct} />}
+        <ImportLink p={p} reload={reload} />
+        <TranscriptLine p={p} reload={reload} />
       </div>
     </div>
   );
@@ -706,6 +714,64 @@ function MediaSection({ title, hint, files, empty }: { title: string; hint: stri
 }
 
 /** Live render progress from hyperframes' own @hf-progress reports, with elapsed time and a rough ETA. */
+/** A download or transcription in progress. Both can be stopped: nobody should have to sit through a slow one. */
+function JobBar({ title, pct, line, onCancel }: { title: string; pct: number; line?: string; onCancel: () => void }) {
+  return (
+    <div className="render-bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={title}>
+      <div className="row small">
+        <strong>{title}</strong>
+        <span className="muted ellipsis spacer">{line}</span>
+        <span className="nowrap">{Math.round(pct)}%</span>
+        <button className="btn ghost sm" onClick={onCancel}>Cancel</button>
+      </div>
+      <div className="progress"><div style={{ width: `${pct}%` }} /></div>
+    </div>
+  );
+}
+
+const skipTranscript = (id: number, then: () => void) =>
+  confirm("Stop transcribing? The agent works from the footage and the brief instead. You can add a subtitle file (.srt) any time.") &&
+  api(`/projects/${id}/transcript`, { body: { action: "skip" } }).then(then, fail);
+
+/** The transcript, where it came from, and switching it off or on. The agent's `37studio transcribe` reads the same state. */
+function TranscriptLine({ p, reload }: { p: Project; reload: () => void }) {
+  const t = p.transcript;
+  const resume = () => api(`/projects/${p.id}/transcript`, { body: { action: "resume" } }).then(() => { toast("Transcription is on again; ask the agent to transcribe"); reload(); }, fail);
+  const from = t?.from?.startsWith("subtitles: ") ? `from ${t.from.slice(11)}` : t?.from ? `transcribed with ${t.from}` : "ready";
+  return (
+    <div className="row wrap small">
+      <span className="muted spacer">
+        <strong>Transcript:</strong>{" "}
+        {!t ? "not made yet. The agent transcribes speech when it starts, which takes about as long as the video. Add subtitles (.srt) to skip that."
+          : t.state === "running" ? `transcribing, ${t.pct ?? 0}%. ${t.line ?? ""}`
+          : t.state === "done" ? from
+          : t.state === "skipped" ? "switched off. The agent works without one, or from subtitles you add."
+          : `failed. ${t.line ?? ""}`}
+      </span>
+      {(!t || t.state === "failed") && <button className="btn ghost sm" onClick={() => api(`/projects/${p.id}/transcript`, { body: { action: "skip" } }).then(reload, fail)}>Don't transcribe</button>}
+      {t?.state === "running" && <button className="btn ghost sm" onClick={() => skipTranscript(p.id, reload)}>Stop</button>}
+      {t?.state === "skipped" && <button className="btn ghost sm" onClick={resume}>Turn back on</button>}
+    </div>
+  );
+}
+
+/** YouTube or Google Drive link → input/, downloaded on this computer (import.go). */
+function ImportLink({ p, reload }: { p: Project; reload: () => void }) {
+  const [url, setUrl] = useState("");
+  const busy = !!p.import && !p.import.done;
+  const start = () => api(`/projects/${p.id}/import`, { body: { url } }).then(() => { setUrl(""); reload(); }, fail);
+  return (
+    <div className="stack" style={{ gap: 6 }}>
+      <div className="row">
+        <input className="input spacer" value={url} disabled={busy} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => e.key === "Enter" && url.trim() && start()}
+          placeholder="Or paste a YouTube or Google Drive link" aria-label="Video link" />
+        <button className="btn" disabled={busy || !url.trim()} onClick={start}><LinkIcon size={15} /> Import</button>
+      </div>
+      {p.import?.error && <p className="small" style={{ margin: 0, color: "var(--danger)" }}>{p.import.error}</p>}
+    </div>
+  );
+}
+
 function RenderBar({ r }: { r: NonNullable<Project["render"]> }) {
   const elapsed = (Date.now() - new Date(r.started).getTime()) / 1000;
   const eta = r.pct >= 15 && r.pct < 100 ? (elapsed * (100 - r.pct)) / r.pct : 0;

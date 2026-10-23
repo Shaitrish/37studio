@@ -230,6 +230,8 @@ func getProject(r *http.Request) (any, error) {
 			p["parent_title"] = t["title"]
 		}
 	}
+	p["transcript"] = transcriptState(id)
+	p["import"] = importState(id)
 	p["generated"] = generatedFiles(id, base)
 	p["comp_assets"] = listFiles(filepath.Join(dir, "comp", "assets"), base+"/comp/assets", true)
 	p["quote"] = quote(p)

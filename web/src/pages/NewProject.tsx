@@ -8,6 +8,7 @@ import { presetIcon } from "./Projects";
 interface A {
   tenant?: number; campaign?: string; campaignText?: string; kind?: string; aspect?: string;
   seconds?: number; brief?: string; files?: File[]; quality?: string; focus?: string; language?: string; count?: string;
+  link?: string; transcribe?: string;
 }
 type Opt = { value: string; label: string; sub?: string; icon?: ReactNode };
 interface Step {
@@ -114,7 +115,18 @@ export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: ()
     },
     {
       key: "files", ask: "Any footage to work from?", files: true,
-      show: (x) => (x.files?.length ? `${x.files.length} file${x.files.length > 1 ? "s" : ""} · ${bytes(x.files.reduce((n, f) => n + f.size, 0))}` : "No footage, use brand assets"),
+      show: (x) => [x.files?.length && `${x.files.length} file${x.files.length > 1 ? "s" : ""} · ${bytes(x.files.reduce((n, f) => n + f.size, 0))}`, x.link]
+        .filter(Boolean).join(" + ") || "No footage, use brand assets",
+    },
+    {
+      // Transcribing takes about as long as the video on most PCs: let the editor skip it, or bring subtitles instead.
+      key: "transcribe", ask: "Should the agent transcribe what's said?",
+      skip: (x) => !x.link && !x.files?.some((f) => /^(video|audio)\//.test(f.type)),
+      options: (x) => [
+        { value: "yes", label: "Yes, transcribe it", sub: x.files?.some((f) => /\.(srt|vtt)$/i.test(f.name)) || x.link?.includes("youtu") ? "uses the subtitles if there are any, which is instant" : "takes about as long as the video" },
+        { value: "no", label: "No, skip it", sub: "faster; the agent works from the footage and your brief" },
+      ],
+      show: (x) => (x.transcribe === "no" ? "Don't transcribe" : "Transcribe"),
     },
   ];
   const live = steps.filter((s) => !s.skip?.(a));
@@ -126,8 +138,8 @@ export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: ()
     if (!current) setTitle((t) => t || (a.brief?.split("\n")[0].slice(0, 60).trim() || `${preset?.label} · ${campaignName ?? tenantName}`));
   }, [current?.key]);
 
-  function answer(key: keyof A, value: A[keyof A]) {
-    const next = { ...a, [key]: value };
+  function answer(key: keyof A, value: A[keyof A], also: Partial<A> = {}) {
+    const next = { ...a, ...also, [key]: value };
     // Picking a format sets sensible defaults for the questions after it.
     if (key === "kind") {
       const p = meta?.presets.find((x) => x.id === value);
@@ -157,7 +169,10 @@ export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: ()
         setBusy(`Uploading ${bytes(a.files.reduce((n, f) => n + f.size, 0))}…`);
         await upload(`/projects/${p.id}/inputs`, a.files, setPct);
       }
-      await api(`/projects/${p.id}/messages`, { body: { text: "" } });
+      if (a.transcribe === "no") await api(`/projects/${p.id}/transcript`, { body: { action: "skip" } });
+      // A link downloads first; the server starts the agent once the video is in.
+      if (a.link) await api(`/projects/${p.id}/import`, { body: { url: a.link, start: true } });
+      else await api(`/projects/${p.id}/messages`, { body: { text: "" } });
       go(`/projects/${p.id}`);
     } catch (e) { fail(e); setBusy(undefined); }
   }
@@ -194,7 +209,7 @@ export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: ()
               </div>
             ))}
             {current.text && <TextAnswer key={current.key} initial={String(a[current.key] ?? "")} placeholder={current.text.placeholder} skip={current.text.skip} onAnswer={(v) => answer(current.key, v)} />}
-            {current.files && <FilesAnswer initial={a.files ?? []} onAnswer={(f) => answer("files", f)} />}
+            {current.files && <FilesAnswer initial={a.files ?? []} initialLink={a.link ?? ""} onAnswer={(f, link) => answer("files", f, { link })} />}
           </div>
         ) : (
           <div className="card card-b stack" style={{ gap: 12 }}>
@@ -237,20 +252,23 @@ function TextAnswer({ initial, placeholder, skip, onAnswer }: { initial: string;
   );
 }
 
-function FilesAnswer({ initial, onAnswer }: { initial: File[]; onAnswer: (f: File[]) => void }) {
+function FilesAnswer({ initial, initialLink, onAnswer }: { initial: File[]; initialLink: string; onAnswer: (f: File[], link: string) => void }) {
   const [files, setFiles] = useState(initial);
+  const [link, setLink] = useState(initialLink);
+  const ok = !!files.length || /^https?:\/\/\S+$/.test(link.trim());
   return (
     <div className="stack" style={{ gap: 8 }}>
-      <DropZone onFiles={(f) => setFiles((x) => [...x, ...f])} accept="video/*,audio/*,image/*" label="Drop long videos, b-roll or music, or click to browse" />
+      <DropZone onFiles={(f) => setFiles((x) => [...x, ...f])} accept="video/*,audio/*,image/*,.srt,.vtt" label="Drop long videos, b-roll, music or subtitles (.srt), or click to browse" />
+      <input className="input" value={link} onChange={(e) => setLink(e.target.value)} placeholder="Or paste a YouTube or Google Drive link; YouTube's subtitles come along" aria-label="Video link" />
       {files.length > 0 && (
         <div className="row wrap small">
           {files.map((f, i) => <span key={i} className="pill">{f.name} · {bytes(f.size)}</span>)}
         </div>
       )}
       <div className="row">
-        <button className="opt" onClick={() => onAnswer([])}><strong>No footage, use brand assets</strong></button>
+        <button className="opt" onClick={() => onAnswer([], "")}><strong>No footage, use brand assets</strong></button>
         <span className="spacer" />
-        <button className="btn primary sm" disabled={!files.length} onClick={() => onAnswer(files)}><ArrowUpIcon size={14} /> Continue</button>
+        <button className="btn primary sm" disabled={!ok} onClick={() => onAnswer(files, link.trim())}><ArrowUpIcon size={14} /> Continue</button>
       </div>
     </div>
   );

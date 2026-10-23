@@ -177,7 +177,9 @@ function LicenseSection() {
             {(licenseDaysLeft(lic) ?? 99) <= 14 && <a href={licenseURL} target="_blank" rel="noreferrer">Renew</a>}</p>
         ) : (<>
           <p className="small muted" style={{ margin: 0 }}>
-            {lic?.revoked
+            {lic?.unchecked
+              ? <>37Studio couldn't check the license for {lic.name} with studio.shaitrish.com for a week. Connect to the internet and restart 37Studio; it checks every hour. </>
+              : lic?.revoked
               ? <>The license for {lic.name} was cancelled. Your work is all still here. To talk about it, email <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a>. </>
               : lic?.expired
               ? <>Your license for {lic.name} ended on {date(lic.expired)}. Renew it to keep making videos, publishing and using Autopilot and auto-replies; your work is all still here. </>

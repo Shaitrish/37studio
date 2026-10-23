@@ -26,8 +26,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 \
       libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2 libpango-1.0-0 libcairo2 libxshmfence1 \
     && rm -rf /var/lib/apt/lists/*
-# Free local transcription for `37studio transcribe` (faster-whisper; models download to ~/.cache on first use).
-RUN python3 -m venv /opt/asr && /opt/asr/bin/pip install --no-cache-dir faster-whisper==1.2.1
+# Free local transcription for `37studio transcribe` (faster-whisper; models download to ~/.cache on first use), and
+# yt-dlp for importing videos from YouTube and Google Drive links (unpinned: YouTube changes often, each release takes the newest).
+RUN python3 -m venv /opt/asr && /opt/asr/bin/pip install --no-cache-dir faster-whisper==1.2.1 "yt-dlp[default,curl-cffi]"
 ENV STUDIO37_ASR_PYTHON=/opt/asr/bin/python
 RUN npm install -g @anthropic-ai/claude-code opencode-ai hyperframes@${HF_VERSION}
 COPY --from=api /37studio /usr/local/bin/37studio
