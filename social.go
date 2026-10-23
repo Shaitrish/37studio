@@ -33,13 +33,9 @@ import (
 var (
 	publicURL = strings.TrimRight(env("STUDIO37_PUBLIC_URL", "http://localhost:8080"), "/") // where OAuth providers send the browser back
 	apiClient = &http.Client{Timeout: time.Minute}
-	// Everyone shares Shaitrish's 37Studio Meta app. Its secret never ships: copies without META_APP_SECRET finish the
-	// login through the auth Worker on studio.shaitrish.com (worker/), which holds it.
-	metaAppID    = env("META_APP_ID", "2057436148296558")
-	metaConfigID = env("META_CONFIG_ID", "1117077147715456")
-	authURL      = strings.TrimRight(env("STUDIO37_AUTH_URL", "https://studio.shaitrish.com"), "/")
-	graphURL     = env("STUDIO37_GRAPH_URL", "https://graph.facebook.com") // or a stand-in, for demos and tests
-	upClient     = &http.Client{}                                          // uploads can take many minutes on a slow uplink
+	authURL   = strings.TrimRight(env("STUDIO37_AUTH_URL", "https://studio.shaitrish.com"), "/")
+	graphURL  = env("STUDIO37_GRAPH_URL", "https://graph.facebook.com") // or a stand-in, for demos and tests
+	upClient  = &http.Client{}                                          // uploads can take many minutes on a slow uplink
 )
 
 const (
@@ -49,9 +45,25 @@ const (
 		"pages_messaging,pages_manage_metadata,pages_read_user_content,pages_manage_engagement,instagram_manage_messages,instagram_manage_comments" // the last six: Inbox
 )
 
+// Copies share Shaitrish's 37Studio Meta app by default. Its secret never ships: they finish the login through the auth
+// Worker on studio.shaitrish.com (worker/), which holds it. A buyer can instead enter their own app's ID and secret
+// (Settings → Keys, or Social → Use your own Meta app). It is then the admin's own app in Development mode, so their
+// Pages work without waiting for Meta to review ours, and logins never touch the Worker.
+const sharedMetaApp, sharedMetaConfig = "2057436148296558", "1117077147715456"
+
+func ownMetaApp() bool { return os.Getenv("META_APP_ID") != "" && os.Getenv("META_APP_SECRET") != "" }
+
+// metaApp is the app ID and Login for Business configuration logins use; an own app without a configuration asks for scopes.
+func metaApp() (id, config string) {
+	if ownMetaApp() {
+		return os.Getenv("META_APP_ID"), os.Getenv("META_CONFIG_ID")
+	}
+	return sharedMetaApp, sharedMetaConfig
+}
+
 func providerReady(p string) bool {
 	if p == "meta" {
-		return metaAppID != "" && (os.Getenv("META_APP_SECRET") != "" || authURL != "")
+		return ownMetaApp() || authURL != ""
 	}
 	keys := map[string][2]string{"meta": {"META_APP_ID", "META_APP_SECRET"}, "google": {"GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"}, "tiktok": {"TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET"}}[p]
 	return keys[0] != "" && os.Getenv(keys[0]) != "" && os.Getenv(keys[1]) != ""
@@ -112,8 +124,9 @@ func oauthStart(w http.ResponseWriter, r *http.Request) {
 	var u string
 	switch prov {
 	case "meta":
-		q := url.Values{"client_id": {metaAppID}, "redirect_uri": {redirectURI(prov)}, "state": {key}, "response_type": {"code"}}
-		if c := metaConfigID; c != "" { // Facebook Login for Business: the configuration holds the permissions
+		app, config := metaApp()
+		q := url.Values{"client_id": {app}, "redirect_uri": {redirectURI(prov)}, "state": {key}, "response_type": {"code"}}
+		if c := config; c != "" { // Facebook Login for Business: the configuration holds the permissions
 			q.Set("config_id", c)
 		} else {
 			q.Set("scope", metaScopes)
@@ -178,14 +191,14 @@ func metaUserToken(code string) (string, error) {
 	var tok struct {
 		AccessToken string `json:"access_token"`
 	}
-	secret := os.Getenv("META_APP_SECRET")
-	if secret == "" {
+	if !ownMetaApp() {
 		req := jsonReq("POST", authURL+"/oauth/meta/token", map[string]string{"code": code, "redirect_uri": redirectURI("meta")}, "")
 		req.Header.Set("X-37Studio-License", setting("license")) // the Worker only finishes logins for licensed copies
 		err := call(req, &tok)
 		return tok.AccessToken, err
 	}
-	app := url.Values{"client_id": {metaAppID}, "client_secret": {secret}}
+	id, _ := metaApp()
+	app := url.Values{"client_id": {id}, "client_secret": {os.Getenv("META_APP_SECRET")}}
 	q := url.Values{"redirect_uri": {redirectURI("meta")}, "code": {code}}
 	for k, v := range app {
 		q[k] = v
@@ -329,7 +342,11 @@ func listSocial(r *http.Request) (any, error) {
 	}
 	var mode string
 	db.QueryRow("select inbox_mode from tenants where id=?", pathID(r)).Scan(&mode)
-	return map[string]any{"accounts": accts, "ready": ready, "inbox_mode": mode, "replies": tenantDoc(pathID(r), "replies.md"),
+	metaID, _ := metaApp()
+	if metaID == sharedMetaApp { // Shaitrish's own install holds the shared app's secret too
+		metaID = ""
+	}
+	return map[string]any{"accounts": accts, "ready": ready, "inbox_mode": mode, "replies": tenantDoc(pathID(r), "replies.md"), "meta_app": metaID,
 		"redirect": publicURL + "/api/oauth/{provider}/callback"}, err
 }
 

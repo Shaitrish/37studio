@@ -43,7 +43,7 @@ func startOpenCode(id int64, p map[string]any, q Quality, text string, announce 
 	exe, _ := os.Executable()
 	cmd := exec.Command("opencode", append(args, prompt)...)
 	cmd.Dir = dir
-	cmd.Env = append(os.Environ(), fmt.Sprintf("STUDIO37_PROJECT=%d", id), "STUDIO37_DATA="+dataDir,
+	cmd.Env = agentEnv(fmt.Sprintf("STUDIO37_PROJECT=%d", id), "STUDIO37_DATA="+dataDir,
 		"PATH="+filepath.Dir(exe)+string(os.PathListSeparator)+os.Getenv("PATH"))
 	pr, pw := io.Pipe()
 	cmd.Stdout = pw

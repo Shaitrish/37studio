@@ -19,7 +19,7 @@ const tiktokPrivacy = [
   ["", "Choose who can see it"], ["PUBLIC_TO_EVERYONE", "Everyone"], ["FOLLOWER_OF_CREATOR", "Followers"],
   ["MUTUAL_FOLLOW_FRIENDS", "Friends"], ["SELF_ONLY", "Only me"], ["INBOX", "Send to TikTok drafts"],
 ];
-interface SocialInfo { accounts: SocialAccount[]; ready: Record<string, boolean>; inbox_mode: string; replies: string; redirect: string }
+interface SocialInfo { accounts: SocialAccount[]; ready: Record<string, boolean>; inbox_mode: string; replies: string; redirect: string; meta_app: string }
 type Candidate = Pick<SocialAccount, "platform" | "account_id" | "name" | "picture">;
 
 function AccountLabel({ a }: { a: Pick<SocialAccount, "platform" | "name" | "picture"> }) {
@@ -51,6 +51,7 @@ export function SocialTab({ tenantId }: { tenantId: number }) {
     api(`/social/${a.id}`, { method: "DELETE" }).then(reload, fail);
   const missing = providers.filter((p) => data && !data.ready[p.id]);
   const [whatsapp, setWhatsapp] = useState(false);
+  const [metaApp, setMetaApp] = useState(false);
   return (
     <div className="stack">
       <div className="card">
@@ -80,6 +81,10 @@ export function SocialTab({ tenantId }: { tenantId: number }) {
           <button className="btn" onClick={() => setWhatsapp(true)} title="For the Inbox: answer customers' WhatsApp messages">
             <WhatsappLogoIcon size={15} /> Connect WhatsApp
           </button>
+          <span className="spacer" />
+          <button className="btn ghost sm" onClick={() => setMetaApp(true)} title="Connect your own Pages before Meta approves 37Studio's app">
+            {data?.meta_app ? `Your Meta app (${data.meta_app})` : "Use your own Meta app"}
+          </button>
         </div>
       </div>
 
@@ -105,6 +110,7 @@ export function SocialTab({ tenantId }: { tenantId: number }) {
       <p className="small faint">Facebook Groups and personal profiles can't be posted to by any app: Meta removed group posting in 2024 and profile posting in 2018. Pages, Instagram, YouTube and TikTok work.</p>
 
       {whatsapp && <ConnectWhatsApp tenantId={tenantId} onDone={() => { setWhatsapp(false); reload(); }} />}
+      {metaApp && data && <OwnMetaApp current={data.meta_app} redirect={data.redirect.replace("{provider}", "meta")} onDone={() => { setMetaApp(false); reload(); }} />}
       {pendingKey && <PickAccounts k={pendingKey} onDone={() => { location.hash = `/clients/${tenantId}/social`; reload(); }} />}
     </div>
   );
@@ -148,6 +154,48 @@ function ConnectWhatsApp({ tenantId, onDone }: { tenantId: number; onDone: () =>
         <Field label="Phone number ID"><input className="input" inputMode="numeric" value={f.phone_id} onChange={set("phone_id")} /></Field>
         <Field label="WhatsApp Business Account ID"><input className="input" inputMode="numeric" value={f.waba_id} onChange={set("waba_id")} /></Field>
         <Field label="Access token"><input className="input" type="password" autoComplete="off" value={f.token} onChange={set("token")} /></Field>
+      </div>
+    </Modal>
+  );
+}
+
+/** The buyer's own Meta app. Until Meta approves 37Studio's app for everyone, Facebook only lets people listed on an app
+ *  sign in to it; on their own app they are the admin. Saved as keys (Settings → Keys), so it applies to every company. */
+function OwnMetaApp({ current, redirect, onDone }: { current: string; redirect: string; onDone: () => void }) {
+  const [f, setF] = useState({ META_APP_ID: current, META_APP_SECRET: "", META_CONFIG_ID: "" });
+  const [busy, setBusy] = useState(false);
+  const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value.trim() });
+  // Blank fields are left as they are; only "Go back" clears them.
+  const save = (keys: Record<string, string>, msg: string) => {
+    setBusy(true);
+    api("/keys", { method: "PUT", body: keys }).then(() => { toast(msg); onDone(); }, (e) => { fail(e); setBusy(false); });
+  };
+  return (
+    <Modal title="Use your own Meta app" size="lg" onClose={onDone}
+      sub="Until Meta approves 37Studio's app for everyone, Facebook only lets the people listed on an app sign in. On your own app you're the admin, so your Pages and Instagram work today."
+      footer={<>
+        {current && <button className="btn ghost danger" disabled={busy} onClick={() => save({ META_APP_ID: "", META_APP_SECRET: "", META_CONFIG_ID: "" }, "Back to 37Studio's Meta app")}>Go back to 37Studio's app</button>}
+        <span className="spacer" />
+        <button className="btn" onClick={onDone}>Cancel</button>
+        <button className="btn primary" disabled={busy || !f.META_APP_ID || (!current && !f.META_APP_SECRET)}
+          onClick={() => save(Object.fromEntries(Object.entries(f).filter(([, v]) => v)), "Saved. Now connect Facebook & Instagram again")}>Save</button>
+      </>}>
+      <div className="stack">
+        <ol className="small muted" style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 6 }}>
+          <li>At <a href="https://developers.facebook.com/apps" target="_blank" rel="noreferrer">developers.facebook.com/apps</a>, click <b>Create app</b>. Pick the use cases <b>Manage everything on your Page</b> and <b>Manage messaging &amp; content on Instagram</b>, plus <b>Engage with customers on Messenger</b> for the Inbox. Connect your business portfolio; it doesn't need to be verified.</li>
+          <li>In each use case, click <b>Customize</b> and add pages_show_list, pages_read_engagement, pages_manage_posts, business_management, instagram_basic and instagram_content_publish. For the Inbox, also add pages_read_user_content, pages_manage_engagement, pages_manage_metadata, pages_messaging, instagram_manage_comments and instagram_manage_messages.</li>
+          <li><b>Facebook Login for Business → Configurations → Create</b>: User access token, your Pages and Instagram accounts, the same permissions. Copy its ID; Instagram video uploads need it.</li>
+          <li><b>App settings → Basic</b>: copy the App ID and App secret. If Meta asks for a redirect URI, use <code style={{ overflowWrap: "anywhere" }}>{redirect}</code>.</li>
+          <li>Leave the app in <b>Development</b> mode. Anyone else who connects Pages needs a role under <b>App roles</b>.</li>
+        </ol>
+        <Field label="App ID"><input className="input" inputMode="numeric" value={f.META_APP_ID} onChange={set("META_APP_ID")} /></Field>
+        <Field label="App secret" hint={current ? "leave blank to keep it" : undefined}><input className="input" type="password" autoComplete="off" value={f.META_APP_SECRET} onChange={set("META_APP_SECRET")} /></Field>
+        <Field label="Login configuration ID" hint={current ? "leave blank to keep it" : "for Instagram videos"}><input className="input" inputMode="numeric" value={f.META_CONFIG_ID} onChange={set("META_CONFIG_ID")} /></Field>
+        <p className="small faint" style={{ margin: 0 }}>
+          This covers posting to your Pages and Instagram, and comments in the Inbox. Messenger and Instagram messages from customers
+          still need Meta's App Review on any app; until then only people with a role on your app show up. After saving, connect
+          Facebook &amp; Instagram again on each company. The secret is stored encrypted on this computer and never shown to the agents.
+        </p>
       </div>
     </Modal>
   );

@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 	"syscall"
@@ -335,9 +336,14 @@ func claudeCmd(dir string, q Quality, system, addDir, prompt string, extra ...st
 	cmd := exec.Command(claudeBin, append(args, extra...)...)
 	cmd.Dir = dir
 	cmd.Stdin = strings.NewReader(prompt)
-	cmd.Env = append(os.Environ(), "STUDIO37_DATA="+dataDir,
-		"PATH="+filepath.Dir(exe)+string(os.PathListSeparator)+os.Getenv("PATH"))
+	cmd.Env = agentEnv("STUDIO37_DATA="+dataDir, "PATH="+filepath.Dir(exe)+string(os.PathListSeparator)+os.Getenv("PATH"))
 	return cmd
+}
+
+// agentEnv is this process's environment for an agent, minus the Meta app secret: it only signs logins, and an agent
+// that reads web pages shouldn't hold it. `37studio gen` still needs the AI provider keys, so those stay.
+func agentEnv(extra ...string) []string {
+	return append(slices.DeleteFunc(os.Environ(), func(kv string) bool { return strings.HasPrefix(kv, "META_APP_SECRET=") }), extra...)
 }
 
 var (

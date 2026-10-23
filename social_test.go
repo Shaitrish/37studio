@@ -36,3 +36,22 @@ func TestCallWithErrors(t *testing.T) {
 		}
 	}
 }
+
+// An app ID only switches logins to the buyer's own Meta app together with its secret, and agents never get the secret.
+func TestMetaApp(t *testing.T) {
+	t.Setenv("META_APP_ID", "111")
+	t.Setenv("META_APP_SECRET", "")
+	if id, c := metaApp(); id != sharedMetaApp || c != sharedMetaConfig {
+		t.Fatalf("ID without secret: got %s %s, want the shared app", id, c)
+	}
+	t.Setenv("META_APP_SECRET", "s3cret")
+	t.Setenv("META_CONFIG_ID", "")
+	if id, c := metaApp(); id != "111" || c != "" {
+		t.Fatalf("own app: got %s %q", id, c)
+	}
+	for _, kv := range agentEnv() {
+		if strings.HasPrefix(kv, "META_APP_SECRET=") {
+			t.Fatal("agents got the Meta app secret")
+		}
+	}
+}
