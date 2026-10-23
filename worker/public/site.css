@@ -373,9 +373,7 @@ pre.cmd { background: var(--ink); color: #f4f3f6; border-radius: 12px; padding: 
 .small-print { font-size: 13.5px; margin-top: 16px; }
 .pay-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .pay-head h2 { margin: 0; }
-.via { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); white-space: nowrap; }
-.nsave { width: 62px; height: 13px; color: var(--ink); }
-.bkash { height: 34px; width: auto; }
+.bkash { height: 44px; width: auto; }
 .bank-logo { width: 16px; height: 16px; margin-right: 7px; vertical-align: -2px; }
 .checks svg.gh { color: var(--ink); }
 .bank { margin: 14px 0 0; display: grid; }
