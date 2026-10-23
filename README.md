@@ -28,6 +28,16 @@ Video and social media studio that runs on your own computer. Long-form footage 
 - **Built-in tools for this work.** It includes `transcribe` (local Whisper, word-level, with Bangla support via `--language bn`), `remove-background` for teacher cut-outs, `snapshot` for thumbnails, and `check` for linting.
 - **License.** HyperFrames is open source. Remotion needs a paid company license once a team has more than 3 people.
 
+## Transcription
+
+The agent transcribes speech with `37studio transcribe <file> --language bn --out work/transcript`. It runs faster-whisper ([asr/transcribe.py](asr/transcribe.py), embedded in the binary) on the user's computer, so it costs nothing and the audio stays local; paid APIs (ElevenLabs, Gemini) are used only when the editor asks for them.
+
+- **Model by hardware.** With an NVIDIA GPU visible it uses `large-v3` (float16). On a CPU it uses `large-v3-turbo` (int8), which is several times faster for a small accuracy loss and still handles Bangla. `--quality best` forces `large-v3`; `--quality fast`, or less than 4 GB of memory, uses `small`, which is weak on Bangla.
+- **Inside Docker every OS is the same Linux CPU path.** Docker Desktop on a Mac can't reach the Apple GPU, and the shipped compose file passes no NVIDIA GPU (the image also lacks the CUDA libraries), so the GPU branch only applies when the binary runs outside Docker. The model and thread count still follow the container's memory and cores. A 2-hour class on a CPU takes roughly 1–2 hours; the tool prints progress and an estimate, and the agent runs it in the background.
+- **Long-class settings.** Voice activity detection skips silences, `condition_on_previous_text` is off so hours of audio don't loop on one phrase, and word timestamps give exact cut points for reels.
+- **Outputs.** `transcript.json` (segments and words), `.srt`, and `.txt` with timestamps. A second run with the same file and settings reuses the result.
+- **Setup.** The image ships the Python environment (`/opt/asr`, `STUDIO37_ASR_PYTHON`). The model (about 1.6 GB for turbo) downloads into the cache volume the first time. Outside Docker the command makes its own venv under the user cache.
+
 ## Run it
 
 ### Docker (Linux, macOS, Windows)

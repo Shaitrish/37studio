@@ -50,6 +50,9 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == "gen" {
 		os.Exit(genCLI(os.Args[2:]))
 	}
+	if len(os.Args) > 1 && os.Args[1] == "transcribe" {
+		os.Exit(transcribeCLI(os.Args[2:]))
+	}
 	if len(os.Args) > 1 && os.Args[1] == "license" {
 		os.Exit(licenseCLI(os.Args[2:]))
 	}

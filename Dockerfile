@@ -21,10 +21,13 @@ RUN CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /37studio .
 FROM node:22-bookworm AS base
 ARG HF_VERSION=0.8.186
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      ffmpeg python3 ca-certificates fonts-noto-core fonts-noto-color-emoji \
+      ffmpeg python3 python3-venv ca-certificates fonts-noto-core fonts-noto-color-emoji \
       libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 \
       libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2 libpango-1.0-0 libcairo2 libxshmfence1 \
     && rm -rf /var/lib/apt/lists/*
+# Free local transcription for `37studio transcribe` (faster-whisper; models download to ~/.cache on first use).
+RUN python3 -m venv /opt/asr && /opt/asr/bin/pip install --no-cache-dir faster-whisper==1.2.1
+ENV STUDIO37_ASR_PYTHON=/opt/asr/bin/python
 RUN npm install -g @anthropic-ai/claude-code opencode-ai hyperframes@${HF_VERSION}
 COPY --from=api /37studio /usr/local/bin/37studio
 COPY --from=web /web/dist /app/web
