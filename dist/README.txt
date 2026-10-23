@@ -8,8 +8,13 @@
    The first start downloads about 3 GB. Every later start checks for updates first.
 3. 37Studio opens in its own window at http://localhost:8080. It only accepts connections from this computer.
    To keep it in your taskbar or Dock: Chrome/Edge menu -> "Install 37Studio", or Safari -> File -> Add to Dock.
-4. Settings: paste your license key and your Claude key (Anthropic API key, or a Claude subscription token from
-   `claude setup-token`). Gemini and ElevenLabs keys are optional. Keys are encrypted and stay on this computer.
+4. Settings: add your Claude key (Anthropic API key, or a Claude subscription token from `claude setup-token`).
+   Gemini and ElevenLabs keys are optional. Keys are encrypted and stay on this computer.
+5. Make two videos free. Then buy a license at https://studio.shaitrish.com/buy (6 months or 1 year; bKash, Nagad
+   or card in Bangladesh, bank transfer from abroad) and paste the key in Settings -> License.
+
+Full step-by-step guide for Windows, Mac and Linux: https://studio.shaitrish.com/setup
+Help: WhatsApp +880 1635 191148 or jahangir@shaitrish.com
 
 Inbox auto-replies and Autopilot work while 37Studio runs. After the first start it comes back by itself whenever Docker
 Desktop starts (Docker Desktop -> Settings -> General -> "Start Docker Desktop when you sign in"). To answer messages at

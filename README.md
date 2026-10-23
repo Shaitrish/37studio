@@ -141,7 +141,7 @@ It runs one video at a time and only while 37Studio is running. A slot that pass
 
 Each buyer runs their own copy in Docker on their own computer and pays for their own AI usage:
 
-- **Website:** `worker/public/` on studio.shaitrish.com: `index.html` (product page, ৳5,000 one-time license), `setup.html` (step-by-step setup for Windows, Mac and Linux), `privacy.html` (what the app sends and where), shared `site.css`, and screenshots in `shots/` taken from a demo copy (`STUDIO37_GRAPH_URL` / `STUDIO37_AUTH_URL` pointed at a stand-in server).
+- **Website:** `worker/public/` on studio.shaitrish.com: `index.html` (product page; licenses ৳5,000 for 6 months or ৳8,000 for a year), `buy.html` (checkout and bank transfer), `setup.html` (step-by-step setup for Windows, Mac and Linux), `privacy.html` (what the app sends and where), `terms.html`, shared `site.css`, and screenshots in `shots/` taken from a demo copy (`STUDIO37_GRAPH_URL` / `STUDIO37_AUTH_URL` pointed at a stand-in server).
 - **Download page:** `worker/public/index.html` on studio.shaitrish.com links `37studio.zip`, which is `dist/`: `docker-compose.yml`, `start.bat` (Windows), `start.command` (Mac), `start.sh` (Linux) and a README. The launcher starts Docker Desktop if it isn't running, pulls the latest image, starts it on `127.0.0.1:8080` only, and opens it in its own app window (Edge on Windows, Chrome on Mac when installed), so every start is also an update. The web app has a manifest, so Chrome/Edge "Install 37Studio" and Safari "Add to Dock" keep it in the taskbar or Dock.
 - **Intel and Apple Silicon:** the image is built for `linux/amd64` and `linux/arm64`. Chrome for Testing has no Linux arm64 build, so on arm64 HyperFrames renders with Playwright's pinned arm64 headless shell (`HYPERFRAMES_BROWSER_PATH`), as HyperFrames' own `Dockerfile.render` does.
 - **Keys:** Settings → Keys takes an Anthropic API key or a Claude subscription token (`claude setup-token`), plus optional Gemini and ElevenLabs keys. They are encrypted in the database with a key file next to it and applied to the agent's environment; nothing needs `.env`. Anthropic's terms don't let third-party products run on Claude subscription logins without its approval, so the supported setup for sold copies is each buyer's own API key.
@@ -209,3 +209,7 @@ The agent can generate media by calling `37studio gen image|video --prompt ... -
 
 - **Object storage.** Footage stays on local disk. Add R2/S3 behind `projectDir` when it outgrows one disk.
 - **Image posts.** Publishing sends videos only; Instagram needs a public URL for images, which a local-first app doesn't have.
+- **YouTube and TikTok for buyers.** The code is there, but the Google and TikTok apps aren't registered or audited yet, so the shared copies show them as not set up.
+- **Meta for everyone.** Until App Review passes, buyers must be added as app testers. The submission pack is `docs/meta-app-review.md`; Business Verification comes first, and the Facebook redirect must go through the Worker before the app goes Live.
+- **WhatsApp on customers' own numbers** (Embedded Signup, coexistence with the phone app) needs Meta Tech Provider approval.
+- **Sale notifications.** Paid orders only land in D1; nothing emails you yet.
