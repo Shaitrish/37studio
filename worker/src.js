@@ -23,6 +23,8 @@ export default {
     if (url.pathname === "/oauth/meta/token" && req.method === "POST") return metaToken(req, env);
     if (url.pathname === "/webhooks/meta") return webhook(req, env, url);
     if (url.pathname === "/whatsapp/messages" && req.method === "GET") return waMessages(req, env, url);
+    // Every copy asks this at start and every 6 hours, so revoking a key reaches the app itself, not only these endpoints.
+    if (url.pathname === "/license/check") return Response.json({ revoked: revoked(req, env) });
     if (url.pathname === "/pay/start" && req.method === "POST") return buy(req, env); // /buy itself is the static form page
     if ((url.pathname === "/pay/return" || url.pathname === "/pay/ipn") && req.method === "POST") return payBack(req, env, url.pathname === "/pay/ipn");
     if (url.pathname === "/pay/order") return orderPage(env, url);
@@ -92,10 +94,14 @@ async function waMessages(req, env, url) {
 
 // licensed checks the X-37Studio-License header: 37S1.<payload>.<signature>, both base64url, Ed25519-signed,
 // not revoked and not past its end date.
+function revoked(req, env) {
+  const sig = (req.headers.get("x-37studio-license") || "").trim().split(".")[2] || "";
+  return sig.length >= 16 && (env.REVOKED_LICENSES || "").split(",").map((s) => s.trim()).includes(sig.slice(0, 16));
+}
+
 async function licensed(req, env) {
   const parts = (req.headers.get("x-37studio-license") || "").trim().split(".");
-  if (parts.length !== 3 || parts[0] !== "37S1") return false;
-  if ((env.REVOKED_LICENSES || "").split(",").map((s) => s.trim()).filter(Boolean).includes(parts[2].slice(0, 16))) return false;
+  if (parts.length !== 3 || parts[0] !== "37S1" || revoked(req, env)) return false;
   try {
     const b64 = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), (c) => c.charCodeAt(0));
     const key = await crypto.subtle.importKey("raw", b64(LICENSE_PUB), { name: "Ed25519" }, false, ["verify"]);

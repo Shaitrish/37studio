@@ -54,6 +54,9 @@ func needLicense(what string) error {
 	if errors.Is(err, errExpired) {
 		return apiErr{http.StatusPaymentRequired, what + " needs an active license. Yours ended on " + l.Expires + "; renew it at " + licenseURL}
 	}
+	if errors.Is(err, errRevoked) {
+		return apiErr{http.StatusPaymentRequired, what + " needs an active license, and yours was cancelled. Contact jahangir@shaitrish.com."}
+	}
 	return apiErr{http.StatusPaymentRequired, what + " needs a 37Studio license. Add your key in Settings, or get one at " + licenseURL}
 }
 
@@ -66,6 +69,7 @@ type license struct {
 }
 
 var errExpired = errors.New("expired")
+var errRevoked = errors.New("revoked")
 
 // parseLicense checks a key of the form 37S1.<payload>.<signature> (both base64url) against licensePub.
 func parseLicense(key string) (*license, error) {
@@ -86,6 +90,9 @@ func parseLicense(key string) (*license, error) {
 	if l.Test {
 		return nil, errors.New("that is a test key from the payment sandbox, not a license")
 	}
+	if r := setting("license_revoked"); r != "" && len(parts[2]) >= 16 && r == parts[2][:16] {
+		return &l, fmt.Errorf("this license was %w; contact jahangir@shaitrish.com", errRevoked)
+	}
 	// ponytail: checked against this computer's clock; the Worker checks the same date with its own clock.
 	if end, err := time.Parse(time.DateOnly, l.Expires); l.Expires != "" && (err != nil || time.Now().After(end.AddDate(0, 0, 1))) {
 		return &l, fmt.Errorf("this license %w on %s; renew it at %s", errExpired, l.Expires, licenseURL)
@@ -99,6 +106,9 @@ func getLicense(r *http.Request) (any, error) {
 		out := map[string]any{"valid": false, "trial_left": trialLeft(), "trial": trialProjects, "url": licenseURL}
 		if errors.Is(err, errExpired) {
 			out["name"], out["expired"] = l.Name, l.Expires
+		}
+		if errors.Is(err, errRevoked) {
+			out["name"], out["revoked"] = l.Name, true
 		}
 		return out, nil
 	}
@@ -114,7 +124,38 @@ func putLicense(r *http.Request) (any, error) {
 		return nil, bad(err.Error())
 	}
 	db.Exec("insert into settings(key,value) values('license',?) on conflict(key) do update set value=excluded.value", strings.TrimSpace(str(b["key"])))
+	go checkRevoked()
 	return getLicense(r)
+}
+
+// licenseLoop asks studio.shaitrish.com whether this copy's key was revoked, at start and every 6 hours. Only a
+// definite answer changes anything: offline, or with the server down, a paid key keeps working.
+func licenseLoop() {
+	for {
+		checkRevoked()
+		time.Sleep(6 * time.Hour)
+	}
+}
+
+func checkRevoked() {
+	key := strings.TrimSpace(setting("license"))
+	parts := strings.Split(key, ".")
+	if len(parts) != 3 || len(parts[2]) < 16 {
+		return
+	}
+	req := get(authURL+"/license/check", "")
+	req.Header.Set("X-37Studio-License", key)
+	var res struct {
+		Revoked bool `json:"revoked"`
+	}
+	if call(req, &res) != nil {
+		return
+	}
+	v := "" // un-revoking a key clears it again
+	if res.Revoked {
+		v = parts[2][:16]
+	}
+	db.Exec("insert into settings(key,value) values('license_revoked',?) on conflict(key) do update set value=excluded.value", v)
 }
 
 // licenseCLI issues keys on the release machine: 37studio license --name "Rafi" --email rafi@example.com

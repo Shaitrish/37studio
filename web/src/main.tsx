@@ -159,7 +159,7 @@ function App() {
             </a>
             {upd?.newer && <a className="who" href="#/settings" style={{ color: "var(--primary)" }}>Version {upd.latest} available</a>}
             <a className="who" href="#/settings">{lic?.valid ? <><span className="dot" />{lic.name}{(licenseDaysLeft(lic) ?? 99) <= 14 && ` · ends in ${licenseDaysLeft(lic)} days`}</>
-              : lic?.expired ? "License ended · renew in Settings" : `Free trial · ${lic?.trial_left ?? 0} of ${lic?.trial ?? 2} videos left`}</a>
+              : lic?.revoked ? "License cancelled · see Settings" : lic?.expired ? "License ended · renew in Settings" : `Free trial · ${lic?.trial_left ?? 0} of ${lic?.trial ?? 2} videos left`}</a>
           </div>
         </aside>
         <main className="main">{page}</main>

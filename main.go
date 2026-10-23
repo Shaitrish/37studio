@@ -71,6 +71,7 @@ func main() {
 	go postLoop()
 	go autopilotLoop()
 	go clipLoop()
+	go licenseLoop()
 	go inboxLoop()
 
 	mux := http.NewServeMux()

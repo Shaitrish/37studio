@@ -58,7 +58,7 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
   return data as T;
 }
 
-export interface License { valid: boolean; name?: string; email?: string; expires?: string; expired?: string; trial_left?: number; trial?: number; url?: string }
+export interface License { valid: boolean; name?: string; email?: string; expires?: string; expired?: string; revoked?: boolean; trial_left?: number; trial?: number; url?: string }
 /** Days until a 6- or 12-month license ends (the end date is the last day it works). */
 export const licenseDaysLeft = (l?: License) => (l?.expires ? Math.ceil((new Date(l.expires + "T23:59:59").getTime() - Date.now()) / 864e5) : undefined);
 export const licenseURL = "https://studio.shaitrish.com/#pricing";

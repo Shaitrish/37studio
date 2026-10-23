@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -59,5 +60,28 @@ func TestTrialAndLicense(t *testing.T) {
 	setKey(sign(license{Name: "Shaitrish", Issued: "2026-10-23"})) // no end date
 	if err := newProject(); err != nil {
 		t.Fatalf("license without an end date: %v", err)
+	}
+
+	// Revoked on studio.shaitrish.com: the next check locks the copy; un-revoking (or another answer) unlocks it again.
+	isRevoked := true
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/license/check" || !strings.HasPrefix(r.Header.Get("X-37Studio-License"), "37S1.") {
+			w.WriteHeader(400)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]bool{"revoked": isRevoked})
+	}))
+	defer srv.Close()
+	oldAuth := authURL
+	authURL = srv.URL
+	defer func() { authURL = oldAuth }()
+	checkRevoked()
+	if err := newProject(); !paid(err) || !strings.Contains(err.Error(), "cancelled") {
+		t.Fatalf("revoked license: want 402 saying it was cancelled, got %v", err)
+	}
+	isRevoked = false
+	checkRevoked()
+	if err := newProject(); err != nil {
+		t.Fatalf("un-revoked license: %v", err)
 	}
 }

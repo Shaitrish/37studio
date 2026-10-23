@@ -177,7 +177,9 @@ function LicenseSection() {
             {(licenseDaysLeft(lic) ?? 99) <= 14 && <a href={licenseURL} target="_blank" rel="noreferrer">Renew</a>}</p>
         ) : (<>
           <p className="small muted" style={{ margin: 0 }}>
-            {lic?.expired
+            {lic?.revoked
+              ? <>The license for {lic.name} was cancelled. Your work is all still here. To talk about it, email <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a>. </>
+              : lic?.expired
               ? <>Your license for {lic.name} ended on {date(lic.expired)}. Renew it to keep making videos, publishing and using Autopilot and auto-replies; your work is all still here. </>
               : <>Free trial: {lic?.trial_left ?? 0} of {lic?.trial ?? 2} videos left. A license (6 months or a year) unlocks unlimited videos, Autopilot, publishing and inbox auto-replies. </>}
             <a href={licenseURL} target="_blank" rel="noreferrer">{lic?.expired ? "Renew" : "Get a license"}</a>
