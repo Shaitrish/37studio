@@ -16,4 +16,5 @@ import json, sys
 json.dump({"version": sys.argv[1], "notes": sys.argv[2], "url": "https://studio.shaitrish.com/"}, open("worker/public/version.json", "w"))
 PY
 (cd worker && npx -y wrangler deploy)
+git tag -a "v$V" -m "37Studio $V${1:+: $1}" && git push origin "v$V"
 echo "Released 37Studio $V as $IMAGE:$V"

@@ -1,0 +1,32 @@
+# The checks every pull request and push to main must pass (the `ci` status check the main branch rule requires).
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+      - name: go build, vet, test
+        run: go build ./... && go vet ./... && go test ./...
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: web build
+        working-directory: web
+        run: npm ci && npm run build
+      - name: Worker syntax
+        run: node --check worker/src.js

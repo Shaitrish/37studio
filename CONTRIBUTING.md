@@ -53,6 +53,8 @@ If you changed `docker-compose.cloud.yml`, check it with `STUDIO37_DOMAIN=exampl
 
 ## Pull requests
 
+Fork the repo, make your change on a branch, and open a pull request against `main`. The `ci` check runs the commands above and has to pass before merging. We squash-merge, so your pull request's title becomes the commit message: make it say what changed.
+
 - **Small and focused.** One change per pull request is much easier to review. For anything big (a new platform, a new page, a schema change), open an issue first so we can agree on the shape.
 - **Match the code around you.** The backend is the Go standard library plus SQLite, with no framework; the UI is React with plain CSS and Phosphor icons. Keep it that way unless there's a strong reason: don't add a dependency for something a few lines can do.
 - **Keep it local-first.** 37Studio runs on people's own computers and servers with their own keys. Changes shouldn't send their data anywhere new, add accounts or telemetry, or need a hosted service.

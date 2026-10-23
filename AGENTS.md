@@ -61,4 +61,4 @@ node --check worker/src.js                       # Worker syntax
 
 ## Releasing (maintainers)
 
-Bump `Version` in `internal/update/update.go`, then run `./release.sh "What changed"`. It pushes the multi-arch image to ghcr.io, zips `dist/`, writes `worker/public/version.json` and deploys the Worker. Never commit `data/`, `.env` or any backup of them.
+Bump `Version` in `internal/update/update.go`, then run `./release.sh "What changed"`. It pushes the multi-arch image to ghcr.io, zips `dist/`, writes `worker/public/version.json`, deploys the Worker and tags the commit `vX.Y.Z`. Never commit `data/`, `.env` or any backup of them.
