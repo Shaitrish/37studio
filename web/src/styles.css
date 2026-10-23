@@ -541,3 +541,4 @@ label.cbtn { cursor: pointer; }
 /* assistant: the chat fills the page */
 .assistant .chat { position: static; height: calc(100vh - 170px); min-height: 420px; }
 .assistant .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.msg-agent a { color: var(--primary); text-underline-offset: 2px; }

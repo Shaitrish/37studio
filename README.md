@@ -34,6 +34,7 @@ You bring your own keys (a Claude plan or an Anthropic API key; Gemini and Eleve
 - **Generated media.** Gemini images and video clips; ElevenLabs voiceover, sound effects and music.
 - **Publishing and Autopilot.** Post to any mix of a company's accounts on nine platforms now or on a schedule, or let a content plan make a fresh video before every slot and wait for one-click approval.
 - **One inbox.** Messenger, Instagram and WhatsApp messages and Facebook and Instagram comments, with replies drafted in the customer's language, following the company's own rules. Off, drafts to approve, or fully automatic, per company.
+- **Assistant and MCP.** Run everything by chatting with the Assistant in the sidebar, or from your own AI agent (Claude Code, Claude Desktop, Cursor) through 37Studio's MCP server: companies, campaigns, videos, publishing, Autopilot, settings and connections.
 - **Real costs.** Every project, campaign and company shows its AI spend in your currency. No markup: you pay Anthropic, Google and ElevenLabs directly.
 
 Everything runs in one Docker container, on your computer or your own server. Footage, brands and messages stay there; API keys and platform credentials are encrypted on disk.
@@ -176,6 +177,40 @@ Environment-only settings (`LINKEDIN_PAGES`, `PINTEREST_API`, `STUDIO37_PUBLIC_U
 **Auto-replies** (Company → Social → Inbox replies): *Off*, *Claude drafts, you approve*, or *Claude replies on its own*, plus the company's own rules for how Claude replies (tone, sign-off, what never to promise, when to hand over to a person). Facts only come from the knowledge base; when the answer isn't there, Claude says a team member will reply. A background loop checks every 2 minutes while 37Studio runs, and catches up on what arrived while it was off if the platform still allows a reply (messages within 24 hours, comments up to 2 days old).
 
 The inbox needs extra Meta permissions on top of publishing, and WhatsApp needs a number on the WhatsApp Business API and a small webhook relay: see [docs/platforms.md](docs/platforms.md#inbox-messenger-instagram-and-comments). Until Meta grants your app Advanced Access, only messages from people with a role on the app or Page appear.
+
+## Assistant and MCP
+
+**Assistant** in the sidebar runs the studio by chatting: "add this company from its website", "plan three reels a week for Dhaka Bites at 8 pm with my approval", "publish yesterday's video to all its Pages", "what did we spend this month?". It is Claude Code connected to 37Studio's own MCP server and nothing else (no shell, no file edits), so it can only do what the app's buttons do. It asks before it deletes anything, publishes, approves an Autopilot video or replies to a customer. Each reply's cost shows in the chat and on the Costs page, under "Assistant".
+
+**MCP server.** Any MCP client on the same computer can manage 37Studio from its own chat, through the same tools. That includes Claude Code, Claude Desktop and Cursor. There are 65 tools:
+- companies, their brand library and knowledge base
+- campaigns, and videos made by the editor agent
+- generated media and templates
+- publishing and Autopilot
+- the inbox and costs
+- settings, keys and account connections
+
+The endpoint is `http://localhost:8080/mcp` (Streamable HTTP). Connect it from:
+
+```bash
+# Claude Code
+claude mcp add --transport http 37studio http://localhost:8080/mcp
+# with STUDIO37_PASSWORD set, add: --header "Authorization: Basic $(printf '37studio:%s' "$PASSWORD" | base64)"
+```
+
+Claude Desktop (`claude_desktop_config.json`), through the `mcp-remote` bridge:
+
+```json
+{ "mcpServers": { "37studio": { "command": "npx", "args": ["-y", "mcp-remote", "http://localhost:8080/mcp"] } } }
+```
+
+Cursor (`.cursor/mcp.json`):
+
+```json
+{ "mcpServers": { "37studio": { "url": "http://localhost:8080/mcp" } } }
+```
+
+Settings → **Connect other AI agents** shows the address for your copy. The server refuses requests from other websites' pages (Origin check), and with `STUDIO37_PASSWORD` set it needs the password like the rest of the app. Agents connected to it can spend on your AI keys and post to your accounts, so connect only agents you trust.
 
 ## Configuration
 

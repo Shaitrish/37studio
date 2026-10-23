@@ -567,7 +567,7 @@ export function ToolGroup({ tools, open }: { tools: Parsed[]; open: boolean }) {
       <summary className="msg-tool" style={{ cursor: "pointer", listStyle: "none" }}>
         <WrenchIcon size={13} />
         <b>{steps} step{steps === 1 ? "" : "s"}</b>
-        <span className="ellipsis">{tidy(last.b.summary ?? last.b.text)}</span>
+        <span className="ellipsis">{last.b.name?.startsWith("mcp__") ? toolLabel(last.b.name) : tidy(last.b.summary ?? last.b.text)}</span>
       </summary>
       <div className="stack" style={{ gap: 4, marginTop: 6 }}>
         {tools.map((t) => {

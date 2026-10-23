@@ -50,6 +50,7 @@
     <nav aria-label="Sections">
       <a href="#how">How it works</a>
       <a href="#make">What it makes</a>
+      <a href="#assistant">Assistant</a>
       <a href="#ai">Your AI</a>
       <a href="#open">Open source</a>
       <a href="https://github.com/Shaitrish/37studio">GitHub</a>
@@ -232,9 +233,23 @@
   </div>
 </section>
 
-<section class="s tint">
+<section class="s tint" id="assistant">
   <div class="wrap">
     <div class="split rv">
+      <div>
+        <span class="eyebrow">Assistant and MCP</span>
+        <h2>Run every client's social media by chatting</h2>
+        <p class="lead">Tell the Assistant what you need: add a client from its website, plan a month of reels, publish to all its Pages, check what it cost. It does it with the same tools as every button. Your own AI agent can too: Claude Code, Claude Desktop or Cursor connect to 37Studio's MCP server and run everything from their chat.</p>
+        <ul class="checks">
+          <li><svg><use href="#i-check"/></svg>65 tools: companies and brand libraries, campaigns, videos, publishing, Autopilot, the inbox, costs, settings and account connections</li>
+          <li><svg><use href="#i-check"/></svg>Asks before it deletes anything, publishes or replies to a customer</li>
+          <li><svg><use href="#i-check"/></svg>Connect your own agent in one line: <code>claude mcp add --transport http 37studio http://localhost:8080/mcp</code></li>
+        </ul>
+      </div>
+      <div class="frame"><div class="bar"><i></i><i></i><i></i><span>localhost:8080/#/assistant</span></div><img class="zoom" src="/shots/assistant.webp" width="2000" height="1760" alt="The Assistant setting up an Eid campaign and an Autopilot plan for a restaurant from one message" loading="lazy"></div>
+    </div>
+
+    <div class="split flip rv">
       <div>
         <span class="eyebrow">Autopilot</span>
         <h2>Content that keeps coming, with you in charge</h2>
@@ -248,7 +263,7 @@
       <div class="frame"><div class="bar"><i></i><i></i><i></i><span>localhost:8080</span></div><img class="zoom" src="/shots/autopilot.webp" width="2000" height="1250" alt="Autopilot plan for BCS Mate: a daily BCS tip on weekdays at 8 pm, with posted videos and one waiting for approval" loading="lazy"></div>
     </div>
 
-    <div class="split flip rv">
+    <div class="split rv">
       <div>
         <span class="eyebrow">You stay in control</span>
         <h2>Claude drafts overnight. Your team sends in the morning.</h2>
