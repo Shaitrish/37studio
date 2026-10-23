@@ -78,6 +78,9 @@ var Qualities = []Quality{
 	{"draft", "Draft", "claude-sonnet-5-5", "medium", "Sonnet 5.5. Fast and cheap: simple cuts and captions.", ""},
 	{"standard", "Standard", "claude-opus-5-5", "high", "Opus 5.5. Best default for reels and motion graphics.", ""},
 	{"premium", "Premium", "claude-opus-5-5", "xhigh", "Opus 5.5 at extra effort, for flagship ads.", ""},
+	{"kimi", "Kimi K3", "opencode-go/kimi-k3", "", "Kimi K3 via OpenCode. A frontier model that's strong at visual work: layouts, motion and checking frames.", "opencode"},
+	{"qwen", "Qwen 3.8 Max", "opencode-go/qwen3.8-max", "", "Qwen 3.8 Max via OpenCode. A frontier model, often for less than Opus.", "opencode"},
+	{"glm", "GLM 5.3", "opencode-go/glm-5.3", "", "GLM 5.3 via OpenCode. A frontier model, often for less than Opus.", "opencode"},
 	{"deepseek", "DeepSeek Pro", "opencode-go/deepseek-v4-pro", "", "DeepSeek V4 Pro via OpenCode. Far cheaper than Opus for routine edits.", "opencode"},
 	{"deepseek-flash", "DeepSeek Flash", "opencode-go/deepseek-v4.1-flash", "", "DeepSeek V4.1 Flash via OpenCode. Near-free for tiny fixes.", "opencode"},
 }
