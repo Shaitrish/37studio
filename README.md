@@ -6,13 +6,15 @@ Video and social media studio that runs on your own computer. Long-form footage 
 
 ## How a job flows
 
-1. **Company.** *Add from website* builds a complete knowledge base of the company's existing system in two stages. First `hyperframes capture` (no tokens) grabs pages, assets, fonts, screenshots, CSS variables and computed styles. Then an agent sorts every asset into the brand library and writes:
+1. **Company.** *Add from website or folder* builds a complete knowledge base of the company's existing system in two stages. First `hyperframes capture` (no tokens) grabs pages, assets, fonts, screenshots, CSS variables and computed styles. Then an agent sorts every asset into the brand library and writes:
    - `design.md`: the design system as a HyperFrames design spec (exact colors by role, type scale, fonts, radii, spacing, shadows, button/card/nav styles). It is copied into every project's `comp/`, where HyperFrames treats it as brand truth.
    - `knowledge.md`: what the business does, offers, proof, tone, site structure and video ideas.
    - `assets.json`: a caption for every file in the library (what it shows, which site section it came from, source URL, what it is good for). Editors can fix captions or move files between folders in the UI. If `GEMINI_API_KEY` is set, capture adds Gemini Vision descriptions.
    - `profile.json`, which fills the company form (only fields still empty).
 
    Brand library folders: `logo`, `people`, `images`, `graphics` (SVG icons and illustrations), `videos`, `fonts`, `audio`, `design` (screenshots, raw tokens), `other`. The UI filters by file type (SVG, PNG, JPG and so on). You can also add a company by hand.
+
+   **From a project folder.** The same dialog takes the company's own folder (a website, app or docs project), with or without a website. The browser uploads a copy to `tenants/<id>/source/`, since Docker can't see the user's disk. Dependencies, build output, hidden files and anything that looks like a secret (`.env`, keys, databases) are left out twice: in the browser, and in `source.go`, because every agent may read the folder and so send it to Anthropic. The scan reads the README, manifests, marketing pages, locale strings, theme and CSS tokens and public assets, and copies real logos, images and fonts into the library. Every project agent also gets the folder as a read-only reference, so a video about a feature can use its real screens, UI text and flows. Choosing the folder again replaces the copy.
 2. **Campaign (optional).** Groups a company's videos around one launch, offer or product. Its brief reaches every video's agent.
 3. **Project.** *New project* is a short chat: company, campaign (or start a new one), what to make, which page or feature it is about (a URL, or a feature name the agent finds on their site), where it runs, length, brief, footage (optional) and quality. No footage is fine: the agent builds from the page, the knowledge base and the brand library.
 4. **Agent.** The app runs `claude -p` in the project folder. The agent probes and transcribes the footage, asks up to 3 questions if it is blocked, cuts with ffmpeg, and builds a HyperFrames composition in `comp/`.
@@ -202,7 +204,9 @@ The agent can generate media by calling `37studio gen image|video --prompt ... -
 | `handlers.go` | Clients, projects, uploads (streamed), file serving + player runtime injection |
 | `agent.go` | Presets, quality tiers, harness prompt, Claude runs (stream-json to chat events), render, generate |
 | `studio.go` | Timeline editor: starts HyperFrames Studio per project, proxies it on its own port |
-| `scan.go` | Website scan: capture, then agent sorts assets and writes `design.md`, `knowledge.md`, profile |
+| `scan.go` | Company scan: website capture and/or project folder, then agent sorts assets and writes `design.md`, `knowledge.md`, profile |
+| `source.go` | Company project folder: upload into `source/`, skip rules for dependencies and secrets |
+| `transcribe.go`, `asr/` | `37studio transcribe`: local faster-whisper, detached long runs |
 | `campaigns.go` | Campaigns: CRUD; the brief reaches each video's harness |
 | `costs.go` | Project cost and the spend report |
 | `keys.go` | Provider keys from Settings, encrypted at rest (AES-GCM, key file in the data folder) |

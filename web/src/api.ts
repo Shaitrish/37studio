@@ -8,8 +8,10 @@ export interface Tenant {
   language: string; brand_color: string; accent_color: string; font: string; notes: string;
   project_count?: number; cost_usd?: number; assets?: FileInfo[]; projects?: Project[];
   scan_status: "" | "running" | "done" | "failed"; scan_note: string; knowledge?: string; design?: string; scanning?: boolean;
-  asset_meta?: Record<string, AssetMeta>;
+  asset_meta?: Record<string, AssetMeta>; source?: SourceInfo | null;
 }
+/** The company's project folder, copied into the app (source.go). */
+export interface SourceInfo { name: string; files: number; bytes: number; uploaded: string }
 export interface Project {
   id: number; tenant_id: number; tenant_name: string; campaign_id: number | null; campaign_name: string | null; title: string; kind: string; aspect: string; seconds: number;
   quality: string; brief: string; focus: string; language: string; status: string; session_id: string; created_at: string;
@@ -58,10 +60,10 @@ export const licenseDaysLeft = (l?: License) => (l?.expires ? Math.ceil((new Dat
 export const licenseURL = "https://studio.shaitrish.com/#pricing";
 
 /** Multipart upload via XHR: fetch() can't report upload progress, and lectures are gigabytes. */
-export function upload(path: string, files: File[], onProgress?: (pct: number) => void): Promise<void> {
+export function upload(path: string, files: File[], onProgress?: (pct: number) => void, field?: (f: File) => string): Promise<void> {
   return new Promise((resolve, reject) => {
     const form = new FormData();
-    files.forEach((f) => form.append("file", f, f.name));
+    files.forEach((f) => form.append(field ? field(f) : "file", f, f.name));
     const xhr = new XMLHttpRequest();
     xhr.open("POST", "/api" + path);
     xhr.upload.onprogress = (e) => e.lengthComputable && onProgress?.(Math.round((e.loaded / e.total) * 100));
@@ -69,6 +71,21 @@ export function upload(path: string, files: File[], onProgress?: (pct: number) =
     xhr.onerror = () => reject(new Error("Upload failed"));
     xhr.send(form);
   });
+}
+
+// Left out of a picked project folder, like skipSource in source.go (which checks again): dependencies, build output,
+// hidden files, anything that looks like a secret, and files over 100 MB.
+const skipDirs = new Set(["node_modules", "vendor", "dist", "build", "out", "target", "coverage", "__pycache__", "venv", "Pods", "DerivedData"]);
+const secretFile = /(\.(pem|key|p12|pfx|jks|keystore|kdbx|sqlite3?|db)$|^id_(rsa|dsa|ecdsa|ed25519)|credential|secret|service-account)/i;
+export function folderFiles(list: FileList) {
+  const keep: File[] = [];
+  let skipped = 0;
+  for (const f of Array.from(list)) {
+    const dirs = f.webkitRelativePath.split("/").slice(1, -1);
+    if (dirs.some((d) => skipDirs.has(d) || d.startsWith(".")) || f.name.startsWith(".") || secretFile.test(f.name) || f.size > 100e6) skipped++;
+    else keep.push(f);
+  }
+  return { name: list[0]?.webkitRelativePath.split("/")[0] ?? "", keep, skipped, bytes: keep.reduce((n, f) => n + f.size, 0) };
 }
 
 /** Fetches `path` on mount and whenever it changes; `reload` refetches without flashing empty state. */

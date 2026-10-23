@@ -84,6 +84,7 @@ func main() {
 	mux.HandleFunc("DELETE /api/tenants/{id}", api(deleteTenant))
 	mux.HandleFunc("POST /api/tenants/{id}/assets", api(uploadAssets))
 	mux.HandleFunc("DELETE /api/tenants/{id}/assets", api(deleteAsset))
+	mux.HandleFunc("POST /api/tenants/{id}/source", api(uploadSource))
 	mux.HandleFunc("PUT /api/tenants/{id}/assets", api(updateAsset))
 
 	mux.HandleFunc("GET /api/campaigns", api(listCampaigns))

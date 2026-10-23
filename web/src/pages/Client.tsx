@@ -57,7 +57,7 @@ export default function ClientPage({ id, tab = "library" }: { id: number; tab?: 
             <h1 className="ellipsis">{t.name}</h1>
             <p>{[t.teacher, t.email, t.phone].filter(Boolean).join(" · ") || "No contact details yet"}</p>
           </div>
-          <button className="btn" disabled={scanning} onClick={() => setRescan(true)}><GlobeIcon size={14} /> {t.website ? "Re-scan website" : "Scan website"}</button>
+          <button className="btn" disabled={scanning} onClick={() => setRescan(true)}><GlobeIcon size={14} /> {t.website || t.source ? "Re-scan" : "Scan website or folder"}</button>
           <button className="btn" onClick={() => setEditing(true)}><PencilSimpleIcon size={14} /> Edit</button>
           <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New project</button>
         </div>
@@ -66,13 +66,13 @@ export default function ClientPage({ id, tab = "library" }: { id: number; tab?: 
       {scanning && (
         <div className="card card-b row" style={{ background: "var(--primary-soft)", borderColor: "var(--border)" }}>
           <div className="typing"><i /><i /><i /></div>
-          <span><strong>Scanning {t.website}</strong> <span className="muted">· {t.scan_note || "Starting."} Takes 5–10 minutes; this page updates by itself.</span></span>
+          <span><strong>Scanning {t.website || t.source?.name}</strong> <span className="muted">· {t.scan_note || "Starting."} Takes 5–10 minutes; this page updates by itself.</span></span>
         </div>
       )}
       {!scanning && t.scan_status === "failed" && (
         <div className="card card-b row" style={{ background: "var(--danger-soft)", borderColor: "var(--border)", alignItems: "flex-start" }}>
           <WarningIcon size={16} color="var(--danger)" style={{ flex: "none", marginTop: 2 }} />
-          <div className="spacer small" style={{ whiteSpace: "pre-wrap" }}><strong>Website scan failed.</strong> {t.scan_note}</div>
+          <div className="spacer small" style={{ whiteSpace: "pre-wrap" }}><strong>Scan failed.</strong> {t.scan_note}</div>
           <button className="btn sm" onClick={() => setRescan(true)}>Try again</button>
         </div>
       )}
@@ -122,6 +122,7 @@ export default function ClientPage({ id, tab = "library" }: { id: number; tab?: 
             <Detail label="Editor notes" value={t.notes} />
             <div className="grid cols-2">
               <Detail label="Website" value={t.website} />
+              <Detail label="Project folder" value={t.source ? `${t.source.name} · ${t.source.files} files, copied ${t.source.uploaded.slice(0, 10)}` : ""} />
               <Detail label="Spoken language" value={t.language} />
               <Detail label="Brand font" value={t.font} />
             </div>
@@ -223,8 +224,8 @@ function Knowledge({ tenant, reload, onScan }: { tenant: Tenant; reload: () => v
         {tenant.scan_status === "done" && tenant.scan_note && <p className="small muted" style={{ whiteSpace: "pre-wrap" }}>{tenant.scan_note}</p>}
         {!text && !tenant.scanning ? (
           <Empty icon={<GlobeIcon size={28} />} title="No knowledge base yet">
-            Scan their website, or write what they do, who they teach, their offers and tone.
-            <button className="btn primary" onClick={onScan}><GlobeIcon size={15} /> Scan website</button>
+            Scan their website or project folder, or write what they do, who they teach, their offers and tone.
+            <button className="btn primary" onClick={onScan}><GlobeIcon size={15} /> Scan</button>
           </Empty>
         ) : null}
         <textarea className="textarea mono" rows={22} value={text} onChange={(e) => setText(e.target.value)}
@@ -277,8 +278,8 @@ function DesignSystem({ tenant, reload, onScan }: { tenant: Tenant; reload: () =
     return (
       <div className="card">
         <Empty icon={<GlobeIcon size={28} />} title="No design system yet">
-          Scan their website to extract colors, type scale, spacing, radii, shadows and component styles.
-          <button className="btn primary" onClick={onScan}><GlobeIcon size={15} /> Scan website</button>
+          Scan their website or project folder to extract colors, type scale, spacing, radii, shadows and component styles.
+          <button className="btn primary" onClick={onScan}><GlobeIcon size={15} /> Scan</button>
         </Empty>
       </div>
     );

@@ -56,6 +56,7 @@ func getTenant(r *http.Request) (any, error) {
 	for k, f := range tenantDocs {
 		t[k] = tenantDoc(id, f)
 	}
+	t["source"] = sourceInfo(id)
 	t["scanning"] = isRunning(-id)
 	t["projects"], _ = rows("select id,title,kind,status,created_at from projects where tenant_id=? order by id desc", id)
 	return t, nil

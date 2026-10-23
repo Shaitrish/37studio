@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { GlobeIcon, PlusIcon, UsersThreeIcon } from "@phosphor-icons/react";
-import { api, fail, go, Tenant, toast, cash, useApi } from "../api";
-import { Avatar, Empty, Field, Modal } from "../ui";
+import { useRef, useState } from "react";
+import { FolderOpenIcon, GlobeIcon, PlusIcon, UsersThreeIcon } from "@phosphor-icons/react";
+import { api, bytes, fail, folderFiles, go, Tenant, toast, cash, upload, useApi } from "../api";
+import { Avatar, Empty, Field, Modal, Progress } from "../ui";
 
 export default function Clients() {
   const { data: tenants } = useApi<Tenant[]>("/tenants");
@@ -15,13 +15,13 @@ export default function Clients() {
           <p>Your businesses and brands. Each has a brand library, design system, knowledge base and social accounts the agents work from.</p>
         </div>
         <button className="btn" onClick={() => setCreating(true)}><PlusIcon size={16} /> Add manually</button>
-        <button className="btn primary" onClick={() => setScanning(true)}><GlobeIcon size={16} /> Add from website</button>
+        <button className="btn primary" onClick={() => setScanning(true)}><GlobeIcon size={16} /> Add from website or folder</button>
       </div>
       {tenants && tenants.length === 0 ? (
         <div className="card">
           <Empty icon={<UsersThreeIcon size={28} />} title="No companies yet">
-            Paste its website: the agent builds the brand library, design system and knowledge base.
-            <button className="btn primary" onClick={() => setScanning(true)}><GlobeIcon size={16} /> Add from website</button>
+            Paste its website or choose its project folder: the agent builds the brand library, design system and knowledge base.
+            <button className="btn primary" onClick={() => setScanning(true)}><GlobeIcon size={16} /> Add from website or folder</button>
           </Empty>
         </div>
       ) : (
@@ -104,36 +104,52 @@ export function TenantModal({ tenant, onClose, onSaved }: { tenant?: Tenant; onC
   );
 }
 
-/** Creates a company from its website (or re-scans one): the agent pulls logo, photos, colors and copy. */
+/** Creates a company from its website and/or project folder (or re-scans one): the agent pulls logo, photos, colors and copy. */
 export function ScanModal({ tenant, onClose, onStarted }: { tenant?: Tenant; onClose: () => void; onStarted?: () => void }) {
   const [url, setUrl] = useState(tenant?.website ?? "");
   const [notes, setNotes] = useState("");
+  const [folder, setFolder] = useState<ReturnType<typeof folderFiles>>();
   const [busy, setBusy] = useState(false);
+  const [pct, setPct] = useState<number>();
+  const pick = useRef<HTMLInputElement>(null);
+  const created = useRef<number | undefined>(undefined); // a new company whose folder upload failed: retry into it, don't make another
+  const ready = !!url.trim() || !!folder?.keep.length || !!tenant?.source;
   async function start() {
     setBusy(true);
     try {
-      if (tenant) {
-        await api(`/tenants/${tenant.id}/scan`, { body: { url, notes } });
-        onStarted?.();
-        onClose();
-      } else {
-        const t = await api<Tenant>("/tenants/scan", { body: { url, notes } });
-        go(`/clients/${t.id}`);
-      }
-    } catch (e) { fail(e); setBusy(false); }
+      let id = tenant?.id ?? created.current;
+      // With a folder, the server waits for the upload; without one, creating the company starts the scan.
+      if (!id) id = created.current = (await api<Tenant>("/tenants/scan", { body: { url, notes, folder: folder?.keep.length ? folder.name : "" } })).id;
+      if (folder?.keep.length) await upload(`/tenants/${id}/source`, folder.keep, setPct, (f) => encodeURIComponent(f.webkitRelativePath));
+      if (tenant || folder?.keep.length) await api(`/tenants/${id}/scan`, { body: { url, notes } });
+      if (tenant) { onStarted?.(); onClose(); } else go(`/clients/${id}`);
+    } catch (e) { fail(e); setBusy(false); setPct(undefined); }
   }
+  const src = tenant?.source;
   return (
     <Modal
-      title={tenant ? "Re-scan website" : "Add company from website"}
-      sub="Captures the site, sorts every asset (logos, people, images, SVGs, videos, fonts) into the brand library, extracts the design system (colors, type scale, spacing, radii, shadows, components) and writes a knowledge base. Every project uses all three."
+      title={tenant ? "Re-scan company" : "Add company"}
+      sub="Reads the website and/or the company's own project folder, sorts every asset (logos, people, images, SVGs, videos, fonts) into the brand library, extracts the design system (colors, type scale, spacing, radii, shadows, components) and writes a knowledge base. Every project uses all three."
       onClose={onClose}
-      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={!url.trim() || busy} onClick={start}><GlobeIcon size={15} /> {busy ? "Starting…" : "Scan website"}</button></>}
+      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={!ready || busy} onClick={start}><GlobeIcon size={15} /> {busy ? (pct === undefined ? "Starting…" : `Uploading ${pct}%`) : "Scan"}</button></>}
     >
       <div className="stack" style={{ gap: 14 }}>
-        <Field label="Website"><input className="input" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="course37.com" autoFocus onKeyDown={(e) => e.key === "Enter" && url.trim() && start()} /></Field>
+        <Field label="Website" hint="optional with a folder"><input className="input" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="course37.com" autoFocus onKeyDown={(e) => e.key === "Enter" && ready && start()} /></Field>
+        <Field label="Project folder" hint="optional: their website, app or docs folder">
+          <div className="row">
+            <button className="btn" type="button" disabled={busy} onClick={() => pick.current?.click()}><FolderOpenIcon size={15} /> {folder || src ? "Choose another" : "Choose folder"}</button>
+            <span className="small muted spacer ellipsis">
+              {folder ? `${folder.name} · ${folder.keep.length} files · ${bytes(folder.bytes)}${folder.skipped ? ` · ${folder.skipped} left out` : ""}`
+                : src ? `${src.name} · ${src.files} files, copied ${src.uploaded.slice(0, 10)}` : "None"}
+            </span>
+          </div>
+          <input ref={pick} type="file" multiple hidden {...{ webkitdirectory: "" }} onChange={(e) => e.target.files?.length && setFolder(folderFiles(e.target.files))} />
+        </Field>
+        {pct !== undefined && <Progress pct={pct} />}
         <Field label="Anything we already know" hint="optional">
           <textarea className="textarea" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="The founder fronts their videos. Focus on the paid product, not the free blog." />
         </Field>
+        <p className="small muted">The folder is copied into 37Studio, without dependencies, build output, hidden files or anything that looks like a secret (keys, .env). Every agent can read it, so a video about a feature uses its real screens and text. Choose it again after big changes.</p>
         <p className="small muted">Takes 5–10 minutes. Manual edits are kept: a re-scan only fills fields that are still empty. Uses Sonnet 5.5; the cost shows under Costs.</p>
       </div>
     </Modal>
