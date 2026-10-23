@@ -5,7 +5,7 @@
 //   POST /webhooks/meta         Meta's webhooks: WhatsApp messages are held in D1 for 30 days
 //   GET  /whatsapp/messages     a copy pulls its number's messages; its WhatsApp token proves the number is its own
 //   POST /donate/report         a donor reports a bKash donation; it counts once confirmed by hand (README → Donations)
-//   GET  /donate/stats          the confirmed total and public supporters, for public/donate.html
+//   GET  /donate/stats          confirmed supporters who chose to be named, for public/donate.html
 //   anything else               static files in public/ (product page, setup guide, launcher bundle)
 // Secrets (set with `npx wrangler secret put NAME`): META_APP_SECRET, META_VERIFY_TOKEN. Var in wrangler.toml: META_APP_ID.
 // To run your own relay, deploy this with your own Meta app and D1 database, and point copies at it with STUDIO37_AUTH_URL.
@@ -96,9 +96,8 @@ async function donateReport(req, env) {
 }
 
 async function donateStats(env) {
-  const t = await env.DB.prepare("select coalesce(sum(amount),0) total, count(*) n from donations where status='confirmed'").first();
   const { results } = await env.DB.prepare("select name, message from donations where status='confirmed' and public=1 and name<>'' order by at desc limit 100").all();
-  return json({ total: t.total, count: t.n, supporters: results });
+  return json({ supporters: results });
 }
 
 // ponytail: per-isolate memory, so a fresh isolate asks Meta again; fine at one pull a minute per number.

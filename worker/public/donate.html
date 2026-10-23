@@ -49,12 +49,6 @@
 
 <div class="wrap donate">
   <div class="stack-col">
-    <div class="card raised" aria-live="polite">
-      <span class="eyebrow">Raised so far</span>
-      <div class="raised-total" id="total">…</div>
-      <p class="muted" id="count">Counting confirmed donations.</p>
-    </div>
-
     <div class="card">
       <h2>Donate in US dollars</h2>
       <p class="muted">Send a US bank transfer (ACH) from a US bank account, or from Wise or any app that pays US bank accounts. The minimum is $2.</p>
@@ -67,7 +61,7 @@
         <div><dt>Recipient address</dt><dd>Dhaka 1207, Bangladesh</dd></div>
         <div><dt>Reference</dt><dd>37Studio</dd></div>
       </dl>
-      <p class="muted small-print">Then email <a href="mailto:jahangir@shaitrish.com?subject=37Studio%20donation">jahangir@shaitrish.com</a> with the amount, and your name if you'd like to be thanked here. ACH takes 1 to 3 business days, and we count it once it arrives. Can't send ACH? Email us and we'll find a way that works for you.</p>
+      <p class="muted small-print">Then email <a href="mailto:jahangir@shaitrish.com?subject=37Studio%20donation">jahangir@shaitrish.com</a> with your name if you'd like to be thanked here. ACH takes 1 to 3 business days. Can't send ACH? Email us and we'll find a way that works for you.</p>
     </div>
 
     <div class="card">
@@ -76,7 +70,7 @@
         <li>In the bKash app, choose <b>Send Money</b>.</li>
         <li>Send any amount to <b class="mono">01635191148</b> <button class="btn sm" type="button" data-copy="01635191148">Copy number</button></li>
         <li>Write <b>37Studio</b> as the reference.</li>
-        <li>Tell us below, with the transaction ID (TrxID) from the bKash message, so we can count it and thank you.</li>
+        <li>Tell us below, with the transaction ID (TrxID) from the bKash message, so we can thank you.</li>
       </ol>
       <form id="report" class="form-grid">
         <label class="field">Amount (taka)<input name="amount" type="number" min="1" step="1" inputmode="numeric" required></label>
@@ -127,14 +121,8 @@
 </footer>
 
 <script>
-  const taka = (n) => "৳" + Number(n).toLocaleString("en-IN");
-
-  // Only donations we've confirmed against bKash count; the Worker keeps them in D1 (worker/schema.sql).
+  // Only confirmed donations are listed; the Worker keeps them in D1 (worker/schema.sql).
   fetch("/donate/stats").then((r) => r.json()).then((s) => {
-    document.getElementById("total").textContent = taka(s.total);
-    document.getElementById("count").textContent = s.count
-      ? `from ${s.count} supporter${s.count === 1 ? "" : "s"}. Thank you!`
-      : "No donations yet. You could be the first.";
     const list = document.getElementById("supporters");
     for (const d of s.supporters) {
       const li = document.createElement("li");
@@ -143,7 +131,7 @@
       list.append(li);
     }
     document.getElementById("supporters-card").hidden = !s.supporters.length;
-  }).catch(() => { document.getElementById("count").textContent = "Couldn't load the total right now."; });
+  }).catch(() => {});
 
   for (const b of document.querySelectorAll("[data-copy]")) b.addEventListener("click", () => {
     navigator.clipboard?.writeText(b.dataset.copy).then(() => { b.textContent = "Copied"; }, () => {});
@@ -160,7 +148,7 @@
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || "Something went wrong.");
       f.reset();
-      out.textContent = "Thank you! We'll confirm it against bKash and add it to the total, usually within a day.";
+      out.textContent = "Thank you! We'll confirm it against bKash, usually within a day.";
     } catch (err) { out.textContent = err.message; }
   });
 </script>

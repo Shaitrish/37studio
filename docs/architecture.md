@@ -157,7 +157,7 @@ Chrome for Testing has no Linux arm64 build, so on arm64 HyperFrames renders wit
 
 ### Donations
 
-[studio.shaitrish.com/donate](https://studio.shaitrish.com/donate) (`worker/public/donate.html`) takes donations by US bank transfer (ACH to an nSave USD account) and by bKash Send Money. A personal bKash number has no API, so donors report the TrxID and amount, which the Worker stores in the D1 `donations` table as `pending` (`worker/schema.sql`; apply it with `npx wrangler d1 execute studio37 --remote --file schema.sql`). Only confirmed rows count toward the total on the page. After checking a TrxID in the bKash app:
+[studio.shaitrish.com/donate](https://studio.shaitrish.com/donate) (`worker/public/donate.html`) takes donations by US bank transfer (ACH to an nSave USD account) and by bKash Send Money. A personal bKash number has no API, so donors report the TrxID and amount, which the Worker stores in the D1 `donations` table as `pending` (`worker/schema.sql`; apply it with `npx wrangler d1 execute studio37 --remote --file schema.sql`). Only confirmed rows show on the page, as named supporters; the page shows no amounts. After checking a TrxID in the bKash app:
 
 ```bash
 cd worker
@@ -165,7 +165,7 @@ npx wrangler d1 execute studio37 --remote --command "select trx, amount, name, m
 npx wrangler d1 execute studio37 --remote --command "update donations set status='confirmed' where trx='BJK7XY2A4Q'"   # or 'rejected'; fix amount here too if it differs
 ```
 
-Bank donors email instead of reporting on the page. Once a transfer shows up in nSave, add it as confirmed, with the amount in taka at that day's rate, since the page totals in taka:
+Bank donors email instead of reporting on the page. Once a transfer shows up in nSave, add it as confirmed (the amount is for your records, in taka at that day's rate):
 
 ```bash
 npx wrangler d1 execute studio37 --remote --command "insert into donations(trx, amount, name, message, public, status, at) values('ACH-2026-10-24-1', 1200, 'Jane', '', 1, 'confirmed', unixepoch()*1000)"

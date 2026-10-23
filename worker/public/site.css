@@ -335,7 +335,6 @@ pre.cmd { background: var(--ink); color: #f4f3f6; border-radius: 12px; padding: 
 @media (min-width: 900px) { .donate { grid-template-columns: 7fr 5fr; align-items: start; } }
 .stack-col { display: grid; gap: 20px; min-width: 0; }
 .donate h2 { font-size: 22px; margin-bottom: 12px; }
-.raised-total { font: 600 48px/1.1 Geist, sans-serif; letter-spacing: -0.04em; margin: 10px 0 6px; }
 .steps-list { display: grid; gap: 10px; padding-left: 20px; margin: 0 0 20px; color: var(--fg2); }
 .steps-list .btn { margin-left: 8px; vertical-align: middle; }
 .mono { font-family: "Geist Mono", monospace; }
