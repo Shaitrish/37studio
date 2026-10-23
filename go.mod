@@ -1,4 +1,4 @@
-module 37studio
+module github.com/Shaitrish/37studio
 
 go 1.26.2
 

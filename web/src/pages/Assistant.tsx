@@ -14,7 +14,7 @@ const ideas = [
   "Which videos are waiting for my review?",
 ];
 
-/** Sidebar → Assistant: run the studio by chatting. Claude drives the same tools other agents get over MCP (server/mcp.go). */
+/** Sidebar → Assistant: run the studio by chatting. Claude drives the same tools other agents get over MCP (internal/mcp). */
 export default function Assistant() {
   const [events, setEvents] = useState<ChatEvent[]>([]);
   const [running, setRunning] = useState(false);

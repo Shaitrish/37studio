@@ -3,7 +3,7 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-  cmd = "go build -o ./tmp/37studio ./server"
+  cmd = "go build -o ./tmp/37studio ./cmd/37studio"
   entrypoint = ["./tmp/37studio"]
   include_ext = ["go"]
   exclude_dir = ["data", "web", "tmp", "worker", "dist", "docs"]

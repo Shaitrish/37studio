@@ -14,8 +14,9 @@ ARG TARGETARCH
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
-COPY server ./server
-RUN CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /37studio ./server
+COPY cmd ./cmd
+COPY internal ./internal
+RUN CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /37studio ./cmd/37studio
 
 # ---- runtime: ffmpeg + Chrome libs for HyperFrames rendering + the Claude Code CLI
 FROM node:22-bookworm AS base

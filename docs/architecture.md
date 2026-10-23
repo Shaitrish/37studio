@@ -49,7 +49,7 @@ Outside the container there is only `worker/`, a Cloudflare Worker: the product 
 
 ## The editor agent
 
-The agent's instructions (the harness) are in `agent.go`: `harness` holds the system prompt and `presets` the per-job-type briefs (hook reel, captioned clip, explainer, promo, thumbnails, custom). Tune them there.
+The agent's instructions (the harness) are in `internal/agent/agent.go`: `harness` holds the system prompt and `presets` the per-job-type briefs (hook reel, captioned clip, explainer, promo, thumbnails, custom). Tune them there.
 
 Each turn is one headless Claude Code run: `--output-format stream-json`, streamed into the project chat; `--max-budget-usd` from Settings caps its spend; the user's own Claude Code hooks are disabled so they can't steer it; the prompt goes over stdin. Sessions are resumed, so the agent keeps its context across turns (they live in the `claude-home` volume).
 
@@ -67,7 +67,7 @@ Each turn is one headless Claude Code run: `--output-format stream-json`, stream
 
 ## Transcription
 
-The agent transcribes speech with `37studio transcribe <file> --language <code> --out work/transcript`. It runs faster-whisper ([server/asr/transcribe.py](../server/asr/transcribe.py), embedded in the binary) on the user's computer, so it costs nothing and the audio stays local; paid APIs (ElevenLabs, Gemini) are used only when the editor asks for them.
+The agent transcribes speech with `37studio transcribe <file> --language <code> --out work/transcript`. It runs faster-whisper ([internal/transcribe/asr/transcribe.py](../internal/transcribe/asr/transcribe.py), embedded in the binary) on the user's computer, so it costs nothing and the audio stays local; paid APIs (ElevenLabs, Gemini) are used only when the editor asks for them.
 
 - **Model by hardware.** With an NVIDIA GPU visible it uses `large-v3` (float16). On a CPU it uses `large-v3-turbo` (int8), which is several times faster for a small accuracy loss. `--quality best` forces `large-v3`; `--quality fast`, or less than 4 GB of memory, uses `small`, which is weak on less common languages.
 - **Inside Docker every OS is the same Linux CPU path.** Docker Desktop on a Mac can't reach the Apple GPU, and the shipped compose files pass no NVIDIA GPU (the image also lacks the CUDA libraries), so the GPU branch only applies when the binary runs outside Docker. The model and thread count follow the container's memory and cores. On a 12-core laptop it ran at about 1.3× the recording's length (a 59-second Bangla clip took 80 seconds), so a 2-hour class takes 2–3 hours. The tool prints progress and an estimate. It runs detached and the command waits at most 9 minutes, so the job outlives one Bash call and the agent's turn; running the same command again joins it or reuses the finished transcript.
@@ -118,32 +118,32 @@ data/
 
 ## Code map
 
-The Go code is one package (`main`) in `server/`, built into the single `37studio` binary that serves the app and runs the agent's CLI commands.
+The Go code builds one binary, `37studio`, that serves the app and runs the agent's helper commands (`gen`, `clip`, `transcribe`). `cmd/37studio` wires it together; everything else is in `internal/`, one package per area. Dependencies point downward: the low packages (`config`, `store`, `httpapi`, `remote`, `files`, `textutil`) import nothing of ours, and nothing imports `cmd`. The agent tells Autopilot and the clip queue that a turn ended through `agent.AfterTurn`, so it never imports them.
 
-| File | What |
+| Package | What |
 | --- | --- |
-| `main.go` | Routes, JSON helpers, basic auth, settings from the environment and `.env` |
-| `db.go` | SQLite schema, row helpers, settings and their defaults |
-| `handlers.go` | Companies, projects, uploads (streamed), file serving + player runtime injection |
-| `agent.go` | Presets, quality tiers, harness prompt, Claude runs (stream-json to chat events), render, generate |
-| `opencode.go` | OpenCode as a second harness, for cheaper models on routine edits |
-| `studio.go` | Timeline editor: starts HyperFrames Studio per project, proxies it on its own port |
-| `scan.go` | Company scan: website capture and/or project folder, then an agent sorts assets and writes `design.md`, `knowledge.md`, profile |
-| `source.go` | Company project folder: upload into `source/`, skip rules for dependencies and secrets |
-| `transcribe.go`, `asr/` | `37studio transcribe`: local faster-whisper, detached long runs |
-| `import.go` | YouTube and Google Drive imports with yt-dlp |
-| `campaigns.go` | Campaigns: CRUD; the brief reaches each video's harness |
-| `costs.go` | Project cost and the spend report |
-| `keys.go` | Provider keys and platform credentials from Settings, encrypted at rest (AES-GCM, key file in the data folder) |
-| `update.go` | Version and the update check |
-| `autopilot.go` | Content plans, scheduler and the build → render → captions → approve pipeline |
-| `template.go` | Templates: save a project's composition, list and delete them, and seed a new project's `comp/` |
-| `clip.go` | Several videos from one source: `37studio clip`, the one-at-a-time build → export queue, and the Library listing |
-| `gemini.go`, `eleven.go` | Gemini (Nano Banana images, Omni video, the `37studio gen` CLI) and ElevenLabs |
-| `social.go` | Social publishing: connecting accounts on each platform, AI captions, the post queue and per-platform uploads |
-| `platforms.go` | LinkedIn, X, Pinterest, Bluesky and Mastodon: sign-in, account listing and uploads |
-| `inbox.go` | Social inbox: Messenger, Instagram DMs and comments read live, Claude-drafted replies, sending, auto-replies |
-| `whatsapp.go` | WhatsApp: connect a number, pull its messages from the relay, send replies |
+| `cmd/37studio` | `main`: subcommands, background loops, every HTTP route |
+| `internal/config` | Settings from the environment and `.env` |
+| `internal/store` | SQLite schema, row helpers, settings and their defaults |
+| `internal/httpapi` | JSON handler adapter, errors, request helpers, basic auth |
+| `internal/remote` | Outbound API calls (JSON, forms, streamed multipart) and readable platform errors |
+| `internal/files` | Data folder layout, uploads, file listing and serving (with the player runtime injected) |
+| `internal/textutil` | Small string helpers |
+| `internal/keys` | Provider keys and platform credentials, encrypted at rest (AES-GCM, key file in the data folder) |
+| `internal/agent` | Presets, quality tiers, harness prompt, Claude Code and OpenCode runs (stream-json to chat events), render, `37studio gen` |
+| `internal/gen` | Gemini (Nano Banana images, Omni video) and ElevenLabs (voice, sound effects, music) |
+| `internal/company` | Companies and their brand library, the website/folder scan that writes `design.md` and `knowledge.md`, campaigns |
+| `internal/source` | A company's project folder: upload into `source/`, skip rules for dependencies and secrets |
+| `internal/project` | Projects, uploads, YouTube/Drive imports, several videos from one source (`37studio clip`), the Library |
+| `internal/templates` | Save a project's composition as a template and seed new projects from it |
+| `internal/transcribe` | `37studio transcribe`: local faster-whisper (`asr/transcribe.py`, embedded), subtitles, detached long runs |
+| `internal/timeline` | HyperFrames Studio per project, proxied on its own port behind the password |
+| `internal/social` | Connecting accounts, AI captions, the post queue and uploads for every platform; the inbox and WhatsApp |
+| `internal/autopilot` | Content plans, scheduler and the build → render → captions → approve pipeline |
+| `internal/costs` | Usage records, project cost and the spend report |
+| `internal/mcp` | The MCP server: the API as tools for other agents and the Assistant |
+| `internal/assistant` | The Assistant chat: Claude Code connected to the MCP server |
+| `internal/update` | Version and the update check |
 | `web/src` | React UI: `pages/Project.tsx` is the editor workspace, `pages/Social.tsx` the Social tab |
 | `worker/` | Cloudflare Worker: product website, `version.json`, Meta login exchange, WhatsApp webhook relay (D1) |
 | `dist/`, `release.sh` | The launcher bundle people download, and the script that publishes a release |
@@ -151,7 +151,7 @@ The Go code is one package (`main`) in `server/`, built into the single `37studi
 
 ## Releasing
 
-Maintainers bump `version` in `update.go`, then run `./release.sh "What changed"`. It builds and pushes `ghcr.io/shaitrish/37studio:<version>` and `:latest` for `linux/amd64` and `linux/arm64` (arm64 under QEMU, through a `studio37` buildx builder it creates; needs about 15 GB of free disk), zips `dist/` into the download, writes `version.json`, and deploys the Worker. Set `IMAGE=` for another registry and log in with `docker login ghcr.io` first. Every copy reads `version.json` at most every 6 hours and shows "Version X available" in the sidebar; the launcher pulls the new image on its next start.
+Maintainers bump `Version` in `internal/update/update.go`, then run `./release.sh "What changed"`. It builds and pushes `ghcr.io/shaitrish/37studio:<version>` and `:latest` for `linux/amd64` and `linux/arm64` (arm64 under QEMU, through a `studio37` buildx builder it creates; needs about 15 GB of free disk), zips `dist/` into the download, writes `version.json`, and deploys the Worker. Set `IMAGE=` for another registry and log in with `docker login ghcr.io` first. Every copy reads `version.json` at most every 6 hours and shows "Version X available" in the sidebar; the launcher pulls the new image on its next start.
 
 Chrome for Testing has no Linux arm64 build, so on arm64 HyperFrames renders with Playwright's pinned arm64 headless shell (`HYPERFRAMES_BROWSER_PATH`), as HyperFrames' own `Dockerfile.render` does.
 
