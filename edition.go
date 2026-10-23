@@ -33,6 +33,13 @@ const trialProjects = 2
 
 const licenseURL = "https://studio.shaitrish.com/#pricing"
 
+// revoked: Shaitrish cancelled this copy's key. Then the whole app stops: every API but the license and update
+// endpoints answers 403, the background loops pause, and the UI shows only the cancelled notice.
+func revoked() bool {
+	_, err := parseLicense(setting("license"))
+	return errors.Is(err, errRevoked)
+}
+
 func licensed() bool {
 	_, err := parseLicense(setting("license"))
 	return err == nil
@@ -128,12 +135,12 @@ func putLicense(r *http.Request) (any, error) {
 	return getLicense(r)
 }
 
-// licenseLoop asks studio.shaitrish.com whether this copy's key was revoked, at start and every 6 hours. Only a
+// licenseLoop asks studio.shaitrish.com whether this copy's key was revoked, at start and every hour. Only a
 // definite answer changes anything: offline, or with the server down, a paid key keeps working.
 func licenseLoop() {
 	for {
 		checkRevoked()
-		time.Sleep(6 * time.Hour)
+		time.Sleep(time.Hour)
 	}
 }
 

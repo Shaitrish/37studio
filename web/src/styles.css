@@ -260,6 +260,8 @@ input[type="color"].input { padding: 3px; height: 36px; cursor: pointer; }
 .progress > div { height: 100%; background: var(--primary); transition: width 0.2s; }
 
 .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.cancelled { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; background: var(--bg); }
+.cancelled h1 { font-size: 22px; margin: 0; }
 .tiles.library { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
 .tile { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--card); position: relative; display: flex; flex-direction: column; }
 .tile .thumb { aspect-ratio: 16 / 10; background: var(--muted) center / cover no-repeat; display: grid; place-items: center; color: var(--faint-fg); overflow: hidden; }

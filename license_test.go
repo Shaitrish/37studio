@@ -79,6 +79,16 @@ func TestTrialAndLicense(t *testing.T) {
 	if err := newProject(); !paid(err) || !strings.Contains(err.Error(), "cancelled") {
 		t.Fatalf("revoked license: want 402 saying it was cancelled, got %v", err)
 	}
+	rec := httptest.NewRecorder() // the whole app is off, except what the cancelled screen needs
+	api(listTenants)(rec, httptest.NewRequest("GET", "/api/tenants", nil))
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("revoked: /api/tenants answered %d, want 403", rec.Code)
+	}
+	rec = httptest.NewRecorder()
+	api(getLicense)(rec, httptest.NewRequest("GET", "/api/license", nil))
+	if rec.Code != 200 || !strings.Contains(rec.Body.String(), `"revoked":true`) {
+		t.Fatalf("revoked: /api/license = %d %s", rec.Code, rec.Body)
+	}
 	isRevoked = false
 	checkRevoked()
 	if err := newProject(); err != nil {

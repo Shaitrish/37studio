@@ -184,7 +184,13 @@ func bad(msg string) error     { return apiErr{http.StatusBadRequest, msg} }
 
 func api(fn func(r *http.Request) (any, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		v, err := fn(r)
+		var v any
+		var err error
+		if r.URL.Path != "/api/license" && r.URL.Path != "/api/update" && revoked() {
+			err = apiErr{http.StatusForbidden, "This 37Studio license was cancelled, so the app is switched off. Contact jahangir@shaitrish.com."}
+		} else {
+			v, err = fn(r)
+		}
 		w.Header().Set("Content-Type", "application/json")
 		if err != nil {
 			code := http.StatusInternalServerError

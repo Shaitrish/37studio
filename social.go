@@ -638,7 +638,7 @@ func postLoop() {
 }
 
 func runDuePosts() {
-	if !postMu.TryLock() {
+	if revoked() || !postMu.TryLock() {
 		return
 	}
 	defer postMu.Unlock()

@@ -130,7 +130,7 @@ func clipTick() {
 	defer clipMu.Unlock()
 	var busy int
 	db.QueryRow("select count(*) from projects where clip_stage in ('building','rendering')").Scan(&busy)
-	if busy > 0 || autopilotBusy() {
+	if busy > 0 || autopilotBusy() || revoked() {
 		return
 	}
 	var id int64

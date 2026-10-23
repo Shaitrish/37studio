@@ -77,6 +77,29 @@ function LicenseDialog({ message, onClose, onActivated }: { message: string; onC
   );
 }
 
+/** A revoked key switches the app off (edition.go): the server answers 403 to everything but the license, so this is all that shows. */
+function Cancelled({ lic, onActivated }: { lic: License; onActivated: () => void }) {
+  const [key, setKey] = useState("");
+  const activate = () => api<License>("/license", { method: "PUT", body: { key } }).then((l) => (l.valid ? onActivated() : fail(new Error("That key isn't active."))), fail);
+  return (
+    <div className="cancelled">
+      <div className="card card-b stack" style={{ maxWidth: 480, gap: 14 }}>
+        <Mark size={36} />
+        <h1>This license was cancelled</h1>
+        <p className="muted" style={{ margin: 0 }}>
+          Shaitrish cancelled the 37Studio license{lic.name ? ` for ${lic.name}` : ""}, so the app is switched off on this computer.
+          Your videos and files are still in the 37Studio data folder. If you think this is a mistake, email{" "}
+          <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a>.
+        </p>
+        <div className="row wrap">
+          <input className="input mono spacer" value={key} onChange={(e) => setKey(e.target.value)} placeholder="New license key (37S1.…)" aria-label="License key" style={{ minWidth: 220 }} />
+          <button className="btn" disabled={!key.trim()} onClick={activate}>Activate</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const hash = useHash();
   const [, section, id, sub] = hash.split("/");
@@ -125,6 +148,7 @@ function App() {
   const { data: upd } = useApi<{ newer?: boolean; latest?: string }>("/update");
   const ThemeIcon = themeIcon[theme];
   const nextTheme = themes[(themes.indexOf(theme) + 1) % themes.length];
+  if (lic?.revoked) return <Cancelled lic={lic} onActivated={() => location.reload()} />;
 
   return (
     <IconContext.Provider value={{ weight: "regular" }}>

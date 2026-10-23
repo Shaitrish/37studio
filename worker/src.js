@@ -23,7 +23,7 @@ export default {
     if (url.pathname === "/oauth/meta/token" && req.method === "POST") return metaToken(req, env);
     if (url.pathname === "/webhooks/meta") return webhook(req, env, url);
     if (url.pathname === "/whatsapp/messages" && req.method === "GET") return waMessages(req, env, url);
-    // Every copy asks this at start and every 6 hours, so revoking a key reaches the app itself, not only these endpoints.
+    // Every copy asks this at start and every hour, so revoking a key switches the app itself off, not only these endpoints.
     if (url.pathname === "/license/check") return Response.json({ revoked: revoked(req, env) });
     if (url.pathname === "/pay/start" && req.method === "POST") return buy(req, env); // /buy itself is the static form page
     if ((url.pathname === "/pay/return" || url.pathname === "/pay/ipn") && req.method === "POST") return payBack(req, env, url.pathname === "/pay/ipn");
