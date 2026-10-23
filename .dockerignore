@@ -1,0 +1,9 @@
+data
+37studio
+.env
+.git
+web/node_modules
+web/dist
+tmp
+worker
+dist

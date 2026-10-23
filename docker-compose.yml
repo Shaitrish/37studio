@@ -1,0 +1,19 @@
+services:
+  37studio:
+    build: .
+    ports:
+      - "127.0.0.1:8080:8080"                # this computer only
+      - "127.0.0.1:3100-3109:3100-3109"      # timeline editor (HyperFrames Studio), one port per open project
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./data:/data                        # clients, footage, renders, SQLite
+      - claude-home:/home/node/.claude      # agent sessions (needed to resume chats) + skills
+      - cache:/home/node/.cache             # HyperFrames Chrome, whisper models
+    shm_size: "1gb"                         # Chrome needs more than Docker's 64 MB default
+    restart: unless-stopped
+
+volumes:
+  claude-home:
+  cache:

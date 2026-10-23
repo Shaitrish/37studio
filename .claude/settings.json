@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "ClaudeInChromeDomain(localhost:5173)",
+      "ClaudeInChromeDomain(developers.facebook.com)"
+    ]
+  }
+}

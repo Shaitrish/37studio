@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>37Studio</title>
+<style>
+  :root { color-scheme: light dark; --fg: #18181b; --muted: #71717a; --bg: #fafafa; --card: #fff; --line: #e4e4e7; --ember: #d4502a; }
+  @media (prefers-color-scheme: dark) { :root { --fg: #f4f4f5; --muted: #a1a1aa; --bg: #0b0b0c; --card: #151517; --line: #27272a; } }
+  body { margin: 0; font: 16px/1.6 system-ui, sans-serif; background: var(--bg); color: var(--fg); }
+  main { max-width: 640px; margin: 0 auto; padding: 56px 16px; }
+  h1 { font-size: 28px; margin: 0 0 4px; } p { color: var(--muted); }
+  ol { padding-left: 20px; } li { margin: 8px 0; }
+  a.btn { display: inline-block; background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; }
+  code { background: var(--card); border: 1px solid var(--line); padding: 1px 6px; border-radius: 4px; font-size: 14px; }
+  .dot { color: var(--ember); }
+</style>
+</head>
+<body>
+<main>
+  <h1>37Studio<span class="dot">.</span></h1>
+  <p>Video and social media studio that runs on your own computer.</p>
+  <p><a class="btn" href="/37studio.zip">Download</a></p>
+  <ol>
+    <li>Install <a href="https://www.docker.com/products/docker-desktop/">Docker Desktop</a> and start it.</li>
+    <li>Unzip <code>37studio.zip</code> anywhere, then double-click <code>Start 37Studio</code> (<code>start.bat</code> on Windows, <code>start.command</code> on Mac). It downloads the app the first time and updates itself on every start.</li>
+    <li>In the app, open <b>Settings</b>: paste your license key and your Claude key, then add your company.</li>
+  </ol>
+</main>
+</body>
+</html>

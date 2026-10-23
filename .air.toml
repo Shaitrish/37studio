@@ -1,0 +1,12 @@
+# Backend dev loop: `air` rebuilds and restarts 37studio whenever a .go file changes.
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o ./tmp/37studio ."
+  entrypoint = ["./tmp/37studio"]
+  include_ext = ["go"]
+  exclude_dir = ["data", "web", "tmp"]
+  exclude_regex = ["_test\\.go$"]
+  send_interrupt = true
+  kill_delay = "1s"

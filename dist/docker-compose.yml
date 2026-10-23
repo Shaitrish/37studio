@@ -1,0 +1,19 @@
+# 37Studio for your own computer. Start it with "Start 37Studio" (start.bat / start.command / start.sh), not by hand.
+services:
+  studio:
+    image: ghcr.io/shaitrish/37studio:latest
+    ports:
+      - "127.0.0.1:8080:8080"              # this computer only
+      - "127.0.0.1:3100-3109:3100-3109"    # timeline editor, one port per open project
+    environment:
+      STUDIO37_AGENT_PERMISSIONS: bypass     # the container is the agent's sandbox
+    volumes:
+      - ./data:/data                       # your companies, footage, videos and settings: back up this folder
+      - claude-home:/home/node/.claude
+      - cache:/home/node/.cache
+    shm_size: "1gb"
+    restart: unless-stopped
+
+volumes:
+  claude-home:
+  cache:
