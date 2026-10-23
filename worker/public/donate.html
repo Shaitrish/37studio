@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Support 37Studio</title>
+<meta name="description" content="37Studio is free and open source. Support its development with a donation by bKash, or by starring, sharing and contributing on GitHub.">
+<meta property="og:title" content="Support 37Studio">
+<meta property="og:description" content="37Studio is free and open source. Help keep it going.">
+<meta property="og:image" content="https://studio.shaitrish.com/og.png">
+<meta name="theme-color" content="#fbfaf8">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav scrolled" id="top">
+  <div class="wrap">
+    <a class="brand" href="/"><img src="/favicon.svg" alt="">37Studio <small>by Shaitrish</small></a>
+    <nav aria-label="Pages">
+      <a href="/#loop">How it works</a>
+      <a href="/#open">Open source</a>
+      <a href="/setup">Setup guide</a>
+      <a href="https://github.com/Shaitrish/37studio">GitHub</a>
+      <a href="/donate" aria-current="page" style="background:var(--soft)">Donate</a>
+    </nav>
+    <div class="right"><a class="btn sm ink" href="/37studio.zip" download><svg><use href="#i-down"/></svg>Download</a></div>
+  </div>
+</header>
+
+<main>
+<section class="doc-hero">
+  <div class="wrap">
+    <span class="eyebrow">Support 37Studio</span>
+    <h1 style="margin-top:14px">Keep 37Studio free and growing</h1>
+    <p class="lead">37Studio is free and open source, and it stays that way whether or not you donate. Donations give us more time to build it: new platforms, fixes and releases.</p>
+  </div>
+</section>
+
+<div class="wrap donate">
+  <div class="stack-col">
+    <div class="card raised" aria-live="polite">
+      <span class="eyebrow">Raised so far</span>
+      <div class="raised-total" id="total">…</div>
+      <p class="muted" id="count">Counting confirmed donations.</p>
+    </div>
+
+    <div class="card">
+      <h2>Donate with bKash</h2>
+      <ol class="steps-list">
+        <li>In the bKash app, choose <b>Send Money</b>.</li>
+        <li>Send any amount to <b class="mono">01635191148</b> <button class="btn sm" type="button" id="copy">Copy number</button></li>
+        <li>Write <b>37Studio</b> as the reference.</li>
+        <li>Tell us below, with the transaction ID (TrxID) from the bKash message, so we can count it and thank you.</li>
+      </ol>
+      <form id="report" class="form-grid">
+        <label class="field">Amount (taka)<input name="amount" type="number" min="1" step="1" inputmode="numeric" required></label>
+        <label class="field">bKash TrxID<input name="trx" required pattern="[A-Za-z0-9]{8,12}" placeholder="e.g. BJK7XY2A4Q" autocomplete="off"></label>
+        <label class="field"><span>Your name <span class="muted">(optional)</span></span><input name="name" maxlength="60" autocomplete="name"></label>
+        <label class="field"><span>A message <span class="muted">(optional)</span></span><input name="message" maxlength="280"></label>
+        <label class="check"><input type="checkbox" name="public" checked> Show my name and message on this page</label>
+        <button class="btn ink" type="submit">Send</button>
+        <p class="muted" id="sent" role="status"></p>
+      </form>
+      <p class="muted small-print">We check every report against our bKash account by hand before it counts, usually within a day. Only confirmed donations appear on this page.</p>
+    </div>
+
+    <div class="card">
+      <h2>From outside Bangladesh</h2>
+      <p class="muted">We can't take international cards on this page yet. If you'd like to support us from abroad, email <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a> and we'll sort out a way that works for you.</p>
+    </div>
+  </div>
+
+  <div class="stack-col">
+    <div class="card">
+      <h2>Other ways to help</h2>
+      <ul class="checks">
+        <li><svg><use href="#i-check"/></svg><span><a href="https://github.com/Shaitrish/37studio">Star it on GitHub</a>, so more people find it.</span></li>
+        <li><svg><use href="#i-check"/></svg><span>Report bugs and suggest features in <a href="https://github.com/Shaitrish/37studio/issues">Issues</a>.</span></li>
+        <li><svg><use href="#i-check"/></svg><span>Send a pull request: see <a href="https://github.com/Shaitrish/37studio/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>.</span></li>
+        <li><svg><use href="#i-check"/></svg><span>Share a video you made with it, and tag us.</span></li>
+        <li><svg><use href="#i-check"/></svg><span>Want it set up for you? We do paid setup over a screen share: <a href="https://wa.me/8801635191148?text=Hi%2C%20I%27d%20like%20help%20setting%20up%2037Studio" target="_blank" rel="noopener">message us on WhatsApp</a>.</span></li>
+      </ul>
+    </div>
+
+    <div class="card" id="supporters-card" hidden>
+      <h2>Supporters</h2>
+      <ul class="supporters" id="supporters"></ul>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="brand" href="/"><img src="/favicon.svg" alt="">37Studio <small>by Shaitrish</small></a>
+      <p style="margin-top:12px">Made in Dhaka by <a href="https://shaitrish.com" style="text-decoration:underline;text-underline-offset:3px">Shaitrish</a>.<br>Open source under the <a href="https://github.com/Shaitrish/37studio/blob/main/LICENSE" style="text-decoration:underline;text-underline-offset:3px">MIT License</a>.</p>
+    </div>
+    <div class="links">
+      <a href="/">Home</a>
+      <a href="/setup">Setup guide</a>
+      <a href="/privacy">Privacy</a>
+      <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const taka = (n) => "৳" + Number(n).toLocaleString("en-IN");
+
+  // Only donations we've confirmed against bKash count; the Worker keeps them in D1 (worker/schema.sql).
+  fetch("/donate/stats").then((r) => r.json()).then((s) => {
+    document.getElementById("total").textContent = taka(s.total);
+    document.getElementById("count").textContent = s.count
+      ? `from ${s.count} supporter${s.count === 1 ? "" : "s"}. Thank you!`
+      : "No donations yet. You could be the first.";
+    const list = document.getElementById("supporters");
+    for (const d of s.supporters) {
+      const li = document.createElement("li");
+      li.append(Object.assign(document.createElement("b"), { textContent: d.name }));
+      if (d.message) li.append(Object.assign(document.createElement("span"), { textContent: d.message }));
+      list.append(li);
+    }
+    document.getElementById("supporters-card").hidden = !s.supporters.length;
+  }).catch(() => { document.getElementById("count").textContent = "Couldn't load the total right now."; });
+
+  document.getElementById("copy").addEventListener("click", (e) => {
+    navigator.clipboard?.writeText("01635191148").then(() => { e.target.textContent = "Copied"; }, () => {});
+  });
+
+  document.getElementById("report").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const f = e.target, out = document.getElementById("sent");
+    const body = Object.fromEntries(new FormData(f));
+    body.public = f.public.checked;
+    out.textContent = "Sending…";
+    try {
+      const r = await fetch("/donate/report", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || "Something went wrong.");
+      f.reset();
+      out.textContent = "Thank you! We'll confirm it against bKash and add it to the total, usually within a day.";
+    } catch (err) { out.textContent = err.message; }
+  });
+</script>
+</body>
+</html>

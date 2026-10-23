@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Set up 37Studio on Windows, Mac or Linux</title>
-<meta name="description" content="Step-by-step setup for 37Studio: install Docker Desktop, start the app, add your Claude key, connect Facebook and Instagram, and keep it running.">
+<meta name="description" content="Step-by-step setup for 37Studio: install Docker Desktop, start the app, add your Claude key, connect your social accounts, and keep it running.">
 <meta property="og:title" content="Set up 37Studio">
 <meta property="og:image" content="https://studio.shaitrish.com/og.png">
 <meta name="theme-color" content="#fbfaf8">
@@ -31,6 +31,7 @@
       <a href="/#open">Open source</a>
       <a href="/setup" aria-current="page" style="background:var(--soft)">Setup guide</a>
       <a href="https://github.com/Shaitrish/37studio">GitHub</a>
+      <a href="/donate">Donate</a>
       <a href="/privacy">Privacy</a>
     </nav>
     <div class="right"><a class="btn sm ink" href="/37studio.zip" download><svg><use href="#i-down"/></svg>Download</a></div>
@@ -70,6 +71,7 @@
       <div><b>Nothing to buy</b>37Studio is free and open source. You pay the AI providers only for what you use.</div>
       <div><b>Claude</b>A Claude Pro or Max plan, or an Anthropic API key. Gemini and ElevenLabs keys are optional.</div>
     </div>
+    <div class="note"><b>Running it on a server instead?</b> For a team, or for replies and Autopilot around the clock, 37Studio also runs on a Linux server (16 GB RAM and 4 vCPUs recommended) behind HTTPS and a password. The <a href="https://github.com/Shaitrish/37studio#run-it-in-the-cloud">cloud guide</a> on GitHub sets it up with one compose file; from step 4 on, everything here is the same.</div>
     <p>Pick your computer once; the steps below follow it.</p>
     <div class="os-tabs" role="tablist" aria-label="Your computer">
       <button role="tab" data-os="win" aria-selected="true">Windows</button>
@@ -161,13 +163,29 @@ sudo usermod -aG docker $USER</pre>
     </ol>
 
     <h2 id="social">6. Connect social accounts</h2>
+    <p>Each company's <b>Social</b> tab has a <b>Connect</b> button for every platform: Facebook &amp; Instagram, YouTube, TikTok, LinkedIn, X, Pinterest, Bluesky and Mastodon. You sign in once on the platform's own page, then tick the accounts that belong to this company.</p>
+    <h3>Facebook and Instagram</h3>
     <ol>
       <li>On the company's <b>Social</b> tab, click <b>Connect Facebook &amp; Instagram</b> and sign in with a Facebook account that manages the company's Pages.</li>
       <li>Tick the Pages and Instagram accounts that belong to this company. Instagram must be a Business or Creator account linked to the Page.</li>
       <li>For the Inbox to read Instagram messages: in the Instagram app, <b>Settings → Messages and story replies → Connected tools → Allow access to messages</b>.</li>
     </ol>
     <div class="note"><b>Until Meta approves 37Studio's shared app for everyone,</b> use your own Meta app: on the Social tab, click <b>Use your own Meta app</b> and follow the five steps there, about 15 minutes. You're the admin of your own app, so your Pages and Instagram work straight away for posting and comments. Messenger and Instagram messages from customers appear once Meta approves your app for those permissions.</div>
-    <p><b>WhatsApp</b> is in beta and needs a number on the WhatsApp Business API. Meta delivers WhatsApp messages only to a public web address, so with your own Meta app you also deploy the small relay in the code's <code>worker/</code> folder to Cloudflare's free plan; the <a href="https://github.com/Shaitrish/37studio#whatsapp">README</a> shows how.</p>
+    <h3>YouTube, TikTok, LinkedIn, X and Pinterest</h3>
+    <p>Each of these needs a free developer app of your own, made once on the platform's developer site:</p>
+    <ol>
+      <li>Create the app and add 37Studio's return address to it: <code>http://localhost:8080/api/oauth/<i>name</i>/callback</code>, where <i>name</i> is <code>google</code> for YouTube, or <code>tiktok</code>, <code>linkedin</code>, <code>x</code> or <code>pinterest</code>. X refuses <code>localhost</code>, so its address is <code>http://127.0.0.1:8080/api/oauth/x/callback</code>.</li>
+      <li>Paste the app's ID and secret into <b>Settings → Keys</b>. They're encrypted on your computer.</li>
+      <li>On the company's Social tab, click <b>Connect</b> for that platform. For Pinterest, then tick the boards to post to.</li>
+    </ol>
+    <p>The <a href="https://github.com/Shaitrish/37studio/blob/main/docs/platforms.md">platform guide</a> lists exactly which products, permissions and settings each developer site needs. Until a platform reviews your app, it limits what the app can do: YouTube keeps uploads private, TikTok posts only privately or to the creator's drafts, LinkedIn posts to your own profile (company Pages need LinkedIn's approval), and new Pinterest apps work in Pinterest's sandbox.</p>
+    <h3>Bluesky and Mastodon</h3>
+    <ul>
+      <li><b>Bluesky:</b> in Bluesky, open <b>Settings → Privacy and security → App passwords</b> and make one. Then click <b>Connect Bluesky</b> and enter your handle and that app password.</li>
+      <li><b>Mastodon:</b> on your server, open <b>Preferences → Development → New application</b> with the scopes <code>read:accounts</code>, <code>write:media</code> and <code>write:statuses</code>. Then click <b>Connect Mastodon</b> and enter the server's address and the application's access token.</li>
+    </ul>
+    <p><b>Not possible:</b> Threads only accepts videos from a public web address, which an app on your computer doesn't have; Meta removed posting to Facebook Groups and personal profiles; Reddit and Snapchat have no usable API for posting videos.</p>
+    <p><b>WhatsApp</b> is in beta and needs a number on the WhatsApp Business API. Meta delivers WhatsApp messages only to a public web address, so with your own Meta app you also deploy the small relay in the code's <code>worker/</code> folder to Cloudflare's free plan; the <a href="https://github.com/Shaitrish/37studio/blob/main/docs/platforms.md#whatsapp">platform guide</a> shows how.</p>
 
     <h2 id="replies">7. Choose how replies go out</h2>
     <p>On the same Social tab, under <b>Inbox replies</b>:</p>
@@ -185,6 +203,7 @@ sudo usermod -aG docker $USER</pre>
       <li data-os-panel="win">To answer messages at night: <b>Settings → System → Power → When plugged in, put my device to sleep after: Never</b>.</li>
       <li data-os-panel="mac" hidden>To answer messages at night: <b>System Settings → Energy</b> (or Battery → Options) → <b>Prevent automatic sleeping when the display is off</b>.</li>
       <li data-os-panel="linux" hidden>Docker Engine restarts 37Studio after a reboot on its own; just keep the machine from suspending.</li>
+      <li>Or run it on a server, which never sleeps: see the <a href="https://github.com/Shaitrish/37studio#run-it-in-the-cloud">cloud guide</a>.</li>
     </ul>
 
     <h2 id="update">Updates and backups</h2>
@@ -204,6 +223,10 @@ sudo usermod -aG docker $USER</pre>
     <p>Give Docker more memory and CPU under <b>Settings → Resources</b>, and close heavy apps while rendering.</p>
     <h3>The agent says there's no Claude key</h3>
     <p>Add one under <b>Settings → Keys</b> (step 4). If you use a subscription token and it stopped working, make a new one with <code>claude setup-token</code>.</p>
+    <h3>Connect says a platform "is not configured"</h3>
+    <p>Its app ID and secret aren't in <b>Settings → Keys</b> yet (step 6).</p>
+    <h3>A platform says the return address doesn't match</h3>
+    <p>The address in the platform's developer app must be exactly <code>http://localhost:8080/api/oauth/<i>name</i>/callback</code> (for X, <code>http://127.0.0.1:8080/api/oauth/x/callback</code>), with no slash at the end. On a server it starts with your own <code>https://</code> domain instead.</p>
     <h3>Facebook sign-in fails</h3>
     <p>Sign in with a Facebook profile that is an admin of your own Meta app (step 6), or has a role on the app you use. The profile must also manage the Page.</p>
 

@@ -4,6 +4,8 @@
 //   GET  /webhooks/meta         Meta's webhook check (hub.challenge)
 //   POST /webhooks/meta         Meta's webhooks: WhatsApp messages are held in D1 for 30 days
 //   GET  /whatsapp/messages     a copy pulls its number's messages; its WhatsApp token proves the number is its own
+//   POST /donate/report         a donor reports a bKash donation; it counts once confirmed by hand (README → Donations)
+//   GET  /donate/stats          the confirmed total and public supporters, for public/donate.html
 //   anything else               static files in public/ (product page, setup guide, launcher bundle)
 // Secrets (set with `npx wrangler secret put NAME`): META_APP_SECRET, META_VERIFY_TOKEN. Var in wrangler.toml: META_APP_ID.
 // To run your own relay, deploy this with your own Meta app and D1 database, and point copies at it with STUDIO37_AUTH_URL.
@@ -17,6 +19,8 @@ export default {
     if (url.pathname === "/oauth/meta/token" && req.method === "POST") return metaToken(req, env);
     if (url.pathname === "/webhooks/meta") return webhook(req, env, url);
     if (url.pathname === "/whatsapp/messages" && req.method === "GET") return waMessages(req, env, url);
+    if (url.pathname === "/donate/report" && req.method === "POST") return donateReport(req, env);
+    if (url.pathname === "/donate/stats") return donateStats(env);
     return env.ASSETS.fetch(req);
   },
 };
@@ -77,6 +81,24 @@ async function waMessages(req, env, url) {
   }
   const { results } = await env.DB.prepare("select seq, body from wa where phone=? and seq>? order by seq limit 500").bind(phone, after).all();
   return json({ messages: results.map((r) => ({ seq: r.seq, ...JSON.parse(r.body) })) });
+}
+
+// Donations go by bKash Send Money, which has no API for a personal number, so the donor reports the TrxID and it waits
+// as "pending" until someone checks it in the bKash app. ponytail: no captcha; spam only ever sits in pending.
+async function donateReport(req, env) {
+  const b = await req.json().catch(() => ({}));
+  const trx = String(b.trx || "").trim().toUpperCase(), amount = Math.round(Number(b.amount));
+  if (!/^[A-Z0-9]{8,12}$/.test(trx)) return json({ error: "That doesn't look like a bKash TrxID (8 to 12 letters and numbers)." }, 400);
+  if (!(amount >= 1 && amount <= 1e7)) return json({ error: "Enter the amount you sent, in taka." }, 400);
+  await env.DB.prepare("insert or ignore into donations(trx, amount, name, message, public, at) values(?,?,?,?,?,?)")
+    .bind(trx, amount, String(b.name || "").trim().slice(0, 60), String(b.message || "").trim().slice(0, 280), b.public ? 1 : 0, Date.now()).run();
+  return json({ ok: true });
+}
+
+async function donateStats(env) {
+  const t = await env.DB.prepare("select coalesce(sum(amount),0) total, count(*) n from donations where status='confirmed'").first();
+  const { results } = await env.DB.prepare("select name, message from donations where status='confirmed' and public=1 and name<>'' order by at desc limit 100").all();
+  return json({ total: t.total, count: t.n, supporters: results });
 }
 
 // ponytail: per-isolate memory, so a fresh isolate asks Meta again; fine at one pull a minute per number.

@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>37Studio: social media, managed without the managing</title>
-<meta name="description" content="37Studio turns a short brief into reels, ads, posts and thumbnails in your brand, posts them to Facebook and Instagram, and drafts replies to every message and comment. Runs on your own Windows PC, Mac or Linux machine with your Claude plan or your own keys. Free and open source, made by Shaitrish.">
+<meta name="description" content="37Studio turns a short brief into reels, ads, posts and thumbnails in your brand, posts them to Facebook, Instagram, YouTube, TikTok, LinkedIn, X, Pinterest, Bluesky and Mastodon, and drafts replies to every message and comment. Runs on your own Windows PC, Mac or Linux machine, or your own server, with your Claude plan or your own keys. Free and open source, made by Shaitrish.">
 <meta property="og:title" content="37Studio, by Shaitrish">
-<meta property="og:description" content="Videos made, posted and answered, on your own computer. Free and open source.">
+<meta property="og:description" content="Videos made, posted and answered, on your own computer or server. Free and open source.">
 <meta property="og:image" content="https://studio.shaitrish.com/og.png">
 <meta property="og:url" content="https://studio.shaitrish.com/">
 <meta name="twitter:card" content="summary_large_image">
@@ -54,6 +54,7 @@
       <a href="#ai">Your AI</a>
       <a href="#open">Open source</a>
       <a href="https://github.com/Shaitrish/37studio">GitHub</a>
+      <a href="/donate">Donate</a>
       <a href="#faq">FAQ</a>
     </nav>
     <div class="right">
@@ -70,7 +71,7 @@
     <div class="rv">
       <span class="eyebrow"><svg width="15" height="15"><use href="#i-spark"/></svg>Social media, managed without the managing</span>
       <h1 style="margin-top:18px">Videos made, posted and <span class="u">answered.</span></h1>
-      <p class="lead">37Studio turns a short brief into reels, ads, posts and thumbnails in your brand, posts them to Facebook and Instagram, and drafts a reply to every message and comment. It runs on your own computer. You approve; it does the rest.</p>
+      <p class="lead">37Studio turns a short brief into reels, ads, posts and thumbnails in your brand, posts them to Facebook, Instagram, YouTube, TikTok, LinkedIn, X, Pinterest, Bluesky and Mastodon, and drafts a reply to every message and comment. It runs on your own computer, or on your own server. You approve; it does the rest.</p>
       <div class="ctas">
         <a class="btn ink" href="#download"><svg><use href="#i-down"/></svg>Download for Windows &amp; Mac</a>
         <a class="btn" href="https://github.com/Shaitrish/37studio">View on GitHub</a>
@@ -97,7 +98,7 @@
 
 <div class="wrap">
   <div class="stats">
-    <div class="stat rv"><b>0<em> servers</em></b><span>It runs in Docker on your Windows PC or Mac. Nothing to host.</span></div>
+    <div class="stat rv"><b>0<em> servers</em></b><span>It runs in Docker on your Windows PC, Mac or Linux machine. Nothing to host, unless you want it on your own server.</span></div>
     <div class="stat rv"><b>1<em> click</em></b><span>to approve a finished video and post it to every account.</span></div>
     <div class="stat rv"><b>2<em> min</em></b><span>between inbox checks when auto-replies are on, drafted from your knowledge base.</span></div>
     <div class="stat rv"><b>0<em> fees</em></b><span>Free and open source under the MIT License. AI usage is billed to you by the providers, at cost.</span></div>
@@ -151,7 +152,7 @@
           <div><svg><use href="#i-cal"/></svg>Sun–Thu 8 pm<em>Autopilot</em></div>
         </div>
         <h3>Publish everywhere</h3>
-        <p>One click posts to every Page and Instagram account, or Autopilot keeps a weekly plan going.</p>
+        <p>One click posts to every connected account, from Facebook and Instagram to YouTube, TikTok and LinkedIn, or Autopilot keeps a weekly plan going.</p>
       </li>
       <li class="stage rv">
         <span class="num">5</span>
@@ -256,7 +257,7 @@
           <li><span class="n">2</span><div><b>Gathers material</b><span>Captures the pages it needs, pulls the company's own clips and transcribes the audio with timings.</span></div></li>
           <li><span class="n">3</span><div><b>Writes the composition</b><span>Layout, motion, captions and timing on a HyperFrames timeline. Footage is cut with ffmpeg; Gemini and ElevenLabs are called for new images, clips, voice or music.</span></div></li>
           <li><span class="n">4</span><div><b>Checks its own work</b><span>Renders stills and looks at them like a reviewer: text, safe zones, brand colours. Fixes what's off. You watch the live preview, ask for changes or move things on the timeline.</span></div></li>
-          <li><span class="n">5</span><div><b>Renders and hands over</b><span>Headless Chrome draws every frame and ffmpeg encodes the MP4, on your PC. Claude writes a caption for each platform.</span></div></li>
+          <li><span class="n">5</span><div><b>Renders and hands over</b><span>Headless Chrome draws every frame and ffmpeg encodes the MP4, on your own machine. Claude writes a caption for each platform.</span></div></li>
         </ol>
       </div>
       <div class="card stack">
@@ -268,7 +269,7 @@
           <div><dt>HyperFrames</dt><dd>Video written as HTML and animated, rendered frame by frame.</dd></div>
           <div><dt>Chrome + ffmpeg</dt><dd>Rendering, cutting and encoding, on your computer.</dd></div>
           <div><dt>Gemini, ElevenLabs</dt><dd>Generated images and clips; voice, sound effects and music.</dd></div>
-          <div><dt>Meta APIs</dt><dd>Facebook and Instagram publishing, Messenger, comments and WhatsApp.</dd></div>
+          <div><dt>Platform APIs</dt><dd>Publishing to Facebook, Instagram, YouTube, TikTok, LinkedIn, X, Pinterest, Bluesky and Mastodon; Messenger, comments and WhatsApp for the inbox.</dd></div>
         </dl>
       </div>
     </div>
@@ -305,10 +306,10 @@
     <div class="grid">
       <div class="card feat rv"><span class="ico"><svg><use href="#i-palette"/></svg></span><h3>Brand library and design system</h3><p>Logos, people, product photos, fonts and the exact colours from each company's website or its own project folder (a website or app's code), sorted and captioned so the agent uses the right ones.</p><div class="tags"><span>website scan</span><span>project folder</span><span>knowledge base</span></div></div>
       <div class="card feat rv"><span class="ico"><svg><use href="#i-bolt"/></svg></span><h3>Autopilot</h3><p>"A BCS tip every weekday at 8 pm." 37Studio picks a fresh topic, makes the video three hours early and waits for your approval, or posts on its own.</p><div class="tags"><span>content plans</span><span>approve in one click</span></div></div>
-      <div class="card feat rv"><span class="ico"><svg><use href="#i-share"/></svg></span><h3>Post everywhere at once</h3><p>Facebook Pages and Instagram, many accounts per company, with a caption written for each platform. YouTube and TikTok are on the way.</p><div class="tags"><span>Facebook</span><span>Instagram</span><span>scheduling</span></div></div>
+      <div class="card feat rv"><span class="ico"><svg><use href="#i-share"/></svg></span><h3>Post everywhere at once</h3><p>Facebook Pages, Instagram, YouTube, TikTok, LinkedIn, X, Pinterest, Bluesky and Mastodon, many accounts per company, with a caption written for each platform.</p><div class="tags"><span>9 platforms</span><span>per-platform captions</span><span>scheduling</span></div></div>
       <div class="card feat rv"><span class="ico"><svg><use href="#i-chat"/></svg></span><h3>One inbox, with replies drafted</h3><p>Messenger, Instagram and WhatsApp messages and comments. Claude drafts from the company's knowledge base, in the customer's language, Bangla included.</p><div class="tags"><span>Messenger</span><span>Instagram</span><span>WhatsApp beta</span></div></div>
       <div class="card feat rv"><span class="ico"><svg><use href="#i-coins"/></svg></span><h3>Know what everything costs</h3><p>Every video, campaign, company and reply shows its real AI cost, in your currency. No markup from us: you pay Anthropic, Google and ElevenLabs directly.</p><div class="tags"><span>per project</span><span>per company</span><span>per month</span></div></div>
-      <div class="card feat rv"><span class="ico"><svg><use href="#i-lock"/></svg></span><h3>Private by design</h3><p>Footage, brands and messages stay on your computer. Your API keys are encrypted on disk and only sent to the provider they belong to.</p><div class="tags"><span>local first</span><span>encrypted keys</span></div></div>
+      <div class="card feat rv"><span class="ico"><svg><use href="#i-lock"/></svg></span><h3>Private by design</h3><p>Footage, brands and messages stay on your computer or your own server. Your API keys are encrypted on disk and only sent to the provider they belong to.</p><div class="tags"><span>local first</span><span>encrypted keys</span></div></div>
     </div>
   </div>
 </section>
@@ -389,7 +390,7 @@
       <button class="shot rv" type="button" data-full="/shots/library.webp"><img src="/shots/library.webp" width="2000" height="1250" alt="" loading="lazy"><div><b>Brand library</b><span>Logos, people, photos, videos and fonts, captioned so the agent picks the right ones.</span></div></button>
       <button class="shot rv" type="button" data-full="/shots/inbox.webp"><img src="/shots/inbox.webp" width="2000" height="1250" alt="" loading="lazy"><div><b>Inbox</b><span>Messenger, Instagram, WhatsApp and comments, with drafts ready to send.</span></div></button>
       <button class="shot rv" type="button" data-full="/shots/costs.webp"><img src="/shots/costs.webp" width="2000" height="1250" alt="" loading="lazy"><div><b>Costs</b><span>Spend by provider, company and month, in your currency.</span></div></button>
-      <button class="shot rv" type="button" data-full="/shots/social.webp"><img src="/shots/social.webp" width="2000" height="986" alt="" loading="lazy"><div><b>Accounts and auto-replies</b><span>Connect Pages, Instagram and WhatsApp per company and choose how replies go out.</span></div></button>
+      <button class="shot rv" type="button" data-full="/shots/social.webp"><img src="/shots/social.webp" width="2000" height="986" alt="" loading="lazy"><div><b>Accounts and auto-replies</b><span>Connect each company's accounts and WhatsApp, and choose how replies go out.</span></div></button>
     </div>
   </div>
 </section>
@@ -404,7 +405,7 @@
     <div class="grid">
       <div class="card feat rv"><span class="ico"><svg><use href="#i-spark"/></svg></span><h3>The best model, not the cheapest</h3><p>Many chat tools save money with small, cheap models. 37Studio runs Claude Opus 5.5, the model behind Claude Code, on your own plan or key, for videos and replies alike.</p></div>
       <div class="card feat rv"><span class="ico"><svg><use href="#i-coins"/></svg></span><h3>No monthly bill</h3><p>Answering chats and comments shouldn't cost a subscription every month. 37Studio itself is free; your AI usage is billed by the provider at cost.</p></div>
-      <div class="card feat rv"><span class="ico"><svg><use href="#i-lock"/></svg></span><h3>Your data stays with you</h3><p>Footage, brand files and conversations live on your computer. Only WhatsApp messages wait briefly on our relay, because Meta delivers them only to a public address.</p></div>
+      <div class="card feat rv"><span class="ico"><svg><use href="#i-lock"/></svg></span><h3>Your data stays with you</h3><p>Footage, brand files and conversations live on your computer, or your own server. Only WhatsApp messages wait briefly on our relay, because Meta delivers them only to a public address.</p></div>
       <div class="card feat rv"><span class="ico"><svg><use href="#i-chat"/></svg></span><h3>A person signs off</h3><p>Drafts wait for one click, so nothing goes out your team wouldn't say. Switch a company to full auto when you trust it.</p></div>
       <div class="card feat rv"><span class="ico"><svg><use href="#i-pc"/></svg></span><h3>Rendering is free</h3><p>Your computer draws and encodes every frame. No render credits and no upload queues.</p></div>
       <div class="card feat rv"><span class="ico"><svg><use href="#i-palette"/></svg></span><h3>You set the behaviour</h3><p>Knowledge base, design system, reply rules, models and budgets are plain settings you can read and change, per company.</p></div>
@@ -457,8 +458,9 @@
         <span class="eyebrow">Download</span>
         <h2>Four steps to your first video</h2>
         <p class="lead">37Studio runs inside Docker Desktop, which keeps it and its tools in one sealed box on your computer.</p>
-        <div class="os"><span>Windows 10 and 11</span><span>macOS, Apple Silicon (M1–M4)</span><span>macOS, Intel</span><span>Linux</span></div>
-        <p class="muted" style="margin-top:18px;font-size:14px">16 GB RAM recommended, and about 10 GB free disk for the app and your footage.</p>
+        <div class="os"><span>Windows 10 and 11</span><span>macOS, Apple Silicon (M1–M4)</span><span>macOS, Intel</span><span>Linux</span><span>Your own server</span></div>
+        <p class="muted" style="margin-top:18px;font-size:14px">16 GB RAM recommended, and about 20 GB free disk for the app and your footage.</p>
+        <p class="muted" style="margin-top:10px;font-size:14px">Want it running around the clock? Put it on a Linux server (16 GB RAM and 4 vCPUs recommended) behind HTTPS and a password. The <a href="https://github.com/Shaitrish/37studio#run-it-in-the-cloud" style="text-decoration:underline;text-underline-offset:3px">cloud guide</a> takes one compose file.</p>
       </div>
       <div class="card" style="padding:28px">
         <ol class="dl">
@@ -489,7 +491,7 @@
         <h3>On our list</h3>
         <p class="muted" style="font-size:14.5px;margin-bottom:10px">What we're working on next. Tell us what you need most.</p>
         <dl>
-          <div><dt>YouTube and TikTok</dt><dd>Publishing to both, next to Facebook and Instagram.</dd></div>
+          <div><dt>Easier sign-in</dt><dd>Connecting YouTube, TikTok and the rest without a developer app of your own, as each platform approves 37Studio.</dd></div>
           <div><dt>More AI tools</dt><dd>New image, video and voice models as they come out, chosen in Settings.</dd></div>
           <div><dt>Image posts</dt><dd>Posting square posts, announcements and carousels straight from the app.</dd></div>
           <div><dt>WhatsApp</dt><dd>Your existing WhatsApp Business number, once Meta approves our app.</dd></div>
@@ -507,17 +509,17 @@
       <details class="rv"><summary>Is 37Studio free?</summary><p>Yes. It's free and open source under the MIT License: no trial, no license key and no paid tier. AI usage is separate and billed to your own Claude plan or Anthropic, Google and ElevenLabs accounts. If you'd rather have someone set it up for you, <a href="https://wa.me/8801635191148?text=Hi%2C%20I%27d%20like%20help%20setting%20up%2037Studio" target="_blank" rel="noopener">message us</a>.</p></details>
       <details class="rv"><summary>Can I contribute?</summary><p>Please do. The code is on <a href="https://github.com/Shaitrish/37studio">GitHub</a>: report bugs and ask for features in Issues, and send pull requests. The README explains how to run it from source.</p></details>
       <details class="rv"><summary>Can I control how the AI replies?</summary><p>Yes, per company. Choose off, drafts for approval or replies on their own; write rules for tone, sign-off, what never to promise and when to hand over to a person; and keep the knowledge base it answers from up to date. Facts only ever come from that knowledge base.</p></details>
-      <details class="rv"><summary>Do I need a server?</summary><p>No. Everything runs on your own Windows PC or Mac inside Docker Desktop. The only things that leave your computer are calls to the AI providers and the social platforms you connect.</p></details>
-      <details class="rv"><summary>What happens when my computer is off?</summary><p>Nothing is lost. Messenger and Instagram keep messages on Meta, and WhatsApp messages wait for you for 30 days. When 37Studio starts again it answers everything the platform still allows a reply to: messages from the last 24 hours and comments up to two days old. For round-the-clock replies, keep it on a computer that doesn't sleep, such as a Mac mini.</p></details>
+      <details class="rv"><summary>Do I need a server?</summary><p>No. Everything runs on your own Windows PC, Mac or Linux machine inside Docker. If you want replies and Autopilot running around the clock, you can also run it on your own Linux server with HTTPS and a password; the <a href="https://github.com/Shaitrish/37studio#run-it-in-the-cloud">cloud guide</a> shows how. The only things that leave your computer are calls to the AI providers and the social platforms you connect.</p></details>
+      <details class="rv"><summary>What happens when my computer is off?</summary><p>Nothing is lost. Messenger and Instagram keep messages on Meta, and WhatsApp messages wait for you for 30 days. When 37Studio starts again it answers everything the platform still allows a reply to: messages from the last 24 hours and comments up to two days old. For round-the-clock replies, keep it on a computer that doesn't sleep, such as a Mac mini, or run it on a server.</p></details>
       <details class="rv"><summary>Can I use my Claude subscription instead of an API key?</summary><p>Yes. Run <code>claude setup-token</code> in Claude Code on your computer and paste the token in Settings → Keys; the agent then works within your Pro or Max plan. Anthropic's terms govern using a subscription in other apps, so an Anthropic API key is the fully supported route.</p></details>
       <details class="rv"><summary>Which AI does it use?</summary><p>Claude Opus 5.5 for editing by default, with Sonnet 5.5 and Haiku 5.5 for quick changes and DeepSeek through OpenCode for cheaper routine edits. Gemini makes images and video clips, and ElevenLabs makes voiceovers, sound effects and music. Models, keys and prices are set in Settings, and new tools arrive with updates.</p></details>
-      <details class="rv"><summary>Does it only make videos?</summary><p>No. It also makes thumbnails, square and portrait posts, announcements and covers in each company's brand, and can generate images with Gemini. Videos post straight to Facebook and Instagram; images download as PNG for now.</p></details>
-      <details class="rv"><summary>Which platforms can it post to?</summary><p>Facebook Pages and Instagram business accounts today, many per company. YouTube and TikTok publishing is built and coming soon. Facebook Groups and personal profiles can't be posted to by any app: Meta removed that in 2024 and 2018.</p></details>
+      <details class="rv"><summary>Does it only make videos?</summary><p>No. It also makes thumbnails, square and portrait posts, announcements and covers in each company's brand, and can generate images with Gemini. Videos post straight to every platform you connect; images download as PNG for now.</p></details>
+      <details class="rv"><summary>Which platforms can it post to?</summary><p>Facebook Pages, Instagram business accounts, YouTube, TikTok, LinkedIn, X, Pinterest boards, Bluesky and Mastodon, many accounts per company. Bluesky and Mastodon connect with an app password or token. The others need a free developer app of your own, set up once by following the <a href="/setup#social">setup guide</a>; Facebook and Instagram can also use our shared app while Meta reviews it, if we add you as a tester. Until each platform reviews your app, YouTube keeps uploads private and TikTok allows only private posts or drafts. Threads only accepts videos from a public web address, which an app on your computer doesn't have; Meta removed posting to Groups and personal profiles; and Reddit and Snapchat have no usable API for posting videos.</p></details>
       <details class="rv"><summary>Does WhatsApp work?</summary><p>Yes, in beta, for a number on the WhatsApp Business API. Keeping the same number on the WhatsApp Business phone app at the same time needs Meta to approve our app as a Tech Provider first, so for now use a number dedicated to the API.</p></details>
       <details class="rv"><summary>Why is the first download so big?</summary><p>About 3 GB, once. 37Studio bundles every tool its AI agent works with, so you install nothing else: Claude Code and OpenCode, the HyperFrames video engine with its own Chrome for rendering, ffmpeg for cutting and encoding, Node.js, Python, and fonts for Bangla, English and emoji. Updates after that only download what changed.</p></details>
-      <details class="rv"><summary>Will it keep getting better?</summary><p>Yes. We use 37Studio for our own products and keep improving it, and anyone can contribute. Every update is free and installs itself the next time you start the app. YouTube and TikTok publishing, more AI tools and image posts are next on our list.</p></details>
+      <details class="rv"><summary>Will it keep getting better?</summary><p>Yes. We use 37Studio for our own products and keep improving it, and anyone can contribute. Every update is free and installs itself the next time you start the app. More AI tools, image posts and easier sign-in for every platform are next on our list.</p></details>
       <details class="rv"><summary>Which languages does it work in?</summary><p>Any language Claude writes, from English and Spanish to Hindi and Bangla. Videos, voiceovers, captions and replies follow the language you choose, and replies follow the customer's language and script. Long recordings, like a 2-hour class, are transcribed on your own computer with an open Whisper model that knows about 100 languages: no per-minute fees, and the audio never leaves your PC.</p></details>
-      <details class="rv"><summary>Where is my data? Do you collect anything?</summary><p>Everything lives in a <code>data</code> folder next to the app on your computer: companies, footage, finished videos, messages and settings, with your keys encrypted. We don't collect it. The <a href="/privacy">privacy page</a> lists the few things that pass through our server, such as the update check.</p></details>
+      <details class="rv"><summary>Where is my data? Do you collect anything?</summary><p>Everything lives in a <code>data</code> folder next to the app on your computer (or your server): companies, footage, finished videos, messages and settings, with your keys encrypted. We don't collect it. The <a href="/privacy">privacy page</a> lists the few things that pass through our server, such as the update check.</p></details>
     </div>
   </div>
 </section>
@@ -545,6 +547,7 @@
     <div class="links">
       <a href="/setup">Setup guide</a>
       <a href="https://github.com/Shaitrish/37studio">GitHub</a>
+      <a href="/donate">Donate</a>
       <a href="/privacy">Privacy</a>
       <a href="/terms">Terms</a>
       <a href="https://shaitrish.com/products">Products</a>

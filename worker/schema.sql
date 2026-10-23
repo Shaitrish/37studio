@@ -8,3 +8,15 @@ create table if not exists wa (
   at integer not null                    -- received, ms; rows go after 30 days
 );
 create index if not exists wa_phone on wa(phone, seq);
+
+-- Donations reported on /donate (bKash Send Money to a personal number has no API). Each waits as pending until checked
+-- against the bKash app, then: update donations set status='confirmed' where trx='…'   (or 'rejected')
+create table if not exists donations (
+  trx text primary key,                    -- the bKash TrxID the donor reported; also stops double reports
+  amount integer not null,                 -- taka, as reported; correct it when confirming if bKash shows otherwise
+  name text not null default '',
+  message text not null default '',
+  public integer not null default 0,       -- 1: show the name and message on /donate
+  status text not null default 'pending',  -- pending | confirmed | rejected
+  at integer not null                      -- reported, ms
+);

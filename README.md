@@ -2,38 +2,72 @@
 
 <h1 align="center">37Studio</h1>
 
-<p align="center"><b>An AI video studio and social inbox that runs on your own computer.</b><br>
+<p align="center"><b>An AI video studio and social media desk that runs on your own computer.</b><br>
 Videos made, posted and answered, with your own keys and no monthly bill.</p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-d4502a" alt="MIT License"></a>
   <a href="https://studio.shaitrish.com"><img src="https://img.shields.io/badge/website-studio.shaitrish.com-1f1c27" alt="Website"></a>
-  <img src="https://img.shields.io/badge/runs%20on-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-555" alt="Windows, macOS, Linux">
+  <img src="https://img.shields.io/badge/runs%20on-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux%20%C2%B7%20cloud-555" alt="Windows, macOS, Linux, cloud">
+  <img src="https://img.shields.io/badge/docker-amd64%20%C2%B7%20arm64-2496ed" alt="Docker image for amd64 and arm64">
+</p>
+
+<p align="center">
+  <a href="https://studio.shaitrish.com/#intro"><b>▶ Watch the intro video</b></a> ·
+  <a href="https://studio.shaitrish.com/setup">Setup guide</a> ·
+  <a href="https://github.com/Shaitrish/37studio/issues">Issues</a> ·
+  <a href="https://studio.shaitrish.com/donate">Donate</a>
 </p>
 
 ![The project page: the editor agent's chat beside a live preview of a reel](worker/public/shots/project.webp)
 
-37Studio turns long footage, a website or a one-line brief into hook reels, captioned clips, motion-graphics explainers, promos, square posts and thumbnails in a company's own brand. It posts them to Facebook and Instagram (YouTube and TikTok are built, waiting on platform review), on a schedule or on Autopilot, and drafts a reply to every message and comment from the company's knowledge base. Every project shows exactly what it cost in AI usage.
+37Studio makes videos for a business and runs its social accounts, from one app on your own computer. Add a company from its website and it builds a brand library and a knowledge base. Brief a video and Claude Code, the editor agent, builds it as a [HyperFrames](https://github.com/heygen-com/hyperframes) composition in that brand, checks its own frames and renders it on your machine. Publish it to the company's accounts with a caption written for each platform, now, on a schedule or on Autopilot. Messages and comments land in one inbox with replies drafted from the knowledge base.
 
-**Claude Code does the editing. HyperFrames renders. Go serves. React is the UI.** Everything runs in one Docker container on your computer. Footage, brands and messages stay there; API keys are encrypted on disk.
+You bring your own keys (a Claude plan or an Anthropic API key; Gemini and ElevenLabs optional) and pay the providers directly. Every project shows what it cost in AI usage, in USD by default. 37Studio is free and open source under the MIT License, made by [Shaitrish](https://shaitrish.com), a software team in Dhaka.
 
-## Features
+## What it does
 
-- **Brand library from a website or folder.** Paste a URL (or pick the company's own project folder) and get its logos, people, photos, fonts and exact colours sorted and captioned, plus a design system (`design.md`) and a knowledge base (`knowledge.md`).
-- **An editor agent.** Claude Opus 5.5 builds each video as an animated [HyperFrames](https://github.com/heygen-com/hyperframes) composition, checks its own frames and takes changes in plain words. Edit by hand on a real timeline when you want to.
-- **Long recordings into many videos.** A 2-hour class becomes ten reels. Transcription runs locally with faster-whisper: free, private, about 100 languages.
+- **Brand library from a website or folder.** Paste a URL, or pick the company's own project folder, and get its logos, people, photos, fonts and exact colours sorted and captioned, plus a design system (`design.md`) and a knowledge base (`knowledge.md`).
+- **An editor agent.** Claude Opus 5.5 builds each video as an animated HyperFrames composition, checks its own frames and takes changes in plain words. Edit by hand on a real timeline when you want to.
+- **Many kinds of output.** Hook reels, captioned clips, motion-graphics explainers, podcast clips, promo ads, square and portrait posts, and thumbnails. Save any finished video as a template for the next one.
+- **Long recordings into many videos.** A 2-hour class becomes ten reels. Transcription runs locally with faster-whisper: free, private, about 100 languages. YouTube and Google Drive links import directly.
 - **Generated media.** Gemini images and video clips; ElevenLabs voiceover, sound effects and music.
-- **Publishing and Autopilot.** Post to any mix of a company's accounts now or on a schedule, or let a content plan make a fresh video before every slot and wait for one-click approval.
-- **One inbox.** Messenger, Instagram and WhatsApp messages and comments, with replies drafted in the customer's language, following the company's own rules. Off, drafts to approve, or fully automatic, per company.
+- **Publishing and Autopilot.** Post to any mix of a company's accounts on nine platforms now or on a schedule, or let a content plan make a fresh video before every slot and wait for one-click approval.
+- **One inbox.** Messenger, Instagram and WhatsApp messages and Facebook and Instagram comments, with replies drafted in the customer's language, following the company's own rules. Off, drafts to approve, or fully automatic, per company.
 - **Real costs.** Every project, campaign and company shows its AI spend in your currency. No markup: you pay Anthropic, Google and ElevenLabs directly.
+
+Everything runs in one Docker container, on your computer or your own server. Footage, brands and messages stay there; API keys and platform credentials are encrypted on disk.
+
+## Platforms
+
+| Platform | Publishes | Inbox | You connect with |
+| --- | --- | --- | --- |
+| Facebook Pages | Reels and Page videos | Messenger, comments | Facebook Login: your own Meta app, or the shared 37Studio app as a tester |
+| Instagram (Business or Creator) | Reels | Messages, comments | The same sign-in as Facebook |
+| YouTube | Videos | | Your own Google OAuth client |
+| TikTok | Videos, or to the creator's drafts | | Your own TikTok app |
+| LinkedIn | Videos to your profile; company Pages with LinkedIn's approval | | Your own LinkedIn app |
+| X | Video posts | | Your own X app |
+| Pinterest | Video Pins, on the boards you pick | | Your own Pinterest app |
+| Bluesky | Video posts | | Handle and an app password |
+| Mastodon | Video posts | | Server URL and an access token |
+| WhatsApp | | Messages | A WhatsApp Business API number |
+
+Not possible: **Threads** (its API only takes a video from a public URL, which a local-first app doesn't have), **Facebook Groups and personal profiles** (Meta removed it), **Reddit and Snapchat** (no usable public video-posting API). Setup for each platform: [Social publishing](#social-publishing).
 
 ## Quick start
 
-You need [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Windows, macOS on Intel or Apple Silicon) or Docker Engine (Linux), 16 GB of RAM and about 20 GB of free disk, plus a Claude plan or an Anthropic API key.
+You need [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Windows 10 or 11 with WSL 2, macOS on Intel or Apple Silicon) or Docker Engine (Linux), 16 GB of RAM and about 20 GB of free disk, plus a Claude plan or an Anthropic API key.
 
-**The ready-made app.** Download [37studio.zip](https://studio.shaitrish.com/37studio.zip), unzip it, and double-click `start.bat` (Windows) or `start.command` (Mac), or run `./start.sh` (Linux). The launcher starts Docker, pulls the latest image and opens the app at http://localhost:8080. The [setup guide](https://studio.shaitrish.com/setup) walks through every step.
+### On your computer: the ready-made app
 
-**From source.**
+1. Install Docker Desktop and open it once.
+2. Download [37studio.zip](https://studio.shaitrish.com/37studio.zip) and unzip it into a folder you'll keep, for example `Documents/37Studio`.
+3. Double-click `start.bat` (Windows) or `start.command` (Mac; the first time, right-click → Open), or run `./start.sh` (Linux).
+
+The launcher starts Docker, pulls the latest image (about 3 GB the first time) and opens the app at http://localhost:8080, which only accepts connections from your own computer. Every later start checks for updates first. Your work lives in the `data` folder next to the launcher; back it up. The [setup guide](https://studio.shaitrish.com/setup) walks through every step for Windows, Mac and Linux.
+
+### From source
 
 ```bash
 git clone https://github.com/Shaitrish/37studio.git && cd 37studio
@@ -42,249 +76,200 @@ docker compose up --build
 # open http://localhost:8080
 ```
 
-Then add a Claude key in **Settings → Keys** (an Anthropic API key, or a Claude subscription token from `claude setup-token`) and your first company.
+- **Agent permissions.** From source, the agent uses an allowlist (`safe`: file edits, ffmpeg, `npx hyperframes`, python and node) unless you set `STUDIO37_AGENT_PERMISSIONS=bypass` in `.env`, which lets it run any command inside the container. The launcher and the cloud file set `bypass`, because the container is the sandbox.
+- **Windows.** Use Docker Desktop with the WSL 2 backend. Footage under `./data` is a bind mount, so for multi-GB files keep the repo inside the WSL filesystem (`\\wsl$\...`) rather than on `C:\`.
 
-- **Agent permissions.** Inside Docker, `STUDIO37_AGENT_PERMISSIONS=bypass` lets the agent run any command; the container is its sandbox. The default, `safe`, is an allowlist: ffmpeg, `npx hyperframes`, file edits, python and node.
-- **Windows.** Use Docker Desktop with the WSL2 backend. Footage under `./data` is a bind mount, so for multi-GB files keep the repo inside the WSL filesystem (`\\wsl$\...`) rather than on `C:\`.
-- **Claude subscriptions.** Anthropic's terms govern using a Claude subscription in other apps; an API key is the fully supported route.
+To work on the code with hot reload, see [CONTRIBUTING.md](CONTRIBUTING.md#running-it-from-source).
 
-### Local development
+### Run it in the cloud
 
-Prerequisites: Go 1.26+, Node 22+, ffmpeg, and the Claude Code CLI (logged in).
+Run it on a server when a team shares it, or when Autopilot and auto-replies should keep going while your laptop sleeps. [`docker-compose.cloud.yml`](docker-compose.cloud.yml) runs the app behind [Caddy](https://caddyserver.com), which gets and renews an HTTPS certificate for your domain by itself.
 
-```bash
-cd web && npm install && npm run build && cd ..
-./dev.sh                  # backend + frontend together; Ctrl+C stops both. Or separately:
-set -a; . ./.env; set +a
-air                       # API on :8080, rebuilds on every .go change (go install github.com/air-verse/air@latest)
-cd web && npm run dev     # UI with hot reload on :5173, proxied to :8080
-```
+**Server.** A Linux VPS with 16 GB of RAM (recommended) and 4 or more vCPUs: rendering and transcription run on the CPU, so more cores make them faster. Give it 50 GB or more of disk for the image, footage and renders. Both amd64 and arm64 servers work.
 
-Tests: `go test ./...` for the backend and `cd web && npm run build` (which type-checks) for the UI.
+1. Point a DNS **A** record (and **AAAA**, if the server has IPv6) for your domain, for example `studio.example.com`, at the server.
+2. Install Docker: `curl -fsSL https://get.docker.com | sh`.
+3. Open TCP ports **80**, **443** and **3100–3109** in the server's firewall (and in your cloud provider's firewall, if it has one).
+4. Get the compose file and create `.env` next to it:
 
-## Configuration
+   ```bash
+   mkdir 37studio && cd 37studio
+   curl -fsSLO https://raw.githubusercontent.com/Shaitrish/37studio/main/docker-compose.cloud.yml
+   printf 'STUDIO37_DOMAIN=studio.example.com\nSTUDIO37_PASSWORD=%s\n' "$(openssl rand -base64 24)" > .env
+   cat .env                                  # note the password
+   mkdir -p data && sudo chown 1000:1000 data  # the app runs as uid 1000 and writes here
+   docker compose -f docker-compose.cloud.yml up -d
+   ```
 
-| Env var | Default | |
-| --- | --- | --- |
-| `STUDIO37_DATA` | `./data` | Everything lives here: `37studio.db`, `tenants/`, `projects/` |
-| `STUDIO37_ADDR` | `127.0.0.1:8080` | Listen address (Docker sets `:8080` and publishes it on `127.0.0.1` only) |
-| `STUDIO37_WEB` | `web/dist` | Built UI |
-| `STUDIO37_CLAUDE` | `claude` | Claude Code binary |
-| `STUDIO37_AGENT_PERMISSIONS` | `safe` | `safe` or `bypass` |
-| `STUDIO37_PASSWORD` | unset | Basic-auth password for the whole app |
-| `HF_VERSION` | `0.8.186` | Pinned HyperFrames CLI and player runtime |
-| `STUDIO37_STUDIO_PORT` | `3100` | First port for timeline editors (one per open project) |
-| `STUDIO37_PUBLIC_URL` | `http://localhost:8080` | Where Facebook, Google and TikTok send the browser back after sign-in; must match the redirect URIs you register |
-| `STUDIO37_AUTH_URL` | `https://studio.shaitrish.com` | The relay for the shared Meta app's sign-in and for WhatsApp messages. See [Run your own relay](#run-your-own-relay) |
-| `STUDIO37_UPDATE_URL` | `https://studio.shaitrish.com/version.json` | Where the update check looks for new releases |
-| `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` | unset | Claude for the editor agent, captions and replies |
-| `GEMINI_API_KEY`, `ELEVENLABS_API_KEY` | unset | Generated images and video; voice, sound effects and music |
-| `META_APP_ID`, `META_APP_SECRET`, `META_CONFIG_ID` | unset | Your own Meta app for Facebook Pages + Instagram |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | unset | YouTube publishing |
-| `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET` | unset | TikTok publishing |
+5. Open `https://studio.example.com` and sign in with any username and the password. Add your Claude key in **Settings → Keys** (for a subscription token, run `docker compose -f docker-compose.cloud.yml exec studio claude setup-token`).
 
-Provider keys (including the Meta app) can also be entered in the app under **Settings → Keys**, where they are encrypted at rest. AI model IDs and unit prices, the display currency (USD by default) and its exchange rate are under **Settings** too.
+What is different on a server:
 
-## How a job flows
+- **Password.** The cloud file won't start without `STUDIO37_PASSWORD`. It is HTTP basic auth on every page, API call and timeline editor, over HTTPS. Use a long random one and share it only with people you trust with the agent (next point).
+- **Agent permissions.** The cloud file sets `STUDIO37_AGENT_PERMISSIONS=bypass`, like the launcher: the agent can run any command inside the container. Anyone who can sign in can therefore have it run commands there, read every company's files in `/data`, and reach the internet. The container runs as an unprivileged user (uid 1000) with no access to the Docker socket or the host's files beyond `./data`. For the allowlist instead, change that line to `safe` in the compose file; commands outside the allowlist are then refused, which can block some tasks.
+- **Sign-in redirects.** The cloud file sets `STUDIO37_PUBLIC_URL=https://<your domain>`, so register `https://<your domain>/api/oauth/<platform>/callback` with each platform. Use your own Meta app (the shared one only knows `localhost`), and the **Web** platform for TikTok.
+- **Timeline editor.** The UI opens each project's editor at the page's own address on a port from 3100 to 3109 (`https://studio.example.com:3100`, ...). Caddy serves HTTPS on those ports with the same certificate and passes each one to the same port on the app, so the editor works once the ports are open. Your browser asks for the password once more the first time, because a different port counts as a different site. Up to ten editors can be open at once. If you'd rather not open those ports, everything else still works; make changes by chatting with the agent.
+- **Updates.** The sidebar says when a new version is out. Then: `docker compose -f docker-compose.cloud.yml pull && docker compose -f docker-compose.cloud.yml up -d`.
+- **Backups.** Everything lives in `./data`: the database, `secret.key` (which decrypts the keys in it), company files, footage and videos. The database is SQLite in WAL mode, so copy it while the app is stopped, or snapshot the whole disk:
 
-1. **Company.** *Add from website or folder* builds a complete knowledge base of the company's existing system in two stages. First `hyperframes capture` (no tokens) grabs pages, assets, fonts, screenshots, CSS variables and computed styles. Then an agent sorts every asset into the brand library and writes:
-   - `design.md`: the design system as a HyperFrames design spec (exact colors by role, type scale, fonts, radii, spacing, shadows, button/card/nav styles). It is copied into every project's `comp/`, where HyperFrames treats it as brand truth.
-   - `knowledge.md`: what the business does, offers, proof, tone, site structure and video ideas.
-   - `assets.json`: a caption for every file in the library (what it shows, which site section it came from, source URL, what it is good for). Editors can fix captions or move files between folders in the UI. If `GEMINI_API_KEY` is set, capture adds Gemini Vision descriptions.
-   - `profile.json`, which fills the company form (only fields still empty).
+  ```bash
+  docker compose -f docker-compose.cloud.yml stop studio
+  tar czf 37studio-$(date +%F).tgz data
+  docker compose -f docker-compose.cloud.yml start studio
+  ```
 
-   Brand library folders: `logo`, `people`, `images`, `graphics` (SVG icons and illustrations), `videos`, `fonts`, `audio`, `design` (screenshots, raw tokens), `other`. The UI filters by file type (SVG, PNG, JPG and so on). You can also add a company by hand. Companies are called tenants in the code.
+  The archive holds platform tokens and keys, so store it somewhere private. Agent chat sessions live in the `claude-home` volume; they are only needed to resume old chats.
 
-   **From a project folder.** The same dialog takes the company's own folder (a website, app or docs project), with or without a website. The browser uploads a copy to `tenants/<id>/source/`, since Docker can't see the user's disk. Dependencies, build output, hidden files and anything that looks like a secret (`.env`, keys, databases) are left out twice: in the browser, and in `source.go`, because every agent may read the folder and so send it to Anthropic. The scan reads the README, manifests, marketing pages, locale strings, theme and CSS tokens and public assets, and copies real logos, images and fonts into the library. Every project agent also gets the folder as a read-only reference, so a video about a feature can use its real screens, UI text and flows. Choosing the folder again replaces the copy.
-2. **Campaign (optional).** Groups a company's videos around one launch, offer or product. Its brief reaches every video's agent.
-3. **Project.** *New project* is a short chat: company, campaign (or start a new one), what to make, which page or feature it is about (a URL, or a feature name the agent finds on their site), where it runs, length, brief, footage (optional) and quality. No footage is fine: the agent builds from the page, the knowledge base and the brand library.
-4. **Agent.** The app runs `claude -p` in the project folder. The agent probes and transcribes the footage, asks up to 3 questions if it is blocked, cuts with ffmpeg, and builds a HyperFrames composition in `comp/`.
-5. **Preview and edit.** The project page plays `comp/index.html` live in `<hyperframes-player>`, with no render needed. Chat with the agent to iterate, or click **Edit timeline** to open HyperFrames Studio and edit by hand: drag, trim and split clips, change text, timing and audio. Studio saves to the same files; on its next turn the agent reads your edits from `hyperframes history`, builds on them, and can ask Studio which element you selected ("make *this* bigger"). Studio is proxied on ports 3100+ (`STUDIO37_STUDIO_PORT`); Docker publishes 3100-3109.
-6. **Export.** *Export final* runs `hyperframes render` into `out/`. Anything in `out/` is a finished video or image, and the **Library** page lists every project's finished files in one place, filterable by company and type.
-   **Templates.** *Save as template* (on a project, or on a video in the Library) copies the project's `comp/` into `templates/<id>/`, with a thumbnail from its export (`template.go`). Dot folders such as HyperFrames history are left out. A template belongs to one company, or to every company. New project asks "Start from a template?" and puts a copy in the new project's `comp/`; the first prompt tells the agent to keep the design (layout, fonts, motion, captions, intro and outro) and swap in the new content. Videos queued from a templated source inherit it. The Library's *Templates* view lists and deletes them.
-   **Several videos from one source.** *New project* asks "one video, or several?". A 2-hour class with ten solved questions can become ten videos. The agent transcribes the source, plans the videos (asking the editor to confirm unless the brief says go), and queues each with `37studio clip --title … --from … --to … --brief …` (`clip.go`). Each video becomes its own project with the source's company, campaign, format, length and quality. It shares the recording by hard link and gets a copy of the transcript, so nothing is copied or transcribed twice. `clipLoop` builds and exports the queued videos one at a time, after any autopilot video. The source project lists them on its *Videos* tab.
-7. **Publish.** *Publish* posts a final video to any mix of the company's connected Facebook Pages, Instagram, TikTok and YouTube accounts, now or on a schedule, with a caption per platform (written by Claude on request, or by the agent when you ask in chat). See [Social publishing](#social-publishing).
-8. **Autopilot (optional).** A content plan per company ("3 reels a week with one product tip each, 8pm, to our Page and Instagram") makes, renders, captions and schedules videos on its own; you approve each with one click, or let it post. See [Autopilot](#autopilot).
+To build the image from your own checkout on the server, clone the repo and replace the `image:` line in `docker-compose.cloud.yml` with `build: .`.
 
-### Why HyperFrames, not Remotion
+## First steps
 
-- **Agent-native.** A composition is plain HTML with `data-*` timing attributes, which Claude writes reliably. HyperFrames also ships Claude Code skills for compositions, captions, keyframes and media.
-- **Live preview for free.** `@hyperframes/player` plays the agent's HTML directly. Remotion would need every agent edit bundled into a React project before it could preview.
-- **Built-in tools for this work.** It includes `transcribe`, `remove-background` for cut-outs of people, `snapshot` for thumbnails, and `check` for linting.
-- **License.** HyperFrames is open source. Remotion needs a paid company license once a team has more than 3 people.
+1. **Add keys.** Settings → Keys: an Anthropic API key, or a Claude subscription token (run `docker compose exec studio claude setup-token` in the launcher's folder; from source the service is `37studio`). Gemini and ElevenLabs are optional. Keys are encrypted at rest and sent only to the provider they belong to. Anthropic's terms govern using a Claude subscription in other apps; an API key is the fully supported route.
+2. **Add a company.** Companies → **Add from website or folder**. In 5 to 10 minutes the brand library, design system and knowledge base are ready. Read the **Knowledge** tab and fix anything wrong: every video and reply uses it.
+3. **Make a video.** **New project** asks a few questions: what to make, the language, where it runs, how long, what it's about, and optional footage or a YouTube or Drive link. The agent narrates as it works. Ask for changes in the chat, or click **Edit timeline** to change things by hand, then **Export**.
+4. **Connect accounts.** On the company's **Social** tab, click **Connect** for each platform. Most platforms need a developer app of your own first: see [Social publishing](#social-publishing).
+5. **Publish.** On the project, **Publish** → pick accounts → **Write with AI** for the captions (or write your own) → post now or schedule it. The **Posts** tab shows each upload's status and a link to the live post.
+6. **Autopilot and the inbox.** On the company's **Autopilot** tab, write a content plan ("3 reels a week with one product tip each, 8 pm, to our Page and Instagram"). Each video is made three hours before its slot and waits for your approval, or posts on its own if you allow it. On the **Social** tab, choose how inbox replies go out and write the company's reply rules; the **Inbox** in the sidebar has every message and comment.
 
-## Transcription
-
-The agent transcribes speech with `37studio transcribe <file> --language <code> --out work/transcript`. It runs faster-whisper ([asr/transcribe.py](asr/transcribe.py), embedded in the binary) on the user's computer, so it costs nothing and the audio stays local; paid APIs (ElevenLabs, Gemini) are used only when the editor asks for them.
-
-- **Model by hardware.** With an NVIDIA GPU visible it uses `large-v3` (float16). On a CPU it uses `large-v3-turbo` (int8), which is several times faster for a small accuracy loss. `--quality best` forces `large-v3`; `--quality fast`, or less than 4 GB of memory, uses `small`, which is weak on less common languages.
-- **Inside Docker every OS is the same Linux CPU path.** Docker Desktop on a Mac can't reach the Apple GPU, and the shipped compose file passes no NVIDIA GPU (the image also lacks the CUDA libraries), so the GPU branch only applies when the binary runs outside Docker. The model and thread count still follow the container's memory and cores. On a 12-core laptop it ran at about 1.3× the recording's length (a 59-second Bangla clip took 80 seconds), so a 2-hour class takes 2–3 hours. The tool prints progress and an estimate. It runs detached and the command waits at most 9 minutes, so the job outlives one Bash call and the agent's turn; running the same command again joins it or reuses the finished transcript.
-- **Why not batched mode.** faster-whisper's batched pipeline was no faster on a CPU at beam 5, and at beam 1 it dropped sentences and slipped Devanagari letters into Bangla.
-- **Long-class settings.** Voice activity detection skips silences, `condition_on_previous_text` is off so hours of audio don't loop on one phrase, and word timestamps give exact cut points for reels.
-- **Outputs.** `transcript.json` (segments and words), `.srt`, and `.txt` with timestamps. A second run with the same file and settings reuses the result.
-- **Subtitles instead.** If an `.srt` or `.vtt` sits next to the video, the command converts it at once instead of transcribing (segment timings, no word timings). It matches by file name, or uses a lone subtitle file beside a lone video. Editors add one from the Media tab or the New project footage step; YouTube imports bring their own.
-- **Skip or stop.** The New project flow asks whether to transcribe. The project page shows progress with a **Cancel** button, and the Media tab can switch transcription off or back on. Both write `work/transcript/skip`, which stops a running job (it is killed as a process group) and makes `37studio transcribe` tell the agent to work without a transcript until it runs with `--force`.
-- **Import from a link.** A YouTube or Google Drive link (in New project or the Media tab) downloads into `input/` with yt-dlp (`import.go`, in the same venv; `--js-runtimes node` for YouTube's player challenges). Video is capped at 1080p and merged to MP4, and YouTube's subtitles come along in the video's language. Progress shows on the project page and can be cancelled. Intermediate files stay in `work/download/`, which is removed afterwards. From New project, the agent starts once the download finishes. Google Drive files must be shared as "Anyone with the link".
-- **Setup.** The image ships the Python environment (`/opt/asr`, `STUDIO37_ASR_PYTHON`). The model (about 1.6 GB for turbo) downloads into the cache volume the first time. Outside Docker the command makes its own venv under the user cache.
+Autopilot, scheduled posts and auto-replies work while 37Studio runs. Keep the computer awake, or run it in the cloud.
 
 ## Social publishing
 
-Each company's **Social** tab connects accounts: you sign in once per platform with an account that manages the company's Pages or channels, then tick which of the returned accounts belong to that company. A company can have any number of Facebook Pages, Instagram, YouTube and TikTok accounts. On a project, **Publish** sends one final video to any mix of them at once, now or at a scheduled time; the **Posts** tab shows each upload's status, a link to the live post, and the platform's own error if one fails (with Retry). Tokens are stored in `37studio.db`.
+Each company's **Social** tab connects its accounts: sign in once per platform, then tick which of the returned accounts belong to that company. **Publish** sends one final video to any mix of them, now or at a scheduled time. Claude writes a caption for each platform (X and Bluesky stay short, LinkedIn professional, YouTube and Pinterest get a title and description), and you can edit every one. Scheduled posts go out only while 37Studio is running; a post more than 12 hours overdue is marked missed instead of going out late.
 
-Facebook **Groups** and personal **profiles** can't be posted to: Meta removed group posting for all apps in April 2024 and profile posting in 2018.
+Every OAuth platform needs a developer app, and except for Facebook & Instagram that is your own (free) app. Put its credentials in **Settings → Keys** (encrypted at rest; the only way in the launcher, which has no `.env`), or in `.env` when running from source. Register the redirect URI with the platform: `STUDIO37_PUBLIC_URL` (default `http://localhost:8080`) followed by the path below.
 
-Scheduled posts go out only while 37Studio is running; a post more than 12 hours overdue is marked missed instead of going out late.
+| Platform | Connect button | Credentials | Redirect path |
+| --- | --- | --- | --- |
+| Facebook Pages + Instagram | Connect Facebook & Instagram | `META_APP_ID`, `META_APP_SECRET`, `META_CONFIG_ID` (your own Meta app), or the shared 37Studio app if the maintainers add you as a tester | `/api/oauth/meta/callback` |
+| YouTube | Connect YouTube | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `/api/oauth/google/callback` |
+| TikTok | Connect TikTok (OAuth with PKCE) | `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET` | `/api/oauth/tiktok/callback` |
+| LinkedIn | Connect LinkedIn | `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` | `/api/oauth/linkedin/callback` |
+| X | Connect X (OAuth 2.0 with PKCE) | `X_CLIENT_ID`, `X_CLIENT_SECRET` | `/api/oauth/x/callback` (on your computer: `http://127.0.0.1:8080/…`, since X refuses `localhost`) |
+| Pinterest | Connect Pinterest, then pick boards | `PINTEREST_APP_ID`, `PINTEREST_APP_SECRET` | `/api/oauth/pinterest/callback` |
+| Bluesky | Connect Bluesky: handle + app password | none | |
+| Mastodon | Connect Mastodon: server URL + access token | none | |
 
-Register these redirect URIs (replace the host if you set `STUDIO37_PUBLIC_URL`):
+**[docs/platforms.md](docs/platforms.md) has the step-by-step setup for each one.** The short version:
 
-| Platform | Redirect URI |
-| --- | --- |
-| Facebook + Instagram | `http://localhost:8080/api/oauth/meta/callback` |
-| YouTube | `http://localhost:8080/api/oauth/google/callback` |
-| TikTok | `http://localhost:8080/api/oauth/tiktok/callback` |
+- **Facebook + Instagram.** A Meta Business app with Facebook Login for Business, left in Development mode with your team as app roles: no App Review needed. Company → Social → **Use your own Meta app** walks through it. Instagram must be a Business or Creator account linked to the Page. Vertical videos of 3–90 seconds post as Reels.
+- **YouTube.** A Google Cloud project with YouTube Data API v3 and a *Web application* OAuth client, consent screen set to *In production*. Uploads stay private until the project passes YouTube's API audit.
+- **TikTok.** Login Kit and Content Posting API, Desktop platform for `localhost` (Web for an HTTPS domain). Until TikTok audits the app, posts must be *Only me*, or go to the creator's drafts.
+- **LinkedIn.** Products *Sign In with LinkedIn using OpenID Connect* and *Share on LinkedIn* (scopes `openid profile w_member_social`). Posts to your own profile. Company Pages need LinkedIn's Community Management API; once LinkedIn approves it, set `LINKEDIN_PAGES=1` and reconnect. Tokens last 60 days; then connect again.
+- **X.** OAuth 2.0 user authentication as a *Web App, Automated App or Bot* (confidential client), scopes `tweet.read tweet.write users.read media.write offline.access`. Needs an X API access level that allows posting and media upload.
+- **Pinterest.** Scopes `boards:read pins:read pins:write user_accounts:read`; each board you pick is an account. New apps have Trial access, which only allows creating Pins through the sandbox API: set `PINTEREST_API=https://api-sandbox.pinterest.com` until Pinterest grants Standard access.
+- **Bluesky.** bsky.app → Settings → Privacy and security → App passwords. For a self-hosted account, also give its PDS host. No developer app.
+- **Mastodon.** Your server → Preferences → Development → New application with `read:accounts write:media write:statuses`, then paste its access token. No developer app.
 
-**Facebook Pages + Instagram: your own Meta app (recommended).** Company → Social → **Use your own Meta app** walks through this in the app, or:
-1. At developers.facebook.com create a **Business** app and add **Facebook Login for Business**. Add the redirect URI above.
-2. Create a Login configuration with a *User access token* and these permissions: `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `business_management`, `instagram_basic`, `instagram_content_publish` (plus the Inbox permissions below). Put its ID in `META_CONFIG_ID` (Instagram's video upload requires Facebook Login for Business), and the app ID and secret in `META_APP_ID` and `META_APP_SECRET`, in Settings → Keys or `.env`. The ID only takes effect together with its secret, and agents never get the secret (`agentEnv`).
-3. Leave the app in **Development** mode and give your team a role on it (Admin, Developer or Tester): no App Review is needed for people with a role. Each company gives your Business Portfolio access to its Page (or makes you a Page admin). Its Instagram must be a Business or Creator account linked to that Page.
-4. Vertical videos of 3-90 seconds post as Reels; anything else posts as a regular Page video. Meta allows 30 API-published Reels per Page per 24 hours.
+Environment-only settings (`LINKEDIN_PAGES`, `PINTEREST_API`, `STUDIO37_PUBLIC_URL`, `STUDIO37_AUTH_URL`, `STUDIO37_PASSWORD`) go in `.env` when running from source, or under `environment:` in the launcher's `docker-compose.yml`. Then run the start file again (from source: `docker compose up -d`), which recreates the container with the new settings; a plain restart doesn't pick them up. Keys saved in Settings → Keys apply at once.
 
-**The shared 37Studio Meta app.** Without your own app, logins use Shaitrish's 37Studio app (its ID and login configuration are built in, `social.go`). Copies don't carry its secret; the relay at `STUDIO37_AUTH_URL` finishes the login. Until Meta approves that app in App Review, only people with a role on it can sign in, so for now it serves installs the maintainers set up. The submission pack is [docs/meta-app-review.md](docs/meta-app-review.md).
-
-**YouTube (one Google Cloud project).**
-1. In console.cloud.google.com create a project and enable **YouTube Data API v3**.
-2. OAuth consent screen: External, with the `youtube.upload` and `youtube.readonly` scopes. Set it to **In production**: in Testing, Google expires the login after 7 days. Unverified apps show a warning screen during sign-in; continue past it.
-3. Credentials → OAuth client ID → *Web application*, with the redirect URI above. Put the ID and secret in `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
-4. Until the project passes YouTube's free API audit, YouTube keeps every upload **private**. Apply via the *YouTube API Services audit and quota extension* form. The default daily quota also allows only a handful of uploads.
-
-**TikTok.**
-1. At developers.tiktok.com create an app with the **Desktop** platform (the only kind TikTok lets redirect to `http://localhost`; 37Studio uses PKCE for it) and the redirect URI above. Running on a real HTTPS domain instead? Use the Web platform with an `https://` redirect and set `STUDIO37_PUBLIC_URL`.
-2. Add **Login Kit** and **Content Posting API** (turn on Direct Post) with the scopes `user.info.basic`, `video.publish`, `video.upload`. Put the client key and secret in `TIKTOK_CLIENT_KEY` and `TIKTOK_CLIENT_SECRET`.
-3. Until TikTok reviews the app, use its Sandbox and add each company's TikTok account as a target user. Until TikTok audits the app, direct posts must be **Only me**; or choose **Send to TikTok drafts** and the account owner taps Post in the app. Each company signs in with its own TikTok account, since TikTok has no agency access.
+```yaml
+    environment:
+      STUDIO37_AGENT_PERMISSIONS: bypass     # already there
+      PINTEREST_API: https://api-sandbox.pinterest.com
+```
 
 ## Social inbox
 
-**Inbox** in the sidebar shows Messenger, Instagram and WhatsApp messages plus Facebook and Instagram comments for every connected account, newest first, with a "needs reply" filter. Pick one, click **Draft with AI** (Claude writes a reply from that company's `knowledge.md`, in the customer's language, and says a team member will follow up when the answer isn't there), edit, and **Send**. Nothing goes out without a person clicking Send unless you turn on auto-replies. Drafts cost about $0.05 each and count toward the company's costs.
+**Inbox** in the sidebar shows Messenger, Instagram and WhatsApp messages plus Facebook and Instagram comments for every connected account, newest first. Click **Draft with AI** and Claude writes a reply from the company's `knowledge.md`, in the customer's language (about $0.05 a draft, counted in the company's costs); edit it and **Send**. Nothing goes out without a person clicking Send unless you turn on auto-replies.
 
-It reads the Graph API live while the page is open (refreshing every minute), so Pages and Instagram need no public address.
+**Auto-replies** (Company → Social → Inbox replies): *Off*, *Claude drafts, you approve*, or *Claude replies on its own*, plus the company's own rules for how Claude replies (tone, sign-off, what never to promise, when to hand over to a person). Facts only come from the knowledge base; when the answer isn't there, Claude says a team member will reply. A background loop checks every 2 minutes while 37Studio runs, and catches up on what arrived while it was off if the platform still allows a reply (messages within 24 hours, comments up to 2 days old).
 
-**Auto-replies** (Company → Social → Inbox replies): *Off*, *Claude drafts, you approve* (drafts wait in the Inbox marked "Draft ready", prefilled for one click), or *Claude replies on its own*. **How Claude should reply** on the same card holds the company's own rules (sign-off, language, what never to promise, when to hand over to a person), saved as `replies.md` next to `knowledge.md` and added to every draft; they override the default style but never the "facts only from the knowledge base" rule. A background loop checks every 2 minutes while 37Studio runs. Whatever arrived while the computer was off is answered when it's back, if the platform still allows it: messages within 24 hours, comments up to 2 days old. At most 20 replies per round, so a flood can't run up the Claude bill. For round-the-clock replies, keep it on a computer that doesn't sleep.
+The inbox needs extra Meta permissions on top of publishing, and WhatsApp needs a number on the WhatsApp Business API and a small webhook relay: see [docs/platforms.md](docs/platforms.md#inbox-messenger-instagram-and-comments). Until Meta grants your app Advanced Access, only messages from people with a role on the app or Page appear.
 
-Meta setup, on top of Social publishing:
-1. In the Meta app, add the **Engage with customers on Messenger** use case (`pages_messaging`). In *Manage everything on your Page* add `pages_manage_engagement`, `pages_manage_metadata` and `pages_read_user_content`. In the Instagram use case, under *API setup with Facebook login*, add the messaging permissions (`instagram_manage_messages`) and `instagram_manage_comments`.
-2. Create a Login configuration with those six plus the six publishing permissions, put its ID in `META_CONFIG_ID`, and reconnect each company on its Social tab.
-3. In the Instagram app: Settings → Messages and story replies → Message controls → Connected tools → **Allow access to messages**.
-4. Until Meta grants Advanced Access through App Review and Business Verification, the inbox only shows messages from people with a role on the app or the Page. Test with a team account; real customers appear after approval.
+## Configuration
 
-Messenger and Instagram allow free-form replies within 24 hours of the customer's last message; comment replies have no time limit.
+Settings are environment variables: in `.env` when running from source, under `environment:` in the launcher's `docker-compose.yml`, or in `.env` next to `docker-compose.cloud.yml`. Variables marked **Keys** can also be entered in the app under Settings → Keys, where they are encrypted at rest. AI model IDs and unit prices, the per-turn budget, the voice, and the display currency (USD by default) and its exchange rate are under Settings too.
 
-### WhatsApp
+| Variable | Default | Keys | What |
+| --- | --- | --- | --- |
+| `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` | unset | yes | Claude for the editor agent, captions and replies |
+| `GEMINI_API_KEY`, `ELEVENLABS_API_KEY` | unset | yes | Generated images and video; voice, sound effects and music |
+| `META_APP_ID`, `META_APP_SECRET`, `META_CONFIG_ID` | unset | yes | Your own Meta app for Facebook Pages + Instagram |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | unset | yes | YouTube |
+| `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET` | unset | yes | TikTok |
+| `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` | unset | yes | LinkedIn |
+| `LINKEDIN_PAGES` | unset | | `1` lists the LinkedIn company Pages you administer (needs the Community Management API) |
+| `X_CLIENT_ID`, `X_CLIENT_SECRET` | unset | yes | X |
+| `PINTEREST_APP_ID`, `PINTEREST_APP_SECRET` | unset | yes | Pinterest |
+| `PINTEREST_API` | `https://api.pinterest.com` | | `https://api-sandbox.pinterest.com` while your Pinterest app has Trial access |
+| `STUDIO37_PASSWORD` | unset | | Basic-auth password for the whole app (any username). Required by the cloud file |
+| `STUDIO37_PUBLIC_URL` | `http://localhost:8080` | | Where the platforms send the browser back after sign-in; must match the redirect URIs you register |
+| `STUDIO37_DOMAIN` | | | Cloud file only: your domain, for Caddy's certificate and `STUDIO37_PUBLIC_URL` |
+| `STUDIO37_AGENT_PERMISSIONS` | `safe` | | `safe` (allowlist) or `bypass` (any command; the launcher and cloud file set it) |
+| `STUDIO37_AUTH_URL` | `https://studio.shaitrish.com` | | The relay for the shared Meta app's sign-in and for WhatsApp messages ([run your own](docs/platforms.md#run-your-own-relay)) |
+| `STUDIO37_UPDATE_URL` | `https://studio.shaitrish.com/version.json` | | Where the update check looks for new releases |
+| `STUDIO37_DATA` | `./data` | | Everything lives here: `37studio.db`, `secret.key`, `tenants/`, `projects/`, `templates/` |
+| `STUDIO37_ADDR` | `127.0.0.1:8080` | | Listen address (the image sets `:8080`; the compose files publish it on `127.0.0.1` only or behind Caddy) |
+| `STUDIO37_STUDIO_PORT` | `3100` | | First port for timeline editors, one per open project (Docker publishes 3100–3109) |
+| `STUDIO37_WEB` | `web/dist` | | Built UI |
+| `STUDIO37_CLAUDE` | `claude` | | Claude Code binary |
+| `HF_VERSION` | `0.8.186` | | Pinned HyperFrames CLI and player runtime |
 
-Company → Social → **Connect WhatsApp**. Meta delivers WhatsApp messages only by webhook, and a copy on someone's computer has no public address, so a small Cloudflare Worker (`worker/`) receives them (`/webhooks/meta`, signed with the app secret), holds them 30 days in D1, and each copy pulls its own numbers' messages (`/whatsapp/messages`, authorised by its WhatsApp token) into `wa_messages`, the lasting history. Replies go straight to the Graph API. Setup:
-1. In the Meta app add the **Connect with customers through WhatsApp** use case, and point its WhatsApp webhook at your relay's `/webhooks/meta` with the `messages` field and the relay's `META_VERIFY_TOKEN`.
-2. WhatsApp → API Setup gives a test number, its **Phone number ID** and **WhatsApp Business Account ID**. Add a real number there when ready; a number on the API can't be used in the WhatsApp Business phone app at the same time.
-3. Business settings → Users → System users: add one, assign the WhatsApp account, **Generate token** for your app with `whatsapp_business_messaging` and `whatsapp_business_management`. It doesn't expire.
-4. Paste the three into Connect WhatsApp. 37Studio subscribes the app to that account's messages.
-
-Numbers owned by other businesses, and keeping a number on the WhatsApp Business phone app alongside the API (coexistence), need Meta's Embedded Signup, which needs the app to be a Meta **Tech Provider**: Business Verification, then App Review with two screen recordings (sending a message, creating a template), then Access Verification.
-
-### Run your own relay
-
-`worker/` is one Cloudflare Worker that does three jobs: it finishes Facebook logins for the shared Meta app, relays WhatsApp webhooks, and serves the product website in `worker/public/`. The public one at studio.shaitrish.com only serves the shared 37Studio Meta app. With your own Meta app you need your own relay only for WhatsApp; Cloudflare's free plan is enough.
-
-```bash
-cd worker
-npx wrangler login
-npx wrangler d1 create studio37          # put the database_id it prints into wrangler.toml
-# edit wrangler.toml: your own `name`, META_APP_ID, and a route on your domain (or delete `routes` to use *.workers.dev)
-npx wrangler secret put META_APP_SECRET  # your Meta app's secret
-npx wrangler secret put META_VERIFY_TOKEN # any random string; enter the same one in Meta's webhook settings
-npx wrangler d1 execute studio37 --remote --file schema.sql
-npx wrangler deploy
-```
-
-Then set `STUDIO37_AUTH_URL=https://<your worker>` for each copy: in `.env` when running from source, or under `environment:` in the launcher bundle's `docker-compose.yml`.
-
-## Autopilot
-
-Each company can have content plans: what the videos are about, video type, length, format, language, quality, which days and time to post, which accounts, and whether to wait for approval. Three hours before each slot the scheduler starts a project; the agent picks a topic the company hasn't covered yet, builds and checks the video in one turn without asking questions, and writes the captions. The app renders it and queues the posts. With approval on (the default) the video waits on its project page and on Overview for one click; otherwise it posts at the slot.
-
-It runs one video at a time and only while 37Studio is running. A slot that passed while the computer was off is skipped, not posted late. Times are in the browser's time zone, saved with the plan.
-
-## Costs
+## How it works
 
 ```
-cost = Claude agent cost      (total_cost_usd reported by the CLI for every turn, plus captions and inbox drafts)
-     + Gemini generations     (per image / per second of video, unit prices in Settings)
-     + ElevenLabs generations (per 1,000 characters, second or minute, unit prices in Settings)
+Browser ──► 37studio (Go, one binary) ──► SQLite + data/ (companies, projects, tokens, encrypted keys)
+             ├─ claude -p, the editor agent ──► ffmpeg · npx hyperframes · 37studio gen / transcribe / clip
+             ├─ hyperframes render (Chrome + ffmpeg) ──► out/*.mp4, *.png
+             ├─ post queue ──► Facebook · Instagram · YouTube · TikTok · LinkedIn · X · Pinterest · Bluesky · Mastodon
+             └─ inbox loop ──► Messenger, Instagram (Graph API) · WhatsApp (through the relay)
 ```
 
-Rendering and storage run on your own computer, so they cost nothing. Costs are recorded in USD, what the providers bill, and shown in the currency set in Settings (USD by default; set any other code and an exchange rate). Every project, campaign and company shows what it has cost; the **Costs** page breaks spend down by provider, company and month.
+**Claude Code does the editing. HyperFrames renders. Go serves. React is the UI.** All of it, with ffmpeg, Chrome, Node.js, Python and fonts, ships in one Docker image for amd64 and arm64.
 
-- **Quality tiers.** The tier picks the model and effort: Draft is Sonnet 5.5 at medium, Standard is Opus 5.5 at high, Premium is Opus 5.5 at xhigh. This is the main lever on cost.
-- **Budget cap.** Each agent turn has a hard budget (`--max-budget-usd`, set in Settings).
+- **The agent.** Each turn runs `claude -p` in the project's folder with a harness prompt (`agent.go`), the company's knowledge base, design system and brand library, and a hard per-turn budget. It probes and transcribes footage, cuts with ffmpeg, writes the composition, renders stills to check its own work, and fixes what's off. Quality tiers pick the model: Haiku 5.5, Sonnet 5.5 or Opus 5.5 (the default), or DeepSeek through OpenCode for cheaper routine edits.
+- **HyperFrames.** A video is an HTML page with `data-*` timing attributes, which an agent writes reliably and which plays live in the browser with no render step. *Edit timeline* opens HyperFrames Studio on the same files, and the agent picks up your hand edits on its next turn. *Export* renders frame by frame with headless Chrome and encodes with ffmpeg.
+- **Transcription.** `37studio transcribe` runs faster-whisper on your CPU (`large-v3-turbo` by default), so long recordings cost nothing and the audio stays local. On a 12-core laptop it takes about 1.3× the recording's length.
+- **Costs.** Claude reports each run's cost; Gemini and ElevenLabs use the unit prices in Settings. Rendering and storage are free because they run on your machine. Costs are recorded in USD and shown in your currency on every project, campaign and company, and by provider and month on the **Costs** page.
 
-## Project folder
+**[docs/architecture.md](docs/architecture.md)** has the full job flow, the agent harness, transcription details, the project folder, a code map and the release process.
 
-```
-data/projects/<id>/
-  input/        raw uploads (the agent may not modify these)
-  work/         agent scratch: audio, transcripts, cut ranges
-  comp/         HyperFrames composition (live preview)
-  out/          finished videos and images
-  out/drafts/   draft renders and generated media
-```
+## FAQ and troubleshooting
 
-The agent's instructions (the harness) are in `agent.go`: `harness` holds the system prompt and `presets` the per-job-type briefs. Tune them there.
+**Is it really free?** Yes: MIT licensed, no license key, no paid tier. You pay the AI providers for what you use.
 
-The agent can generate media by calling `37studio gen image|video --prompt ... --out ...`, which is the same binary. The cost is recorded against the project in `$STUDIO37_PROJECT`.
+**What leaves my computer?** Calls to the AI providers you set up (Anthropic, and Gemini and ElevenLabs if you add them), uploads to the platforms you connect, the update check (`version.json`), and, only for the shared Meta app's sign-in and for WhatsApp, the relay at `STUDIO37_AUTH_URL`. Any agent may read a company's brand files and source folder, so they go to Anthropic as part of its work.
 
-## Code map
+**The page doesn't open, or port 8080 is in use.** Another program has port 8080. Close it and run the start file again. `docker compose logs` shows what the app is doing.
 
-| File | What |
-| --- | --- |
-| `main.go` | Routes, JSON helpers, basic auth |
-| `db.go` | SQLite schema, row helpers, settings and their defaults |
-| `handlers.go` | Companies, projects, uploads (streamed), file serving + player runtime injection |
-| `agent.go` | Presets, quality tiers, harness prompt, Claude runs (stream-json to chat events), render, generate |
-| `opencode.go` | OpenCode as a second harness, for cheaper models on routine edits |
-| `studio.go` | Timeline editor: starts HyperFrames Studio per project, proxies it on its own port |
-| `scan.go` | Company scan: website capture and/or project folder, then agent sorts assets and writes `design.md`, `knowledge.md`, profile |
-| `source.go` | Company project folder: upload into `source/`, skip rules for dependencies and secrets |
-| `transcribe.go`, `asr/` | `37studio transcribe`: local faster-whisper, detached long runs |
-| `import.go` | YouTube and Google Drive imports with yt-dlp |
-| `campaigns.go` | Campaigns: CRUD; the brief reaches each video's harness |
-| `costs.go` | Project cost and the spend report |
-| `keys.go` | Provider keys from Settings, encrypted at rest (AES-GCM, key file in the data folder) |
-| `update.go` | Version and the update check |
-| `autopilot.go` | Content plans, scheduler and the build → render → captions → approve pipeline |
-| `template.go` | Templates: save a project's composition, list and delete them, and seed a new project's `comp/` |
-| `clip.go` | Several videos from one source: `37studio clip`, the one-at-a-time build → export queue, and the Library listing |
-| `gemini.go`, `eleven.go` | Gemini (Nano Banana images, Omni video, the `37studio gen` CLI) and ElevenLabs |
-| `social.go` | Social publishing: OAuth for Meta, Google and TikTok, AI captions, post queue and per-platform uploads |
-| `inbox.go` | Social inbox: Messenger, Instagram DMs and comments read live, Claude-drafted replies, sending, auto-replies |
-| `whatsapp.go` | WhatsApp: connect a number, pull its messages from the relay, send replies |
-| `web/src` | React UI: `pages/Project.tsx` is the editor workspace |
-| `worker/` | Cloudflare Worker: product website, `version.json`, Meta login exchange, WhatsApp webhook relay (D1) |
-| `dist/`, `release.sh` | The launcher bundle people download, and the script that publishes a release |
+**Linux: the app restarts and the logs say permission denied on `/data`.** With Docker Engine, Docker creates a missing `data` folder as root, and the app runs as uid 1000. Run `sudo chown -R 1000:1000 data` in the 37Studio folder and start it again.
 
-## Releasing
+**The agent says there's no Claude key.** Add one in Settings → Keys. A subscription token that stopped working can be replaced with a new one from `claude setup-token`.
 
-Maintainers bump `version` in `update.go`, then run `./release.sh "What changed"`. It builds and pushes `ghcr.io/shaitrish/37studio:<version>` and `:latest` for `linux/amd64` and `linux/arm64` (arm64 under QEMU, through a `studio37` buildx builder it creates; needs ~15 GB free disk), zips `dist/` into the download, writes `version.json`, and deploys the Worker. Set `IMAGE=` for another registry and log in with `docker login ghcr.io` first. Every copy reads `version.json` at most every 6 hours and shows "Version X available" in the sidebar; the launcher pulls the new image on its next start.
+**Connect says a platform "is not configured".** Its credentials are missing. Add them in Settings → Keys (or `.env`, then restart).
 
-Chrome for Testing has no Linux arm64 build, so on arm64 HyperFrames renders with Playwright's pinned arm64 headless shell (`HYPERFRAMES_BROWSER_PATH`), as HyperFrames' own `Dockerfile.render` does.
+**The platform says the redirect URI doesn't match.** The URI registered with the platform must match `STUDIO37_PUBLIC_URL` + the path exactly: protocol, host, port, no trailing slash. On your own computer, X's is `http://127.0.0.1:8080/api/oauth/x/callback`, because X refuses `localhost`.
+
+**A YouTube upload is private, or TikTok only offers "Only me".** Both platforms restrict unaudited apps. See their sections in [docs/platforms.md](docs/platforms.md).
+
+**LinkedIn posts started failing.** LinkedIn tokens last 60 days. Click **Connect LinkedIn** again.
+
+**A scheduled post was marked missed.** 37Studio wasn't running at the time, and it won't post more than 12 hours late. Click **Retry** to post now.
+
+**The timeline editor doesn't open on a server.** Check that ports 3100–3109 are open in every firewall, and enter the password again when the browser asks.
+
+**Rendering is slow.** Docker Desktop on a Mac or Windows gets a share of the machine: give it more memory and CPU under Settings → Resources. Inside Docker, rendering and transcription run on the CPU.
+
+**Can I use my Claude subscription?** Yes, with a token from `claude setup-token`. Anthropic's terms govern using a subscription in other apps; an API key is the fully supported route.
+
+More questions: [open an issue](https://github.com/Shaitrish/37studio/issues).
 
 ## Roadmap
 
-- **Object storage.** Footage stays on local disk. Add R2/S3 behind `projectDir` when it outgrows one disk.
 - **Image posts.** Publishing sends videos only; Instagram needs a public URL for images, which a local-first app doesn't have.
-- **YouTube and TikTok on the shared apps.** The code is there, but the shared Google and TikTok apps aren't registered or audited yet. Your own apps work today.
-- **Meta App Review** for the shared app, so anyone can connect without their own Meta app ([docs/meta-app-review.md](docs/meta-app-review.md)).
+- **Shared apps beyond Meta.** Connecting YouTube, TikTok and the rest without your own developer app, once shared apps are registered and pass each platform's review.
+- **Meta App Review** for the shared app, so anyone can connect Facebook and Instagram without their own Meta app ([docs/meta-app-review.md](docs/meta-app-review.md)).
 - **WhatsApp on existing business numbers** (Embedded Signup, coexistence with the phone app), which needs Meta Tech Provider approval.
+- **Object storage.** Footage stays on local disk; R2 or S3 behind `projectDir` when it outgrows one disk.
+
+## Support the project
+
+37Studio is free and stays free. If it saves you time, you can [donate by bKash](https://studio.shaitrish.com/donate) (the page shows the confirmed total and thanks supporters), star the repo, or share what you made with it. Want it set up for you? Shaitrish does paid setup over a screen share: [message us on WhatsApp](https://wa.me/8801635191148?text=Hi%2C%20I%27d%20like%20help%20setting%20up%2037Studio).
 
 ## Contributing
 
-Bug reports, ideas and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to run it, the code style, and what makes a pull request easy to merge.
+Bug reports, ideas and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers running it from source with hot reload, the checks to run, the code style, and how to add a social platform. The internals are in [docs/architecture.md](docs/architecture.md).
 
 ## License
 

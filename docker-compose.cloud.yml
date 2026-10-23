@@ -1,0 +1,71 @@
+# 37Studio on a server: the app behind Caddy, which gets and renews an HTTPS certificate for your domain by itself.
+#
+#   1. Point a DNS A (and AAAA, if the server has IPv6) record for your domain at the server.
+#   2. Open TCP 80, 443 and 3100-3109 (the timeline editor) in the server's firewall.
+#   3. Next to this file, create .env with at least:
+#        STUDIO37_DOMAIN=studio.example.com
+#        STUDIO37_PASSWORD=<a long random password without $ signs, e.g. from: openssl rand -base64 24>
+#      API keys and platform credentials can go in .env too, or in Settings → Keys once it's running.
+#   4. mkdir -p data && sudo chown 1000:1000 data      # the app runs as uid 1000 and must be able to write here
+#   5. docker compose -f docker-compose.cloud.yml up -d
+#   6. Open https://studio.example.com and sign in with any username and that password.
+#
+# Needs Docker Compose 2.24 or newer. README → Run it in the cloud has the details.
+
+services:
+  studio:
+    image: ghcr.io/shaitrish/37studio:latest   # or replace this line with `build: .` to run this checkout
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # The app is on the internet, so it refuses to start without a password (HTTP basic auth on every page and API).
+      STUDIO37_PASSWORD: ${STUDIO37_PASSWORD:?set STUDIO37_PASSWORD in .env}
+      # Where the platforms send the browser back after sign-in; register https://<domain>/api/oauth/<platform>/callback.
+      STUDIO37_PUBLIC_URL: https://${STUDIO37_DOMAIN:?set STUDIO37_DOMAIN in .env}
+      # The container is the agent's sandbox, the same as the launcher. See README → Run it in the cloud.
+      STUDIO37_AGENT_PERMISSIONS: bypass
+    # No published ports: only Caddy is reachable from outside.
+    volumes:
+      - ./data:/data                        # companies, footage, videos, settings, encrypted keys: back up this folder
+      - claude-home:/home/node/.claude      # agent sessions (needed to resume chats) + skills
+      - cache:/home/node/.cache             # HyperFrames Chrome, whisper models
+    shm_size: "1gb"                         # Chrome needs more than Docker's 64 MB default
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    depends_on:
+      - studio
+    ports:
+      - "80:80"                             # certificate checks, and the redirect to HTTPS
+      - "443:443"
+      - "443:443/udp"                       # HTTP/3
+      - "3100-3109:3100-3109"               # timeline editor, one port per open project, over HTTPS
+    configs:
+      - source: caddyfile
+        target: /etc/caddy/Caddyfile
+    volumes:
+      - caddy-data:/data                    # certificates
+      - caddy-config:/config
+    restart: unless-stopped
+
+configs:
+  caddyfile:
+    # The app on 443. The timeline editor opens at https://<domain>:<port>, so Caddy also serves HTTPS on 3100-3109,
+    # with the same certificate, and passes each port to the same port on the app.
+    content: |
+      ${STUDIO37_DOMAIN} {
+      	reverse_proxy studio:8080
+      }
+
+      ${STUDIO37_DOMAIN}:3100, ${STUDIO37_DOMAIN}:3101, ${STUDIO37_DOMAIN}:3102, ${STUDIO37_DOMAIN}:3103, ${STUDIO37_DOMAIN}:3104,
+      ${STUDIO37_DOMAIN}:3105, ${STUDIO37_DOMAIN}:3106, ${STUDIO37_DOMAIN}:3107, ${STUDIO37_DOMAIN}:3108, ${STUDIO37_DOMAIN}:3109 {
+      	reverse_proxy studio:{http.request.port}
+      }
+
+volumes:
+  claude-home:
+  cache:
+  caddy-data:
+  caddy-config:

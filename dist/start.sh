@@ -11,6 +11,7 @@ if ! docker info >/dev/null 2>&1; then
   read -r -p "Press Enter to close."
   exit 1
 fi
+mkdir -p data # made by Docker instead, on Linux it would belong to root and the app couldn't write to it
 echo "Checking for updates..."
 docker compose pull
 docker compose up -d --remove-orphans

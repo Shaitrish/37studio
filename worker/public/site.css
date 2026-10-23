@@ -329,3 +329,25 @@ pre.cmd { background: var(--ink); color: #f4f3f6; border-radius: 12px; padding: 
 @media (min-width: 640px) { .req { grid-template-columns: 1fr 1fr; } }
 .req div { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 14.5px; color: var(--fg2); }
 .req b { display: block; color: var(--ink); }
+
+/* donate page */
+.donate { display: grid; gap: 20px; padding-top: 48px; padding-bottom: 96px; }
+@media (min-width: 900px) { .donate { grid-template-columns: 7fr 5fr; align-items: start; } }
+.stack-col { display: grid; gap: 20px; min-width: 0; }
+.donate h2 { font-size: 22px; margin-bottom: 12px; }
+.raised-total { font: 600 48px/1.1 Geist, sans-serif; letter-spacing: -0.04em; margin: 10px 0 6px; }
+.steps-list { display: grid; gap: 10px; padding-left: 20px; margin: 0 0 20px; color: var(--fg2); }
+.steps-list .btn { margin-left: 8px; vertical-align: middle; }
+.mono { font-family: "Geist Mono", monospace; }
+.form-grid { display: grid; gap: 14px; }
+@media (min-width: 640px) { .form-grid { grid-template-columns: 1fr 1fr; } .form-grid .check, .form-grid p { grid-column: 1 / -1; } }
+.form-grid .btn { justify-self: start; }
+.field { display: grid; gap: 6px; font-size: 14px; font-weight: 500; }
+.field input { font: 15px Geist, sans-serif; padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); min-width: 0; }
+.field input:focus { outline: 2px solid var(--ember); outline-offset: 1px; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--fg2); }
+.small-print { font-size: 13.5px; margin-top: 16px; }
+.supporters { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.supporters li { display: grid; gap: 2px; padding-bottom: 10px; border-bottom: 1px solid var(--line); font-size: 15px; }
+.supporters li:last-child { border-bottom: 0; padding-bottom: 0; }
+.supporters span { color: var(--muted); font-size: 14px; }
