@@ -347,6 +347,12 @@ pre.cmd { background: var(--ink); color: #f4f3f6; border-radius: 12px; padding: 
 .field input:focus { outline: 2px solid var(--ember); outline-offset: 1px; }
 .check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--fg2); }
 .small-print { font-size: 13.5px; margin-top: 16px; }
+.bank { margin: 14px 0 0; display: grid; }
+.bank div { display: grid; grid-template-columns: 150px 1fr; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 15px; }
+.bank dt { color: var(--muted); }
+.bank dd { margin: 0; overflow-wrap: anywhere; }
+.bank .btn { margin-left: 8px; vertical-align: middle; }
+@media (max-width: 520px) { .bank div { grid-template-columns: 1fr; gap: 2px; } }
 .supporters { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
 .supporters li { display: grid; gap: 2px; padding-bottom: 10px; border-bottom: 1px solid var(--line); font-size: 15px; }
 .supporters li:last-child { border-bottom: 0; padding-bottom: 0; }

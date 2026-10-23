@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Support 37Studio</title>
-<meta name="description" content="37Studio is free and open source. Support its development with a donation by bKash, or by starring, sharing and contributing on GitHub.">
+<meta name="description" content="37Studio is free and open source. Support its development with a donation in US dollars or by bKash, or by starring, sharing and contributing on GitHub.">
 <meta property="og:title" content="Support 37Studio">
 <meta property="og:description" content="37Studio is free and open source. Help keep it going.">
 <meta property="og:image" content="https://studio.shaitrish.com/og.png">
@@ -56,10 +56,25 @@
     </div>
 
     <div class="card">
+      <h2>Donate in US dollars</h2>
+      <p class="muted">Send a US bank transfer (ACH) from a US bank account, or from Wise or any app that pays US bank accounts. The minimum is $2.</p>
+      <dl class="bank">
+        <div><dt>Account holder</dt><dd>Md Jahangir Hossain</dd></div>
+        <div><dt>Account number</dt><dd><span class="mono">30000005325754</span> <button class="btn sm" type="button" data-copy="30000005325754">Copy</button></dd></div>
+        <div><dt>Routing number</dt><dd><span class="mono">028000024</span> <button class="btn sm" type="button" data-copy="028000024">Copy</button></dd></div>
+        <div><dt>Account type</dt><dd>Checking</dd></div>
+        <div><dt>Bank</dt><dd>JPMorgan Chase Bank, N.A.<br><span class="muted">270 Park Avenue, New York, NY 10017</span></dd></div>
+        <div><dt>Recipient address</dt><dd>Dhaka 1207, Bangladesh</dd></div>
+        <div><dt>Reference</dt><dd>37Studio</dd></div>
+      </dl>
+      <p class="muted small-print">Then email <a href="mailto:jahangir@shaitrish.com?subject=37Studio%20donation">jahangir@shaitrish.com</a> with the amount, and your name if you'd like to be thanked here. ACH takes 1 to 3 business days, and we count it once it arrives. Can't send ACH? Email us and we'll find a way that works for you.</p>
+    </div>
+
+    <div class="card">
       <h2>Donate with bKash</h2>
       <ol class="steps-list">
         <li>In the bKash app, choose <b>Send Money</b>.</li>
-        <li>Send any amount to <b class="mono">01635191148</b> <button class="btn sm" type="button" id="copy">Copy number</button></li>
+        <li>Send any amount to <b class="mono">01635191148</b> <button class="btn sm" type="button" data-copy="01635191148">Copy number</button></li>
         <li>Write <b>37Studio</b> as the reference.</li>
         <li>Tell us below, with the transaction ID (TrxID) from the bKash message, so we can count it and thank you.</li>
       </ol>
@@ -73,11 +88,6 @@
         <p class="muted" id="sent" role="status"></p>
       </form>
       <p class="muted small-print">We check every report against our bKash account by hand before it counts, usually within a day. Only confirmed donations appear on this page.</p>
-    </div>
-
-    <div class="card">
-      <h2>From outside Bangladesh</h2>
-      <p class="muted">We can't take international cards on this page yet. If you'd like to support us from abroad, email <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a> and we'll sort out a way that works for you.</p>
     </div>
   </div>
 
@@ -135,8 +145,8 @@
     document.getElementById("supporters-card").hidden = !s.supporters.length;
   }).catch(() => { document.getElementById("count").textContent = "Couldn't load the total right now."; });
 
-  document.getElementById("copy").addEventListener("click", (e) => {
-    navigator.clipboard?.writeText("01635191148").then(() => { e.target.textContent = "Copied"; }, () => {});
+  for (const b of document.querySelectorAll("[data-copy]")) b.addEventListener("click", () => {
+    navigator.clipboard?.writeText(b.dataset.copy).then(() => { b.textContent = "Copied"; }, () => {});
   });
 
   document.getElementById("report").addEventListener("submit", async (e) => {
