@@ -31,7 +31,7 @@ You bring your own keys (a Claude plan or an Anthropic API key; Gemini and Eleve
 - **An editor agent.** Claude Opus 5.5 builds each video as an animated HyperFrames composition, checks its own frames and takes changes in plain words. Edit by hand on a real timeline when you want to.
 - **Many kinds of output.** Hook reels, captioned clips, motion-graphics explainers, podcast clips, promo ads, square and portrait posts, and thumbnails. Save any finished video as a template for the next one.
 - **Long recordings into many videos.** A 2-hour class becomes ten reels. Transcription runs locally with faster-whisper: free, private, about 100 languages. YouTube and Google Drive links import directly.
-- **Generated media.** Gemini images and video clips; ElevenLabs voiceover, sound effects and music.
+- **Generated media.** Gemini images and video clips; ElevenLabs voiceover, sound effects and music. The agent uses them only when the footage and brand library can't do the job, and says what it made.
 - **Publishing and Autopilot.** Post to any mix of a company's accounts on nine platforms now or on a schedule, or let a content plan make a fresh video before every slot and wait for one-click approval.
 - **One inbox.** Messenger, Instagram and WhatsApp messages and Facebook and Instagram comments, with replies drafted in the customer's language, following the company's own rules. Off, drafts to approve, or fully automatic, per company.
 - **Assistant and MCP.** Run everything by chatting with the Assistant in the sidebar, or from your own AI agent (Claude Code, Claude Desktop, Cursor) through 37Studio's MCP server: companies, campaigns, videos, publishing, Autopilot, settings and connections.
@@ -253,7 +253,7 @@ Browser ──► 37studio (Go, one binary) ──► SQLite + data/ (companies,
 
 **Claude Code does the editing. HyperFrames renders. Go serves. React is the UI.** All of it, with ffmpeg, Chrome, Node.js, Python and fonts, ships in one Docker image for amd64 and arm64.
 
-- **The agent.** Each turn runs `claude -p` in the project's folder with a harness prompt (`internal/agent/agent.go`), the company's knowledge base, design system and brand library, and a hard per-turn budget. It probes and transcribes footage, cuts with ffmpeg, writes the composition, renders stills to check its own work, and fixes what's off. Quality tiers pick the model: Haiku 5.5, Sonnet 5.5 or Opus 5.5 (the default), or DeepSeek through OpenCode for cheaper routine edits.
+- **The agent.** Each turn runs `claude -p` in the project's folder with a harness prompt (`internal/agent/agent.go`), the company's knowledge base, design system and brand library, and a hard per-turn budget on Claude's own spend. It probes and transcribes footage, cuts with ffmpeg, writes the composition, renders stills to check its own work, and fixes what's off. Quality tiers pick the model: Haiku 5.5, Sonnet 5.5 or Opus 5.5 (the default), or DeepSeek through OpenCode for cheaper routine edits.
 - **HyperFrames.** A video is an HTML page with `data-*` timing attributes, which an agent writes reliably and which plays live in the browser with no render step. *Edit timeline* opens HyperFrames Studio on the same files, and the agent picks up your hand edits on its next turn. *Export* renders frame by frame with headless Chrome and encodes with ffmpeg.
 - **Transcription.** `37studio transcribe` runs faster-whisper on your CPU (`large-v3-turbo` by default), so long recordings cost nothing and the audio stays local. On a 12-core laptop it takes about 1.3× the recording's length.
 - **Costs.** Claude reports each run's cost; Gemini and ElevenLabs use the unit prices in Settings. Rendering and storage are free because they run on your machine. Costs are recorded in USD and shown in your currency on every project, campaign and company, and by provider and month on the **Costs** page.
@@ -288,6 +288,10 @@ Browser ──► 37studio (Go, one binary) ──► SQLite + data/ (companies,
 
 **Can I use my Claude subscription?** Yes, with a token from `claude setup-token`. Anthropic's terms govern using a subscription in other apps; an API key is the fully supported route.
 
+**Can I use my Runway, Kling or other video subscription?** Not directly. Monthly plans for video tools (Runway, Kling, Google AI Pro and the like) work only on their own websites; using a model from another app needs a separate API key, billed on its own. Make the clip on their site, then upload it to a project or paste a Google Drive link, and the agent edits it like any other footage. For clips generated inside 37Studio, add a Gemini key.
+
+**When does the agent generate images, clips or voice?** Only when the footage and the company's brand library can't do the job, because every generation is billed. It says what it generated, and the cost shows on the project. On Autopilot it decides on its own. The per-turn budget in Settings caps Claude's spend only; generated media is billed on top, so keep an eye on the **Costs** page.
+
 More questions: [open an issue](https://github.com/Shaitrish/37studio/issues).
 
 ## Roadmap
@@ -295,6 +299,8 @@ More questions: [open an issue](https://github.com/Shaitrish/37studio/issues).
 - **Image posts.** Publishing sends videos only; Instagram needs a public URL for images, which a local-first app doesn't have.
 - **Shared apps beyond Meta.** Connecting YouTube, TikTok and the rest without your own developer app, once shared apps are registered and pass each platform's review.
 - **Meta App Review** for the shared app, so anyone can connect Facebook and Instagram without their own Meta app ([docs/meta-app-review.md](docs/meta-app-review.md)).
+- **More video models.** Kling, Seedance, Wan, Veo and others through one fal.ai key, chosen in Settings. The agent's `37studio gen video` command stays the same.
+- **A spending cap on generated media** per project, alongside the per-turn cap on Claude.
 - **WhatsApp on existing business numbers** (Embedded Signup, coexistence with the phone app), which needs Meta Tech Provider approval.
 - **Object storage.** Footage stays on local disk; R2 or S3 behind `projectDir` when it outgrows one disk.
 

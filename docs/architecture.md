@@ -55,7 +55,7 @@ Each turn is one headless Claude Code run: `--output-format stream-json`, stream
 
 - **Quality tiers** pick the model and effort: Quick is Haiku 5.5 (low), Draft is Sonnet 5.5 (medium), Standard is Opus 5.5 (high), Premium is Opus 5.5 (xhigh). The OpenCode tiers run DeepSeek models for cheaper routine edits (`opencode.go`); they need an OpenCode login (`docker compose exec studio opencode auth login`). The tier can change per message.
 - **Permissions.** `STUDIO37_AGENT_PERMISSIONS=safe` (the default) gives the agent an allowlist: file edits, ffmpeg/ffprobe, `npx`, `37studio`, python3, node and a few shell basics. `bypass` lets it run any command; the launcher and the cloud compose file set it, because the container is the sandbox. Claude Code refuses bypass mode as root, so the image runs as the unprivileged `node` user. Agents don't get the platform apps' secrets (variables ending in `_SECRET`).
-- **Generated media.** The agent calls `37studio gen image|video --prompt … --out …` (Gemini) and the ElevenLabs tools; the cost is recorded against the project in `$STUDIO37_PROJECT`.
+- **Generated media.** The harness lists `37studio gen image|video|voice|sfx|music` under "Paid AI media" and tells the agent to use them only when the footage and brand library can't do the job; on Autopilot it decides alone. The agent never picks a provider or model: `genAny` sends images and video to Gemini (`image_model`, `video_model` in Settings) and voice, sound effects and music to ElevenLabs (`voice_model`), so a new provider needs no prompt change (see CONTRIBUTING.md). Without the key the command fails with "GEMINI_API_KEY is not set" and the agent carries on without it. Each generation's cost is recorded against the project in `$STUDIO37_PROJECT`.
 - **Captions and replies** use one tool-less Claude turn each (Sonnet, low effort), not the agent.
 
 ## Why HyperFrames, not Remotion
@@ -97,7 +97,7 @@ cost = Claude agent cost      (total_cost_usd reported by the CLI for every turn
 Rendering and storage run on your own computer, so they cost nothing. Costs are recorded in USD, what the providers bill, and shown in the currency set in Settings (USD by default; set any other code and an exchange rate). Every project, campaign and company shows what it has cost; the **Costs** page breaks spend down by provider, company and month.
 
 - **Quality tiers** are the main lever on cost (see [The editor agent](#the-editor-agent)).
-- **Budget cap.** Each agent turn has a hard budget (`--max-budget-usd`, $25 by default, set in Settings).
+- **Budget cap.** Each agent turn has a hard budget on Claude's spend (`--max-budget-usd`, $25 by default, set in Settings). Gemini and ElevenLabs generations are recorded but not capped.
 - **Inbox auto-replies** send at most 20 replies per two-minute round.
 
 ## Project folder

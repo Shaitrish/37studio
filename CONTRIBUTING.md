@@ -74,6 +74,16 @@ Each platform follows the same pattern; LinkedIn, X and Pinterest (OAuth) and Bl
 7. **Docs.** The README's platforms table, Social publishing table and configuration table, and a section in `docs/platforms.md` with the developer-app steps, scopes and redirect URI.
 8. **A test.** At least the parts that can break quietly: request shape and error handling against an `httptest` server, and any text escaping the platform needs (see `platforms_test.go`).
 
+## Adding a generation provider
+
+The agent only knows `37studio gen image|video|voice|sfx|music`. Which provider answers is the app's choice, so a new one needs no change to the harness prompt.
+
+1. **Key.** Add its env name to `Names` in `internal/keys/keys.go` and to `.env.example`. It has to be an API key: subscriptions to video tools (Runway, Kling, Google AI Pro) don't include API access.
+2. **Client.** A small file in `internal/gen/`, like `gemini.go` or `eleven.go`, that sends the request, waits for the result and writes it to the output file.
+3. **Routing.** Choose it in `gen.Image` or `gen.Video` from the model setting (`image_model`, `video_model`), for example by a model-name prefix, so people switch providers in Settings.
+4. **Cost.** Call `costs.Record` with the provider, the model and a unit price from Settings, so the project and the Costs page show it.
+5. **A test.** Request shape and error handling against an `httptest` server.
+
 ## Releasing
 
 Maintainers only: bump `Version` in `internal/update/update.go`, then `./release.sh "What changed"`. [docs/architecture.md](docs/architecture.md#releasing) has the details.
