@@ -15,6 +15,7 @@ WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY *.go ./
+COPY asr ./asr
 RUN CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /37studio .
 
 # ---- runtime: ffmpeg + Chrome libs for HyperFrames rendering + the Claude Code CLI
