@@ -74,6 +74,17 @@ create table if not exists usage(
 );
 create table if not exists settings(key text primary key, value text not null);
 create table if not exists secrets(name text primary key, value blob not null);
+create table if not exists templates(
+  id integer primary key,
+  name text not null,
+  notes text not null default '',
+  tenant_id integer references tenants(id) on delete cascade, -- null: every company
+  project_id integer,
+  kind text not null default '',
+  aspect text not null default '',
+  seconds integer not null default 0,
+  created_at text not null default current_timestamp
+);
 create table if not exists autopilots(
   id integer primary key,
   tenant_id integer not null references tenants(id) on delete cascade,
@@ -181,6 +192,7 @@ func openDB() {
 		"alter table projects add column autopilot_stage text not null default ''",
 		"alter table projects add column parent_id integer",
 		"alter table projects add column clip_stage text not null default ''",
+		"alter table projects add column template_id integer",
 		"alter table tenants add column inbox_mode text not null default 'off'",
 	} {
 		db.Exec(m)

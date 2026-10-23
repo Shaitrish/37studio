@@ -19,7 +19,7 @@ import (
 // Editions: "agency" (Shaitrish's own install: clients, pricing, invoices) and "personal" (sold to friends and family:
 // brands, social, autopilot, no billing). Personal copies check studio.shaitrish.com for updates and carry a license key.
 
-const version = "0.4.4"
+const version = "0.4.5"
 
 var updateURL = env("STUDIO37_UPDATE_URL", "https://studio.shaitrish.com/version.json")
 

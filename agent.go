@@ -224,7 +224,7 @@ Job type: %s
 Brief:
 %s
 %s`,
-		p["id"], p["title"], pr.Label, p["aspect"], length, strings.Join(inputs, "\n"), pr.Brief, or(str(p["brief"]), "(none, use your judgment)"), focusText(str(p["focus"])))
+		p["id"], p["title"], pr.Label, p["aspect"], length, strings.Join(inputs, "\n"), pr.Brief, or(str(p["brief"]), "(none, use your judgment)"), focusText(str(p["focus"]))+templateText(p))
 }
 
 // firstTurn is how a brand-new job starts; a harness joining a job already in progress gets only the brief plus recap().

@@ -1,10 +1,11 @@
 import { ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpIcon, CheckCircleIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FileTextIcon, FilmStripIcon, GlobeIcon, ListChecksIcon, PencilLineIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MicrophoneSlashIcon, PaperclipIcon, MagnifyingGlassIcon, SlidersHorizontalIcon, SparkleIcon, SquareIcon, TerminalWindowIcon, TrashIcon, MagicWandIcon, WrenchIcon, XIcon } from "@phosphor-icons/react";
+import { ArrowUpIcon, BookmarkSimpleIcon, CheckCircleIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FileTextIcon, FilmStripIcon, GlobeIcon, ListChecksIcon, PencilLineIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MicrophoneSlashIcon, PaperclipIcon, MagnifyingGlassIcon, SlidersHorizontalIcon, SparkleIcon, SquareIcon, TerminalWindowIcon, TrashIcon, MagicWandIcon, WrenchIcon, XIcon } from "@phosphor-icons/react";
 import { Quality } from "../api";
 import { api, bytes, ChatEvent, clock, fail, FileInfo, go, languageName, Meta, Project, toast, upload, cash, useApi } from "../api";
 import { DropZone, Empty, FileTile, KindIcon, Progress, Seg, Status, projectStatus } from "../ui";
 import { presetIcon } from "./Projects";
 import { PostsCard, PublishModal } from "./Social";
+import { SaveTemplate } from "./Library";
 import { approve, skip } from "./Autopilot";
 
 export default function ProjectPage({ id }: { id: number }) {
@@ -14,6 +15,7 @@ export default function ProjectPage({ id }: { id: number }) {
   const [view, setView] = useState<FileInfo | "comp">();
   const [tab, setTab] = useState("brief");
   const [publishing, setPublishing] = useState(false);
+  const [templating, setTemplating] = useState(false);
   // The player only reloads when asked: remounting on every agent save made the preview flicker and restart.
   const [shownComp, setShownComp] = useState<string>();
   const stage = useRef<HTMLDivElement>(null);
@@ -121,6 +123,9 @@ export default function ProjectPage({ id }: { id: number }) {
                 onClick={() => api(`/projects/${id}/studio`, { method: "DELETE" }).then(reload, fail)}><XIcon size={15} /></button>
             )}
           </span>
+          <button className="btn" disabled={!p.composition} onClick={() => setTemplating(true)} title="Start later videos from this one's look">
+            <BookmarkSimpleIcon size={15} /> Save as template
+          </button>
           <button className="btn" disabled={!finals.some((f) => f.kind === "video")} onClick={() => setPublishing(true)}
             title={finals.some((f) => f.kind === "video") ? "Post to the company's Facebook, Instagram, TikTok and YouTube" : "Export a final video first"}>
             <ShareNetworkIcon size={15} /> Publish
@@ -207,6 +212,7 @@ export default function ProjectPage({ id }: { id: number }) {
             {tab === "posts" && <PostsCard p={p} reload={reload} onPublish={() => setPublishing(true)} />}
             {tab === "cost" && <CostCard p={p} />}
           </div>
+          {templating && <SaveTemplate projectId={p.id} title={p.title} onClose={() => setTemplating(false)} />}
           {publishing && <PublishModal p={p} onClose={() => setPublishing(false)} onQueued={() => { setPublishing(false); setTab("posts"); reload(); }} />}
         </div>
 

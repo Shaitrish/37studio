@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { ArrowUpIcon, MegaphoneIcon, PencilSimpleIcon, SparkleIcon, MagicWandIcon } from "@phosphor-icons/react";
-import { api, bytes, Campaign, fail, go, languageName, languages, Meta, Project, Tenant, upload, useApi } from "../api";
+import { api, bytes, Campaign, fail, go, languageName, languages, Meta, Project, Template, Tenant, upload, useApi } from "../api";
 import { DropZone, Modal, Progress, Seg } from "../ui";
 import { presetIcon } from "./Projects";
 
@@ -8,7 +8,7 @@ import { presetIcon } from "./Projects";
 interface A {
   tenant?: number; campaign?: string; campaignText?: string; kind?: string; aspect?: string;
   seconds?: number; brief?: string; files?: File[]; quality?: string; focus?: string; language?: string; count?: string;
-  link?: string; transcribe?: string;
+  link?: string; transcribe?: string; template?: string;
 }
 type Opt = { value: string; label: string; sub?: string; icon?: ReactNode };
 interface Step {
@@ -42,6 +42,8 @@ export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: ()
   const [a, setA] = useState<A>({ tenant: tenantId, campaign: campaignId ? String(campaignId) : undefined, quality: "standard" });
   const [done, setDone] = useState<(keyof A)[]>([]);
   const { data: campaigns } = useApi<Campaign[]>(a.tenant ? `/campaigns?tenant=${a.tenant}` : null);
+  const { data: templates } = useApi<Template[]>(a.tenant ? `/templates?tenant=${a.tenant}` : null);
+  const template = templates?.find((t) => String(t.id) === a.template);
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState<string>();
   const [pct, setPct] = useState(0);
@@ -70,6 +72,15 @@ export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: ()
       key: "campaignText", ask: "What's the campaign? Give it a name and say what it promotes.", skip: (x) => x.campaign !== "new",
       text: { placeholder: "Eid offer: 30% off the HSC physics course until 15 April. Audience: HSC candidates. CTA: enroll at course37.com" },
       show: (x) => x.campaignText ?? "",
+    },
+    {
+      // A saved look: the new project's comp/ starts as a copy of it, and the format follows it.
+      key: "template", ask: "Start from a template?", skip: () => !templates?.length,
+      options: () => [
+        ...(templates ?? []).map((t) => ({ value: String(t.id), label: t.name, sub: [t.tenant_name ?? "All companies", t.aspect, t.notes].filter(Boolean).join(" · ") })),
+        { value: "none", label: "No, start fresh" },
+      ],
+      show: () => template?.name ?? "Start fresh",
     },
     {
       key: "kind", ask: "What are we making?", cards: true,
@@ -140,7 +151,9 @@ export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: ()
 
   function answer(key: keyof A, value: A[keyof A], also: Partial<A> = {}) {
     const next = { ...a, ...also, [key]: value };
-    // Picking a format sets sensible defaults for the questions after it.
+    // Picking a format, or a template, sets sensible defaults for the questions after it.
+    const tpl = key === "template" ? templates?.find((t) => String(t.id) === value) : undefined;
+    if (tpl) Object.assign(next, { kind: tpl.kind || next.kind, aspect: tpl.aspect || next.aspect, seconds: tpl.seconds || next.seconds });
     if (key === "kind") {
       const p = meta?.presets.find((x) => x.id === value);
       next.aspect ??= p?.aspect;
@@ -163,7 +176,7 @@ export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: ()
       // Several videos: the agent plans them from the footage and queues one project per video (clip.go).
       const split = many(a) ? `Make ${a.count === "all" ? "a separate video for every strong moment in this footage (for example each solved question or topic)" : `${a.count} separate videos from this footage`}, each about ${secs(a.seconds ?? 60)}. Plan them from the transcript, then queue them without waiting for me.\n\n` : "";
       const p = await api<Project>("/projects", {
-        body: { tenant_id: a.tenant, campaign_id, title: title.trim() || "Untitled", kind: a.kind, aspect: a.aspect, seconds: a.kind === "thumbnail" ? 0 : a.seconds, quality: a.quality, brief: split + (a.brief ?? ""), focus: a.focus ?? "", language: a.language ?? "" },
+        body: { tenant_id: a.tenant, campaign_id, title: title.trim() || "Untitled", kind: a.kind, aspect: a.aspect, seconds: a.kind === "thumbnail" ? 0 : a.seconds, quality: a.quality, brief: split + (a.brief ?? ""), focus: a.focus ?? "", language: a.language ?? "", template_id: template?.id ?? null },
       });
       if (a.files?.length) {
         setBusy(`Uploading ${bytes(a.files.reduce((n, f) => n + f.size, 0))}…`);

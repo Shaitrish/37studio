@@ -20,7 +20,7 @@ import (
 
 var (
 	tenantCols  = []string{"name", "contact", "email", "phone", "website", "teacher", "bio", "language", "brand_color", "accent_color", "font", "notes", "inbox_mode"}
-	projectCols = []string{"tenant_id", "campaign_id", "title", "kind", "aspect", "seconds", "quality", "brief", "focus", "language", "status"}
+	projectCols = []string{"tenant_id", "campaign_id", "title", "kind", "aspect", "seconds", "quality", "brief", "focus", "language", "status", "template_id"}
 	assetDirs   = []string{"logo", "people", "images", "graphics", "videos", "fonts", "audio", "design", "other"}
 	tenantDocs  = map[string]string{"knowledge": "knowledge.md", "design": "design.md", "replies": "replies.md"}
 )
@@ -278,6 +278,11 @@ func saveProject(r *http.Request) (any, error) {
 	for _, d := range []string{"input", "work", "out/drafts"} {
 		os.MkdirAll(filepath.Join(projectDir(id), d), 0o755)
 	}
+	if isNew {
+		if err := useTemplate(id, b["template_id"]); err != nil {
+			return nil, err
+		}
+	}
 	return row(projectSelect+" where p.id=?", id)
 }
 
@@ -458,7 +463,7 @@ func filesHandler() http.Handler {
 	runtime := fmt.Sprintf(`<script src="https://cdn.jsdelivr.net/npm/@hyperframes/core@%s/dist/hyperframe.runtime.iife.js"></script>`, hfVersion)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		p := path.Clean("/" + r.URL.Path)
-		if !strings.HasPrefix(p, "/tenants/") && !strings.HasPrefix(p, "/projects/") {
+		if !strings.HasPrefix(p, "/tenants/") && !strings.HasPrefix(p, "/projects/") && !strings.HasPrefix(p, "/templates/") {
 			http.NotFound(w, r)
 			return
 		}

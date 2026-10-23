@@ -119,6 +119,9 @@ func main() {
 
 	mux.HandleFunc("GET /api/costs", api(getCosts))
 	mux.HandleFunc("GET /api/library", api(listLibrary))
+	mux.HandleFunc("GET /api/templates", api(listTemplates))
+	mux.HandleFunc("DELETE /api/templates/{id}", api(deleteTemplate))
+	mux.HandleFunc("POST /api/projects/{id}/template", api(saveTemplate))
 	mux.HandleFunc("GET /api/keys", api(listKeys))
 	mux.HandleFunc("PUT /api/keys", api(putKeys))
 	mux.HandleFunc("GET /api/license", api(getLicense))

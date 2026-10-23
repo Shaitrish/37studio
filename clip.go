@@ -68,13 +68,14 @@ func queueClip(parent int64, title, brief, from, to string, seconds int) (int64,
 	}
 	id, err := save("projects", projectCols, 0, map[string]any{
 		"tenant_id": p["tenant_id"], "campaign_id": p["campaign_id"], "title": title, "kind": p["kind"], "aspect": p["aspect"],
-		"seconds": seconds, "quality": p["quality"], "language": p["language"], "focus": p["focus"],
+		"seconds": seconds, "quality": p["quality"], "language": p["language"], "focus": p["focus"], "template_id": p["template_id"],
 		"brief": brief + fmt.Sprintf(clipRules, str(p["title"]), parent, span),
 	})
 	if err != nil {
 		return 0, err
 	}
 	db.Exec("update projects set parent_id=?, clip_stage='queued' where id=?", parent, id)
+	useTemplate(id, p["template_id"]) // a series cut from a templated source keeps its look
 	db.Exec("insert into settings(key,value) values('projects_made','1') on conflict(key) do update set value=cast(value as integer)+1")
 	dir, src := projectDir(id), projectDir(parent)
 	for _, d := range []string{"input", "work/transcript", "out/drafts"} {

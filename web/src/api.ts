@@ -23,8 +23,14 @@ export interface Project {
   // Several videos from one source (clip.go): the source lists its videos; each video names its source.
   parent_id?: number | null; parent_title?: string; clip_stage?: "" | "queued" | "building" | "rendering" | "done" | "failed";
   children?: Pick<Project, "id" | "title" | "status" | "clip_stage">[];
+  template_id?: number | null;
   transcript?: { state: "running" | "done" | "skipped" | "failed"; pct?: number; line?: string; from?: string } | null;
   import?: { url: string; pct: number; line: string; error?: string; done: boolean } | null;
+}
+/** A saved composition new projects can start from (template.go). tenant_id null: every company. */
+export interface Template {
+  id: number; name: string; notes: string; tenant_id: number | null; tenant_name: string | null; project_id: number;
+  kind: string; aspect: string; seconds: number; thumb?: string; created_at: string;
 }
 export interface LibraryItem { file: FileInfo; project_id: number; title: string; tenant_id: number; tenant_name: string }
 export type Platform = "facebook" | "instagram" | "youtube" | "tiktok" | "whatsapp";
