@@ -137,7 +137,13 @@ func licenseCLI(args []string) int {
 		fmt.Fprintln(os.Stderr, "valid until", l.Expires)
 	}
 	payload, _ := json.Marshal(l)
-	fmt.Printf("37S1.%s.%s\n", base64.RawURLEncoding.EncodeToString(payload), base64.RawURLEncoding.EncodeToString(ed25519.Sign(priv, payload)))
+	sig := base64.RawURLEncoding.EncodeToString(ed25519.Sign(priv, payload))
+	fmt.Printf("37S1.%s.%s\n", base64.RawURLEncoding.EncodeToString(payload), sig)
+	// Hand-issued keys (gifts, bank transfers) aren't in the Worker's orders table; this log is how one gets revoked later.
+	if f, err := os.OpenFile(filepath.Join(filepath.Dir(*keyFile), "issued.csv"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600); err == nil {
+		fmt.Fprintf(f, "%s,%q,%q,%s,%s,%s\n", time.Now().Format(time.DateTime), l.Name, l.Email, l.Issued, or(l.Expires, "never"), sig[:16])
+		f.Close()
+	}
 	return 0
 }
 
