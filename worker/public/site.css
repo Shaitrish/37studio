@@ -351,3 +351,7 @@ pre.cmd { background: var(--ink); color: #f4f3f6; border-radius: 12px; padding: 
 .supporters li { display: grid; gap: 2px; padding-bottom: 10px; border-bottom: 1px solid var(--line); font-size: 15px; }
 .supporters li:last-child { border-bottom: 0; padding-bottom: 0; }
 .supporters span { color: var(--muted); font-size: 14px; }
+
+/* intro video */
+.intro-video { max-width: 1040px; margin: 0 auto; }
+.intro-video video { display: block; width: 100%; height: auto; background: #111; }
