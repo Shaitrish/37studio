@@ -627,6 +627,9 @@ func runDuePosts() {
 			continue
 		}
 		db.Exec("update posts set status='posted', remote_id=?, url=? where id=?", remote, link, p["id"])
+		// An autopilot video counts as posted once every account has it.
+		db.Exec(`update projects set autopilot_stage='posted' where id=? and autopilot_stage='scheduled'
+		  and not exists(select 1 from posts where project_id=? and status<>'posted')`, p["project_id"], p["project_id"])
 	}
 }
 

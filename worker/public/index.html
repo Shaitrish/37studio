@@ -1,30 +1,608 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>37Studio</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>37Studio: your AI video studio and social team, on your own computer</title>
+<meta name="description" content="37Studio turns a short brief into finished reels, explainers and ads in your brand, posts them to Facebook and Instagram, and drafts replies to every message and comment. Runs on your own Windows or Mac. Made by Shaitrish.">
+<meta property="og:title" content="37Studio, by Shaitrish">
+<meta property="og:description" content="Videos made, posted and answered, on your own computer. Free download, one-time license.">
+<meta property="og:image" content="https://studio.shaitrish.com/og.png">
+<meta property="og:url" content="https://studio.shaitrish.com/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#fbfaf8">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Noto+Sans+Bengali:wght@500;600&display=swap" rel="stylesheet">
 <style>
-  :root { color-scheme: light dark; --fg: #18181b; --muted: #71717a; --bg: #fafafa; --card: #fff; --line: #e4e4e7; --ember: #d4502a; }
-  @media (prefers-color-scheme: dark) { :root { --fg: #f4f4f5; --muted: #a1a1aa; --bg: #0b0b0c; --card: #151517; --line: #27272a; } }
-  body { margin: 0; font: 16px/1.6 system-ui, sans-serif; background: var(--bg); color: var(--fg); }
-  main { max-width: 640px; margin: 0 auto; padding: 56px 16px; }
-  h1 { font-size: 28px; margin: 0 0 4px; } p { color: var(--muted); }
-  ol { padding-left: 20px; } li { margin: 8px 0; }
-  a.btn { display: inline-block; background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; }
-  code { background: var(--card); border: 1px solid var(--line); padding: 1px 6px; border-radius: 4px; font-size: 14px; }
-  .dot { color: var(--ember); }
+  :root {
+    color-scheme: light;
+    --bg: #fbfaf8; --card: #fff; --ink: #15131c; --fg2: #3b3843; --muted: #625f6c; --faint: #8b8794;
+    --line: #e6e4de; --soft: #f3f2ee; --ember: #d4502a; --ember-ink: #b8401d; --ember-soft: #fbeee8; --violet: #5b45d6;
+    --shadow: 0 1px 2px rgba(21,19,28,.04), 0 2px 8px -2px rgba(21,19,28,.05);
+    --lift: 0 1px 2px rgba(21,19,28,.04), 0 24px 48px -20px rgba(21,19,28,.22);
+    --swift: cubic-bezier(.16,1,.3,1);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 Geist, ui-sans-serif, system-ui, "Noto Sans Bengali", sans-serif; -webkit-font-smoothing: antialiased; }
+  img, video { display: block; max-width: 100%; height: auto; }
+  a { color: inherit; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+  @media (min-width: 640px) { .wrap { padding: 0 24px; } }
+  @media (min-width: 1024px) { .wrap { padding: 0 32px; } }
+  .mono { font-family: "Geist Mono", ui-monospace, monospace; }
+  .bn { font-family: "Noto Sans Bengali", Geist, sans-serif; }
+  h1, h2, h3 { margin: 0; letter-spacing: -0.03em; font-weight: 600; }
+  h1 { font-size: clamp(40px, 6.2vw, 66px); line-height: 1.02; letter-spacing: -0.04em; }
+  h2 { font-size: clamp(30px, 3.6vw, 42px); line-height: 1.1; }
+  h3 { font-size: 17px; letter-spacing: -0.01em; }
+  p { margin: 0; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--ember-ink); }
+  .lead { font-size: 18px; color: var(--muted); line-height: 1.65; text-wrap: pretty; }
+  .muted { color: var(--muted); }
+  .dots { background-image: radial-gradient(rgba(21,19,28,.09) 1px, transparent 1px); background-size: 20px 20px; }
+
+  /* buttons */
+  .btn { display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 20px; border-radius: 999px; font-weight: 500; font-size: 15px; text-decoration: none; border: 1px solid var(--line); background: var(--card); color: var(--ink); transition: transform .3s var(--swift), box-shadow .3s var(--swift), background .2s; cursor: pointer; white-space: nowrap; }
+  .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+  .btn.ink { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .btn.ink:hover { background: #2a2733; }
+  .btn.sm { height: 38px; padding: 0 16px; font-size: 14px; }
+  .btn svg { width: 16px; height: 16px; flex: none; }
+  :focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; border-radius: 6px; }
+
+  /* nav */
+  header.nav { position: sticky; top: 0; z-index: 20; background: rgba(251,250,248,.82); backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px); border-bottom: 1px solid transparent; transition: border-color .2s; }
+  header.nav.scrolled { border-bottom-color: var(--line); }
+  .nav .wrap { display: flex; align-items: center; height: 64px; gap: 24px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; letter-spacing: -0.02em; text-decoration: none; }
+  .brand img { width: 28px; height: 28px; border-radius: 4px; }
+  .brand small { font-weight: 400; color: var(--faint); font-size: 13px; letter-spacing: 0; }
+  .nav nav { display: none; gap: 4px; margin: 0 auto; }
+  .nav nav a { text-decoration: none; font-size: 14px; color: var(--fg2); padding: 6px 12px; border-radius: 999px; transition: background .2s; }
+  .nav nav a:hover { background: var(--soft); }
+  .nav .right { margin-left: auto; display: flex; gap: 8px; }
+  @media (min-width: 900px) { .nav nav { display: flex; } .nav .right { margin-left: 0; } }
+
+  /* hero */
+  .hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); }
+  .hero .dots { position: absolute; inset: 0; mask-image: radial-gradient(ellipse at 80% 0%, #000, transparent 62%); -webkit-mask-image: radial-gradient(ellipse at 80% 0%, #000, transparent 62%); pointer-events: none; }
+  .hero .glow { position: absolute; right: -10%; top: -20%; width: 60%; height: 80%; background: radial-gradient(closest-side, rgba(212,80,42,.10), transparent); pointer-events: none; }
+  .hero .wrap { position: relative; display: grid; gap: 56px; padding-top: 72px; padding-bottom: 88px; }
+  @media (min-width: 1024px) { .hero .wrap { grid-template-columns: 5fr 7fr; align-items: center; padding-top: 88px; padding-bottom: 104px; } }
+  .hero h1 .u { position: relative; white-space: nowrap; }
+  .hero h1 .u::after { content: ""; position: absolute; left: 2%; right: 2%; bottom: -0.06em; height: 0.09em; border-radius: 99px; background: var(--ember); opacity: .85; }
+  .hero .lead { margin-top: 24px; max-width: 520px; }
+  .hero .ctas { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 12px; }
+  .hero .fine { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13.5px; color: var(--muted); }
+  .hero .fine span { display: inline-flex; align-items: center; gap: 6px; }
+  .hero .fine svg { width: 15px; height: 15px; color: var(--ember); }
+  .stage { position: relative; padding-right: 0; }
+  @media (min-width: 640px) { .stage { padding-right: 96px; padding-bottom: 40px; } }
+  .frame { border: 1px solid var(--line); background: var(--card); border-radius: 14px; overflow: hidden; box-shadow: var(--lift); }
+  .frame .bar { display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-bottom: 1px solid var(--line); background: #f7f6f3; }
+  .frame .bar i { width: 9px; height: 9px; border-radius: 50%; background: #dcd9d2; }
+  .frame .bar span { margin: 0 auto; font: 11px "Geist Mono", monospace; color: var(--muted); border: 1px solid var(--line); background: var(--card); border-radius: 99px; padding: 1px 12px; transform: translateX(-18px); }
+  .phone { display: none; position: absolute; right: 0; bottom: 0; width: 196px; aspect-ratio: 9/17.4; padding: 7px; border-radius: 34px; background: #111113; box-shadow: 0 30px 60px -18px rgba(21,19,28,.45), 0 0 0 1px rgba(255,255,255,.06) inset; }
+  @media (min-width: 640px) { .phone { display: block; } }
+  .phone video, .phone img { width: 100%; height: 100%; object-fit: contain; border-radius: 27px; background: #f7f4ec; }
+  .phone .tag { position: absolute; left: -14px; bottom: 56px; transform: translateX(-100%); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; box-shadow: var(--shadow); font-size: 12.5px; line-height: 1.35; width: 172px; }
+  .phone .tag b { display: block; font-weight: 600; }
+  .phone .tag em { font-style: normal; color: var(--muted); }
+  .sound { position: absolute; right: 14px; bottom: 14px; width: 30px; height: 30px; border-radius: 50%; border: 0; background: rgba(21,19,28,.7); color: #fff; display: grid; place-items: center; cursor: pointer; }
+  .sound svg { width: 15px; height: 15px; }
+
+  /* stats */
+  .stats { display: grid; grid-template-columns: repeat(2, 1fr); border-bottom: 1px solid var(--line); }
+  @media (min-width: 900px) { .stats { grid-template-columns: repeat(4, 1fr); } }
+  .stat { padding: 28px 24px; border-right: 1px solid var(--line); border-top: 1px solid var(--line); }
+  .stats .stat:nth-child(-n+2) { border-top: 0; }
+  @media (min-width: 900px) { .stats .stat { border-top: 0; } .stats .stat:last-child { border-right: 0; } }
+  .stat b { display: block; font: 600 clamp(30px, 3.4vw, 40px)/1.1 "Geist Mono", monospace; letter-spacing: -0.04em; }
+  .stat b em { font-style: normal; color: var(--ember); }
+  .stat span { display: block; margin-top: 8px; font-size: 14px; color: var(--muted); max-width: 230px; }
+
+  /* sections */
+  section.s { padding: 96px 0; }
+  section.s.tint { background: #f6f5f1; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .head { max-width: 680px; margin-bottom: 48px; }
+  .head h2 { margin-top: 12px; }
+  .head .lead { margin-top: 16px; }
+
+  /* how it works */
+  .how { display: grid; gap: 32px; }
+  @media (min-width: 1024px) { .how { grid-template-columns: 4fr 8fr; align-items: start; } }
+  .steps { display: grid; gap: 10px; counter-reset: step; }
+  .step { text-align: left; width: 100%; display: grid; grid-template-columns: 34px 1fr; gap: 4px 14px; padding: 18px 18px; border-radius: 16px; border: 1px solid transparent; background: transparent; font: inherit; color: inherit; cursor: pointer; transition: background .25s, border-color .25s, box-shadow .25s; }
+  .step:hover { background: rgba(255,255,255,.6); }
+  .step[aria-selected="true"] { background: var(--card); border-color: var(--line); box-shadow: var(--shadow); }
+  .step .n { grid-row: span 2; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font: 500 13px "Geist Mono", monospace; background: var(--soft); color: var(--muted); transition: background .25s, color .25s; }
+  .step[aria-selected="true"] .n { background: var(--ember); color: #fff; }
+  .step h3 { align-self: center; }
+  .step p { font-size: 14.5px; color: var(--muted); line-height: 1.55; }
+  .how .view { position: sticky; top: 96px; }
+  .how .view img { width: 100%; height: auto; aspect-ratio: 1440/900; object-fit: cover; object-position: top; transition: opacity .25s; }
+  .how .view .cap { margin-top: 14px; font-size: 14px; color: var(--muted); min-height: 44px; }
+
+  /* features */
+  .grid { display: grid; gap: 16px; }
+  @media (min-width: 640px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px; box-shadow: var(--shadow); }
+  .feat { display: flex; flex-direction: column; gap: 10px; transition: transform .35s var(--swift), box-shadow .35s var(--swift); }
+  .feat:hover { transform: translateY(-3px); box-shadow: var(--lift); }
+  .ico { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; background: var(--ember-soft); color: var(--ember-ink); margin-bottom: 6px; }
+  .ico svg { width: 20px; height: 20px; }
+  .feat p { font-size: 14.5px; color: var(--muted); line-height: 1.6; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 6px; }
+  .tags span { font: 11.5px "Geist Mono", monospace; color: var(--muted); background: var(--soft); border-radius: 6px; padding: 2px 8px; }
+
+  /* split rows */
+  .split { display: grid; gap: 40px; align-items: center; }
+  .split + .split { margin-top: 96px; }
+  @media (min-width: 1024px) { .split { grid-template-columns: 5fr 7fr; gap: 64px; } .split.flip { grid-template-columns: 7fr 5fr; } .split.flip > :first-child { order: 2; } }
+  .split h2 { margin-top: 12px; }
+  .split .lead { margin-top: 16px; }
+  .checks { list-style: none; padding: 0; margin: 24px 0 0; display: grid; gap: 12px; }
+  .checks li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; font-size: 15px; color: var(--fg2); }
+  .checks svg { width: 20px; height: 20px; color: var(--ember); margin-top: 2px; }
+  .zoom { cursor: zoom-in; }
+
+  /* showcase */
+  .show { display: grid; gap: 40px; align-items: center; }
+  @media (min-width: 900px) { .show { grid-template-columns: auto 1fr; gap: 72px; } }
+  .show .phone { position: relative; display: block; width: 270px; margin: 0 auto; }
+  .made { display: grid; gap: 14px; margin-top: 28px; }
+  .made div { display: grid; grid-template-columns: 120px 1fr; gap: 16px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 15px; }
+  .made dt { color: var(--muted); }
+
+  /* gallery */
+  .gallery { display: grid; gap: 20px; }
+  @media (min-width: 640px) { .gallery { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .gallery { grid-template-columns: repeat(3, 1fr); } }
+  .shot { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 8px; box-shadow: var(--shadow); cursor: zoom-in; text-align: left; font: inherit; color: inherit; transition: transform .35s var(--swift), box-shadow .35s var(--swift); }
+  .shot:hover { transform: translateY(-3px); box-shadow: var(--lift); }
+  .shot img { width: 100%; aspect-ratio: 16/10; object-fit: cover; object-position: top left; border-radius: 10px; border: 1px solid var(--line); }
+  .shot div { padding: 14px 8px 8px; }
+  .shot b { display: block; font-weight: 600; font-size: 15px; }
+  .shot span { display: block; font-size: 13.5px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+
+  /* always-on */
+  .timeline { display: grid; gap: 0; margin-top: 8px; }
+  .tl { display: grid; grid-template-columns: 76px 22px 1fr; gap: 14px; padding: 12px 0; font-size: 15px; }
+  .tl time { font: 13px "Geist Mono", monospace; color: var(--muted); padding-top: 2px; }
+  .tl i { position: relative; }
+  .tl i::before { content: ""; position: absolute; left: 10px; top: 0; bottom: -24px; width: 1px; background: var(--line); }
+  .tl:last-child i::before { display: none; }
+  .tl i::after { content: ""; position: absolute; left: 5px; top: 6px; width: 11px; height: 11px; border-radius: 50%; background: var(--card); border: 2px solid var(--faint); }
+  .tl.on i::after { border-color: var(--ember); background: var(--ember); }
+  .tl small { display: block; color: var(--muted); font-size: 13.5px; }
+
+  /* pricing + download */
+  .price { display: grid; gap: 20px; }
+  @media (min-width: 900px) { .price { grid-template-columns: 1fr 1fr; } }
+  .plan { padding: 32px; border-radius: 20px; }
+  .plan.dark { background: var(--ink); color: #f4f3f6; border-color: var(--ink); }
+  .plan.dark .muted, .plan.dark .checks li { color: #c9c6d1; }
+  .plan .big { font: 600 44px/1 Geist, sans-serif; letter-spacing: -0.04em; margin: 18px 0 6px; }
+  .plan .ctas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+  .plan.dark .btn { border-color: #3a3744; background: #1f1c27; color: #fff; }
+  .plan.dark .btn.ember { background: var(--ember); border-color: var(--ember); }
+  .plan.dark .btn.ember:hover { background: #e05a33; }
+  .dl { list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 16px; counter-reset: d; }
+  .dl li { display: grid; grid-template-columns: 30px 1fr; gap: 12px; font-size: 15px; color: var(--fg2); }
+  .dl li::before { counter-increment: d; content: counter(d); width: 26px; height: 26px; border-radius: 8px; background: var(--soft); display: grid; place-items: center; font: 500 12px "Geist Mono", monospace; color: var(--muted); }
+  .dl a { color: var(--ember-ink); text-underline-offset: 3px; }
+  .os { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+  .os span { font-size: 13px; border: 1px solid var(--line); border-radius: 99px; padding: 4px 12px; color: var(--fg2); background: var(--card); }
+  code { font: 13px "Geist Mono", monospace; background: var(--soft); border-radius: 5px; padding: 1px 6px; }
+
+  /* faq */
+  .faq { display: grid; gap: 10px; max-width: 820px; }
+  details { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 0 20px; box-shadow: var(--shadow); }
+  summary { list-style: none; cursor: pointer; padding: 18px 0; font-weight: 500; display: flex; justify-content: space-between; gap: 16px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font: 400 20px/1 Geist, sans-serif; color: var(--muted); transition: transform .25s var(--swift); }
+  details[open] summary::after { transform: rotate(45deg); }
+  details p { padding: 0 0 18px; color: var(--muted); font-size: 15px; line-height: 1.65; }
+
+  /* cta band + footer */
+  .band { background: var(--ink); color: #f4f3f6; border-radius: 24px; padding: 56px 32px; text-align: center; position: relative; overflow: hidden; }
+  .band::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px); background-size: 20px 20px; mask-image: radial-gradient(ellipse at center, #000, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at center, #000, transparent 70%); }
+  .band > * { position: relative; }
+  .band p { color: #c9c6d1; margin: 14px auto 0; max-width: 520px; }
+  .band .ctas { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 28px; }
+  .band .btn { background: #fff; color: var(--ink); border-color: #fff; }
+  .band .btn.ghost { background: transparent; color: #fff; border-color: #3a3744; }
+  footer { padding: 48px 0 56px; font-size: 14px; color: var(--muted); }
+  footer .wrap { display: grid; gap: 24px; }
+  @media (min-width: 900px) { footer .wrap { grid-template-columns: 1fr auto; align-items: end; } }
+  footer a { text-decoration: none; }
+  footer .brand { color: var(--ink); }
+  footer a:hover { color: var(--ink); }
+  footer .links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+
+  /* lightbox */
+  dialog { border: 0; padding: 0; background: transparent; max-width: min(1280px, 94vw); width: 100%; }
+  dialog::backdrop { background: rgba(21,19,28,.72); backdrop-filter: blur(4px); }
+  dialog img { width: 100%; border-radius: 12px; box-shadow: 0 30px 80px rgba(0,0,0,.4); }
+  dialog p { color: #fff; text-align: center; margin-top: 12px; font-size: 14px; }
+  dialog button { position: fixed; top: 16px; right: 16px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: #fff; cursor: pointer; font-size: 20px; }
+
+  /* reveal */
+  .rv { opacity: 0; transform: translateY(14px); transition: opacity .7s var(--swift), transform .7s var(--swift); }
+  .rv.in { opacity: 1; transform: none; }
+  .hero .rv { animation: up .7s var(--swift) both; opacity: 1; transform: none; }
+  .hero .rv.d1 { animation-delay: .12s; }
+  @keyframes up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .rv, .hero .rv { opacity: 1; transform: none; animation: none; transition: none; } html { scroll-behavior: auto; } }
 </style>
 </head>
 <body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18.5V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H8z"/><path d="M8.5 9.5h7M8.5 12.5h4"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="9.5" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></symbol>
+    <symbol id="i-pc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8.5 20h7M12 16.5V20"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12.2V5a1.5 1.5 0 0 1 1.5-1.5h7.2l8.3 8.3a1.5 1.5 0 0 1 0 2.1l-7 7a1.5 1.5 0 0 1-2.1 0z"/><circle cx="8" cy="8" r="1.4"/></symbol>
+    <symbol id="i-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.4 0 1.9-1 1.4-2.1-.6-1.3.3-2.4 1.7-2.4H17a3.5 3.5 0 0 0 3.5-3.5C20.5 7.3 16.7 3.5 12 3.5z"/><circle cx="7.8" cy="11" r="1"/><circle cx="10.5" cy="7.5" r="1"/><circle cx="15" cy="7.8" r="1"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 13.8 9a2 2 0 0 0 1.2 1.2l5.5 1.8-5.5 1.8a2 2 0 0 0-1.2 1.2L12 20.5 10.2 15A2 2 0 0 0 9 13.8L3.5 12 9 10.2A2 2 0 0 0 10.2 9z"/></symbol>
+    <symbol id="i-film" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9h17M8 4.5 10 9m4-4.5L16 9"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 5 13.5h6l-1 7.5 8-10.5h-6z"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="17.5" cy="6" r="2.5"/><circle cx="6.5" cy="12" r="2.5"/><circle cx="17.5" cy="18" r="2.5"/><path d="m8.7 10.8 6.6-3.6m-6.6 6 6.6 3.6"/></symbol>
+    <symbol id="i-coins" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="9" cy="7" rx="5.5" ry="2.5"/><path d="M3.5 7v4.5C3.5 12.9 6 14 9 14s5.5-1.1 5.5-2.5V7"/><path d="M9.5 16.9c.9.4 2 .6 3.3.6 3 0 5.5-1.1 5.5-2.5V10.5c0-1.3-2.2-2.4-5-2.5"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.3 2.5 3.4 5.3 3.4 8.5s-1.1 6-3.4 8.5c-2.3-2.5-3.4-5.3-3.4-8.5s1.1-6 3.4-8.5z"/></symbol>
+    <symbol id="i-wa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.2 19.8 5.3 16A8.3 8.3 0 1 1 8.4 19z"/><path d="M9.3 8.6c.3-.6.9-.6 1.2 0l.6 1.3c.1.3 0 .6-.2.8l-.4.4c.5 1.1 1.4 2 2.5 2.5l.4-.4c.2-.2.5-.3.8-.2l1.3.6c.6.3.6.9 0 1.2-1.6 1-5.2-1-6.2-3.6-.4-1-.4-1.9 0-2.6z"/></symbol>
+    <symbol id="i-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path d="m16 10 4 4m0-4-4 4"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav" id="top">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="/favicon.svg" alt="">37Studio <small>by Shaitrish</small></a>
+    <nav aria-label="Sections">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#screens">Screens</a>
+      <a href="#pricing">License</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="right">
+      <a class="btn sm ink" href="#download"><svg><use href="#i-down"/></svg>Download</a>
+    </div>
+  </div>
+</header>
+
 <main>
-  <h1>37Studio<span class="dot">.</span></h1>
-  <p>Video and social media studio that runs on your own computer.</p>
-  <p><a class="btn" href="/37studio.zip">Download</a></p>
-  <ol>
-    <li>Install <a href="https://www.docker.com/products/docker-desktop/">Docker Desktop</a> and start it.</li>
-    <li>Unzip <code>37studio.zip</code> anywhere, then double-click <code>Start 37Studio</code> (<code>start.bat</code> on Windows, <code>start.command</code> on Mac). It downloads the app the first time and updates itself on every start.</li>
-    <li>In the app, open <b>Settings</b>: paste your license key and your Claude key, then add your company.</li>
-  </ol>
+<section class="hero">
+  <div class="dots" aria-hidden="true"></div>
+  <div class="glow" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="rv">
+      <span class="eyebrow"><svg width="15" height="15"><use href="#i-pc"/></svg>A video studio that runs on your own computer</span>
+      <h1 style="margin-top:18px">Videos made, posted and <span class="u">answered.</span></h1>
+      <p class="lead">37Studio turns a short brief into finished reels, explainers and ads in your brand, posts them to Facebook and Instagram, and drafts a reply to every message and comment. You approve; it does the rest.</p>
+      <div class="ctas">
+        <a class="btn ink" href="#download"><svg><use href="#i-down"/></svg>Download for Windows &amp; Mac</a>
+        <a class="btn" href="#pricing">Get a license</a>
+      </div>
+      <div class="fine">
+        <span><svg><use href="#i-check"/></svg>Free download</span>
+        <span><svg><use href="#i-check"/></svg>One-time license</span>
+        <span><svg><use href="#i-check"/></svg>Your keys, your data</span>
+      </div>
+    </div>
+    <div class="stage rv d1">
+      <div class="frame">
+        <div class="bar"><i></i><i></i><i></i><span>localhost:8080</span></div>
+        <img src="/shots/project.webp" width="2000" height="1250" alt="37Studio project page: the editor agent's chat on the right and a live preview of a Bangla reel for BCS Mate" fetchpriority="high">
+      </div>
+      <div class="phone" aria-label="Sample video made with 37Studio">
+        <video id="reel" src="/shots/bcsmate-reel.mp4" poster="/shots/bcsmate-reel.webp" autoplay muted loop playsinline preload="metadata"></video>
+        <button class="sound" type="button" aria-label="Turn sound on" data-video="reel"><svg><use href="#i-mute"/></svg></button>
+        <div class="tag" aria-hidden="true"><b>Made in 37Studio</b><em>BCS Mate app guide, Bangla voiceover</em></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="stats">
+    <div class="stat rv"><b>0<em> servers</em></b><span>It runs in Docker on your Windows PC or Mac. Nothing to host.</span></div>
+    <div class="stat rv"><b>1<em> click</em></b><span>to approve a finished video and post it to every account.</span></div>
+    <div class="stat rv"><b>2<em> min</em></b><span>between inbox checks when auto-replies are on, drafted from your knowledge base.</span></div>
+    <div class="stat rv"><b>৳0<em>/mo</em></b><span>to us. You pay the AI providers only for what you use.</span></div>
+  </div>
+</div>
+
+<section class="s" id="how">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="eyebrow">How it works</span>
+      <h2>From a website to a posted reel, in four steps</h2>
+      <p class="lead">Add a company once. After that, every video starts from its brand, and every reply from what it knows.</p>
+    </div>
+    <div class="how">
+      <div class="steps" role="tablist" aria-label="How 37Studio works">
+        <button class="step" role="tab" aria-selected="true" data-img="/shots/design.webp" data-cap="Paste a company's website. 37Studio collects its logos, photos, fonts and exact colours into a brand library and writes a knowledge base about the business.">
+          <span class="n">01</span><h3>Add your company</h3><p>Paste its website. 37Studio reads the brand: colours, fonts, logos, photos and what the business sells.</p>
+        </button>
+        <button class="step" role="tab" aria-selected="false" data-img="/shots/project.webp" data-cap="The editor agent builds the video, checks its own frames and renders it. Ask for changes in plain words; the preview updates live.">
+          <span class="n">02</span><h3>Brief a video</h3><p>Pick a reel, explainer, ad, captioned clip or thumbnails. Upload footage or none. The agent builds it; you ask for changes in chat.</p>
+        </button>
+        <button class="step" role="tab" aria-selected="false" data-img="/shots/publish.webp" data-cap="One video, any mix of the company's accounts, with a caption written for each platform. Post now or schedule it.">
+          <span class="n">03</span><h3>Approve and post</h3><p>Claude writes a caption for each platform. Post to all accounts at once, now or on a schedule.</p>
+        </button>
+        <button class="step" role="tab" aria-selected="false" data-img="/shots/inbox.webp" data-cap="Messenger, Instagram and WhatsApp messages and comments in one inbox. Claude drafts the reply from the company's knowledge base; you check it and send.">
+          <span class="n">04</span><h3>Answer customers</h3><p>Messages and comments from every account land in one inbox, each with a reply drafted from the company's knowledge base.</p>
+        </button>
+      </div>
+      <div class="view">
+        <div class="frame">
+          <div class="bar"><i></i><i></i><i></i><span>localhost:8080</span></div>
+          <img id="how-img" class="zoom" src="/shots/design.webp" width="2000" height="1250" alt="" loading="lazy">
+        </div>
+        <p class="cap" id="how-cap" aria-live="polite">Paste a company's website. 37Studio collects its logos, photos, fonts and exact colours into a brand library and writes a knowledge base about the business.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="s tint" id="features">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="eyebrow">Features</span>
+      <h2>A small agency's whole content desk</h2>
+      <p class="lead">Built for small and medium businesses and the people who make their content: shops, restaurants, coaching centres, agencies.</p>
+    </div>
+    <div class="grid">
+      <div class="card feat rv"><span class="ico"><svg><use href="#i-palette"/></svg></span><h3>Brand library and design system</h3><p>Logos, people, product photos, fonts and the exact colours from each company's own website, sorted and captioned so the agent uses the right ones.</p><div class="tags"><span>website scan</span><span>knowledge base</span></div></div>
+      <div class="card feat rv"><span class="ico"><svg><use href="#i-spark"/></svg></span><h3>An editor that does the work</h3><p>Claude builds the video from your brief, renders frames to check its own work, and fixes what looks wrong. Change anything by asking, or open the timeline editor.</p><div class="tags"><span>Claude</span><span>live preview</span><span>timeline</span></div></div>
+      <div class="card feat rv"><span class="ico"><svg><use href="#i-film"/></svg></span><h3>Every format you post</h3><p>Hook reels from long videos, captioned clips, motion-graphics explainers, promo ads and YouTube thumbnails, in 9:16, 4:5, 1:1 or 16:9.</p><div class="tags"><span>reels</span><span>explainers</span><span>ads</span><span>thumbnails</span></div></div>
+      <div class="card feat rv"><span class="ico"><svg><use href="#i-bolt"/></svg></span><h3>Autopilot</h3><p>"A BCS tip every weekday at 8 pm." 37Studio picks a fresh topic, makes the video three hours early and waits for your approval, or posts on its own.</p><div class="tags"><span>content plans</span><span>approve in one click</span></div></div>
+      <div class="card feat rv"><span class="ico"><svg><use href="#i-share"/></svg></span><h3>Post everywhere at once</h3><p>Facebook Pages and Instagram, many accounts per company, with a caption written for each platform. YouTube and TikTok are on the way.</p><div class="tags"><span>Facebook</span><span>Instagram</span><span>scheduling</span></div></div>
+      <div class="card feat rv"><span class="ico"><svg><use href="#i-chat"/></svg></span><h3>One inbox, with replies drafted</h3><p>Messenger, Instagram and WhatsApp messages and comments. Claude drafts from the company's knowledge base, in the customer's language, Bangla included.</p><div class="tags"><span>Messenger</span><span>Instagram</span><span>WhatsApp beta</span></div></div>
+      <div class="card feat rv"><span class="ico"><svg><use href="#i-wa"/></svg></span><h3>Auto-replies, your call</h3><p>Per company: off, Claude drafts and you approve, or Claude replies on its own. It never invents prices; when the answer isn't known, it says a person will reply.</p><div class="tags"><span>every 2 minutes</span><span>24-hour window</span></div></div>
+      <div class="card feat rv"><span class="ico"><svg><use href="#i-coins"/></svg></span><h3>Know what everything costs</h3><p>Every video, campaign, company and reply shows its real AI cost in taka. No markup from us: you pay Anthropic, Google and ElevenLabs directly.</p><div class="tags"><span>per project</span><span>per company</span><span>per month</span></div></div>
+      <div class="card feat rv"><span class="ico"><svg><use href="#i-lock"/></svg></span><h3>Private by design</h3><p>Footage, brands and messages stay on your computer. Your API keys are encrypted on disk and only sent to the provider they belong to.</p><div class="tags"><span>local first</span><span>encrypted keys</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="s">
+  <div class="wrap">
+    <div class="split rv">
+      <div>
+        <span class="eyebrow">Autopilot</span>
+        <h2>Content that keeps coming, with you in charge</h2>
+        <p class="lead">Write a plan once: what the videos are about, which days, what time, which accounts. 37Studio does the rest and asks before anything goes out.</p>
+        <ul class="checks">
+          <li><svg><use href="#i-check"/></svg>Picks a topic the company hasn't covered yet, from its brief and knowledge base</li>
+          <li><svg><use href="#i-check"/></svg>Builds, checks and renders the video three hours before the slot</li>
+          <li><svg><use href="#i-check"/></svg>Writes the captions and waits on your Overview for one click, or posts on its own if you allow it</li>
+        </ul>
+      </div>
+      <div class="frame"><div class="bar"><i></i><i></i><i></i><span>localhost:8080</span></div><img class="zoom" src="/shots/autopilot.webp" width="2000" height="1250" alt="Autopilot plan for BCS Mate: a daily BCS tip on weekdays at 8 pm, with posted videos and one waiting for approval" loading="lazy"></div>
+    </div>
+
+    <div class="split flip rv">
+      <div>
+        <span class="eyebrow">Always on, while your computer is</span>
+        <h2>Customers write at night. Replies go out by morning.</h2>
+        <p class="lead">37Studio checks every account every two minutes while it runs. Anything that arrived while the computer was off is answered as soon as it's back, while the platform still allows a reply.</p>
+        <div class="timeline">
+          <div class="tl"><time>11:40 pm</time><i></i><div>Nusrat asks on Messenger if the kacchi is on tonight<small>The computer is asleep. Meta keeps the message.</small></div></div>
+          <div class="tl"><time>8:02 am</time><i></i><div>The laptop opens, 37Studio starts with Docker<small>It reads every inbox it missed.</small></div></div>
+          <div class="tl on"><time>8:04 am</time><i></i><div>Claude's reply is drafted and waiting, or already sent<small>Drafts only use the company's own knowledge base.</small></div></div>
+        </div>
+      </div>
+      <div class="frame"><div class="bar"><i></i><i></i><i></i><span>localhost:8080</span></div><img class="zoom" src="/shots/whatsapp.webp" width="2000" height="1250" alt="Inbox with a WhatsApp catering question and Claude's drafted reply" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<section class="s tint" id="made">
+  <div class="wrap">
+    <div class="show">
+      <div class="phone rv">
+        <video id="reel2" src="/shots/bcsmate-reel.mp4" poster="/shots/bcsmate-reel.webp" muted loop playsinline preload="none"></video>
+        <button class="sound" type="button" aria-label="Turn sound on" data-video="reel2"><svg><use href="#i-mute"/></svg></button>
+      </div>
+      <div class="rv">
+        <span class="eyebrow">Made with 37Studio</span>
+        <h2>BCS Mate's one-minute app guide</h2>
+        <p class="lead" style="margin-top:16px">A real video from our own product, BCS Mate: brand colours and fonts from bcsmate.com, the app's screen recordings, a Bangla voiceover and music, all put together by the editor agent from a one-line brief.</p>
+        <dl class="made">
+          <div><dt>Brief</dt><dd>"Explain how users can use the guide to learn about all the features and how to use the BCS Mate app."</dd></div>
+          <div><dt>Format</dt><dd>Hook reel, 9:16, about a minute, Bangla</dd></div>
+          <div><dt>Made from</dt><dd>The brand library, app screen recordings, ElevenLabs voice and music</dd></div>
+          <div><dt>Output</dt><dd>1080×1920 MP4, ready for Reels, Shorts and TikTok</dd></div>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="s" id="screens">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="eyebrow">Screens</span>
+      <h2>Have a look around</h2>
+      <p class="lead">Shown with demo companies. Click any screen to see it full size.</p>
+    </div>
+    <div class="gallery">
+      <button class="shot rv" type="button" data-full="/shots/overview.webp"><img src="/shots/overview.webp" width="2000" height="1250" alt="" loading="lazy"><div><b>Overview</b><span>What's in motion, what waits for you, and what this month has cost.</span></div></button>
+      <button class="shot rv" type="button" data-full="/shots/projects.webp"><img src="/shots/projects.webp" width="2000" height="1250" alt="" loading="lazy"><div><b>Projects</b><span>Every video across every company, with its status and cost.</span></div></button>
+      <button class="shot rv" type="button" data-full="/shots/library.webp"><img src="/shots/library.webp" width="2000" height="1250" alt="" loading="lazy"><div><b>Brand library</b><span>Logos, people, photos, videos and fonts, captioned so the agent picks the right ones.</span></div></button>
+      <button class="shot rv" type="button" data-full="/shots/inbox.webp"><img src="/shots/inbox.webp" width="2000" height="1250" alt="" loading="lazy"><div><b>Inbox</b><span>Messenger, Instagram, WhatsApp and comments, with drafts ready to send.</span></div></button>
+      <button class="shot rv" type="button" data-full="/shots/costs.webp"><img src="/shots/costs.webp" width="2000" height="1250" alt="" loading="lazy"><div><b>Costs</b><span>Spend by provider, company and month, in your currency.</span></div></button>
+      <button class="shot rv" type="button" data-full="/shots/social.webp"><img src="/shots/social.webp" width="2000" height="986" alt="" loading="lazy"><div><b>Accounts and auto-replies</b><span>Connect Pages, Instagram and WhatsApp per company and choose how replies go out.</span></div></button>
+    </div>
+  </div>
+</section>
+
+<section class="s tint" id="pricing">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="eyebrow">License</span>
+      <h2>Free to download. A license is yours for good.</h2>
+      <p class="lead">No subscription to us. Buy a license once, and pay the AI providers directly for what you use.</p>
+    </div>
+    <div class="price">
+      <div class="card plan dark rv">
+        <span class="eyebrow" style="color:#f0a487">37Studio license</span>
+        <div class="big">One-time</div>
+        <p class="muted">Price on request. We sell a small number of licenses and set each one up with you.</p>
+        <ul class="checks">
+          <li><svg><use href="#i-check"/></svg>Every feature: studio, Autopilot, publishing, inbox and auto-replies</li>
+          <li><svg><use href="#i-check"/></svg>Unlimited companies, projects and accounts</li>
+          <li><svg><use href="#i-check"/></svg>Updates, installed by the app on every start</li>
+          <li><svg><use href="#i-check"/></svg>Setup help from our team in Dhaka, in Bangla or English</li>
+        </ul>
+        <div class="ctas">
+          <a class="btn ember" href="https://wa.me/8801635191148?text=Hi%2C%20I%27d%20like%20a%2037Studio%20license" target="_blank" rel="noopener"><svg><use href="#i-wa"/></svg>Ask on WhatsApp</a>
+          <a class="btn" href="mailto:jahangir@shaitrish.com?subject=37Studio%20license">Email us</a>
+        </div>
+      </div>
+      <div class="card plan rv">
+        <span class="eyebrow">What you pay for usage</span>
+        <div class="big">Your keys</div>
+        <p class="muted">37Studio uses your own accounts with these providers. Each video shows exactly what it cost.</p>
+        <ul class="checks">
+          <li><svg><use href="#i-check"/></svg><span><b>Anthropic (Claude)</b>, required: the editor agent, captions and replies. Pay as you go.</span></li>
+          <li><svg><use href="#i-check"/></svg><span><b>Google Gemini</b>, optional: generated images and video clips.</span></li>
+          <li><svg><use href="#i-check"/></svg><span><b>ElevenLabs</b>, optional: voiceovers, sound effects and music.</span></li>
+          <li><svg><use href="#i-check"/></svg><span>Rendering runs on your computer, so it costs nothing.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="s" id="download">
+  <div class="wrap">
+    <div class="split rv" style="align-items:start">
+      <div>
+        <span class="eyebrow">Download</span>
+        <h2>Four steps to your first video</h2>
+        <p class="lead">37Studio runs inside Docker Desktop, which keeps it and its tools in one sealed box on your computer.</p>
+        <div class="os"><span>Windows 10 and 11</span><span>macOS, Apple Silicon (M1–M4)</span><span>macOS, Intel</span><span>Linux</span></div>
+        <p class="muted" style="margin-top:18px;font-size:14px">16 GB RAM recommended, and about 10 GB free disk for the app and your footage.</p>
+      </div>
+      <div class="card" style="padding:28px">
+        <ol class="dl">
+          <li><span>Install <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="noopener">Docker Desktop</a>. It's free for personal use and small businesses.</span></li>
+          <li><span>Download 37Studio and unzip it anywhere, for example in Documents.</span></li>
+          <li><span>Double-click <code>start.bat</code> on Windows or <code>start.command</code> on a Mac. The first start downloads about 3 GB; every later start checks for updates.</span></li>
+          <li><span>37Studio opens in its own window. In Settings, paste your license key and your Claude key, then add your first company.</span></li>
+        </ol>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:26px">
+          <a class="btn ink" href="/37studio.zip" download><svg><use href="#i-down"/></svg>Download 37Studio</a>
+          <a class="btn" href="#pricing">Get a license</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="s tint" id="faq">
+  <div class="wrap">
+    <div class="head rv"><span class="eyebrow">FAQ</span><h2>Questions people ask</h2></div>
+    <div class="faq">
+      <details class="rv"><summary>Is 37Studio free?</summary><p>The download is free. To use it you need a license, which is a one-time purchase: message us on WhatsApp or email jahangir@shaitrish.com. AI usage is separate and billed to your own Anthropic, Google and ElevenLabs accounts.</p></details>
+      <details class="rv"><summary>Do I need a server?</summary><p>No. Everything runs on your own Windows PC or Mac inside Docker Desktop. The only things that leave your computer are calls to the AI providers and the social platforms you connect.</p></details>
+      <details class="rv"><summary>What happens when my computer is off?</summary><p>Nothing is lost. Messenger and Instagram keep messages on Meta, and WhatsApp messages wait for you for 30 days. When 37Studio starts again it answers everything the platform still allows a reply to: messages from the last 24 hours and comments up to two days old. For round-the-clock replies, keep it on a computer that doesn't sleep, such as a Mac mini.</p></details>
+      <details class="rv"><summary>Can I use my Claude subscription instead of an API key?</summary><p>An Anthropic API key is the supported way. Anthropic's terms don't allow software sold by others to run on a personal Claude subscription without their approval.</p></details>
+      <details class="rv"><summary>Which platforms can it post to?</summary><p>Facebook Pages and Instagram business accounts today, many per company. YouTube and TikTok publishing is built and coming soon. Facebook Groups and personal profiles can't be posted to by any app: Meta removed that in 2024 and 2018.</p></details>
+      <details class="rv"><summary>Does WhatsApp work?</summary><p>Yes, in beta, for a number on the WhatsApp Business API. Keeping the same number on the WhatsApp Business phone app at the same time needs Meta to approve our app as a Tech Provider first, so for now use a number dedicated to the API.</p></details>
+      <details class="rv"><summary>Does it work in Bangla?</summary><p>Yes. Videos, voiceovers, captions and replies can all be in Bangla, and replies follow the customer's language and script.</p></details>
+      <details class="rv"><summary>Where is my data?</summary><p>In a <code>data</code> folder next to the app on your computer: companies, footage, finished videos, messages and settings. Back it up like any other folder. Your keys are encrypted there.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="s" style="padding-top:72px">
+  <div class="wrap">
+    <div class="band rv">
+      <h2>Make this week's videos on your own computer.</h2>
+      <p>Download 37Studio, then message us for a license. We'll help you set up your first company.</p>
+      <div class="ctas">
+        <a class="btn" href="#download"><svg><use href="#i-down"/></svg>Download</a>
+        <a class="btn ghost" href="https://wa.me/8801635191148?text=Hi%2C%20I%27d%20like%20a%2037Studio%20license" target="_blank" rel="noopener"><svg><use href="#i-wa"/></svg>Talk to us</a>
+      </div>
+    </div>
+  </div>
+</section>
 </main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="brand" href="https://shaitrish.com"><img src="/favicon.svg" alt="">37Studio <small>by Shaitrish</small></a>
+      <p style="margin-top:12px">Made in Dhaka by <a href="https://shaitrish.com" style="text-decoration:underline;text-underline-offset:3px">Shaitrish</a>, the team behind Course37, BCS Mate and Daily Exam.<br>Shekhertek 12, Mohammadpur, Dhaka 1207 · Trade licence TRADIDNCC/022960/2025</p>
+    </div>
+    <div class="links">
+      <a href="https://shaitrish.com/products">Products</a>
+      <a href="https://shaitrish.com/#contact">Contact</a>
+      <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a>
+      <a href="tel:+8801635191148">+880 1635 191148</a>
+    </div>
+  </div>
+</footer>
+
+<dialog id="lightbox" aria-label="Screenshot">
+  <button type="button" aria-label="Close" onclick="this.closest('dialog').close()">×</button>
+  <img alt="">
+  <p></p>
+</dialog>
+
+<script>
+  // Sticky nav border once scrolled.
+  const nav = document.querySelector("header.nav");
+  addEventListener("scroll", () => nav.classList.toggle("scrolled", scrollY > 8), { passive: true });
+
+  // Reveal on scroll.
+  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -8% 0px" });
+  document.querySelectorAll(".rv").forEach((el) => io.observe(el));
+
+  // How it works: steps switch the screenshot.
+  const steps = [...document.querySelectorAll(".step")], img = document.getElementById("how-img"), cap = document.getElementById("how-cap");
+  function pick(s) {
+    steps.forEach((x) => x.setAttribute("aria-selected", x === s));
+    img.style.opacity = 0;
+    setTimeout(() => { img.src = s.dataset.img; cap.textContent = s.dataset.cap; img.onload = () => (img.style.opacity = 1); }, 150);
+  }
+  steps.forEach((s, i) => {
+    s.addEventListener("click", () => pick(s));
+    s.addEventListener("keydown", (e) => {
+      const d = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
+      if (d) { e.preventDefault(); const n = steps[(i + d + steps.length) % steps.length]; n.focus(); pick(n); }
+    });
+  });
+
+  // Lightbox for screenshots.
+  const box = document.getElementById("lightbox");
+  function open(src, text) { box.querySelector("img").src = src; box.querySelector("p").textContent = text || ""; box.showModal(); }
+  document.querySelectorAll(".shot").forEach((b) => b.addEventListener("click", () => open(b.dataset.full, b.querySelector("b").textContent)));
+  document.querySelectorAll("img.zoom").forEach((i) => i.addEventListener("click", () => open(i.src, i.alt)));
+  box.addEventListener("click", (e) => { if (e.target === box) box.close(); });
+
+  // Sound toggles; the lower video only plays once it is on screen.
+  document.querySelectorAll(".sound").forEach((b) => b.addEventListener("click", () => {
+    const v = document.getElementById(b.dataset.video);
+    v.muted = !v.muted; if (!v.muted) v.play();
+    b.querySelector("use").setAttribute("href", v.muted ? "#i-mute" : "#i-sound");
+    b.setAttribute("aria-label", v.muted ? "Turn sound on" : "Turn sound off");
+  }));
+  const reel2 = document.getElementById("reel2");
+  new IntersectionObserver(([e]) => e.isIntersecting ? reel2.play().catch(() => {}) : reel2.pause(), { threshold: 0.4 }).observe(reel2);
+</script>
 </body>
 </html>
