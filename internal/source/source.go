@@ -1,4 +1,4 @@
-// Package source keeps a company's own project folder: the upload, the skip rules and its summary.
+// Package source keeps a brand's own project folder: the upload, the skip rules and its summary.
 package source
 
 import (

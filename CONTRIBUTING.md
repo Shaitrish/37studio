@@ -6,7 +6,7 @@ Thanks for helping. Bug reports, ideas, docs fixes and pull requests are all wel
 
 Open an [issue](https://github.com/Shaitrish/37studio/issues). For a bug, include your OS, how you run 37Studio (the launcher, from source, or on a server), the version (Settings → Updates), what you did, what you expected, and what happened. A screenshot or the server log (`docker compose logs`) helps a lot. Leave out API keys, tokens, passwords and customer data.
 
-Found a security problem, for example a way to read another company's files or a leaked token? Don't open a public issue. Email jahangir@shaitrish.com instead.
+Found a security problem, for example a way to read another brand's files or a leaked token? Don't open a public issue. Email jahangir@shaitrish.com instead.
 
 ## Running it from source
 

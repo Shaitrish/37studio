@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { CaretRightIcon, MegaphoneIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
-import { api, Campaign, fail, go, Tenant, toast, cash, useApi } from "../api";
-import { Empty, Field, Modal } from "../ui";
+import { api, Campaign, fail, go, toast, cash, useApi, useTenants } from "../api";
+import { Empty, Field, Modal, TenantPicker, TenantTag } from "../ui";
 import { ProjectTable } from "./Projects";
 import { NewProjectModal } from "./NewProject";
 
@@ -13,7 +13,7 @@ export default function Campaigns() {
       <div className="page-head">
         <div className="spacer">
           <h1>Campaigns</h1>
-          <p>A launch, offer or product push for one of your companies, with all the videos made for it.</p>
+          <p>A launch, offer or product push for one of your brands, with all the videos made for it.</p>
         </div>
         <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New campaign</button>
       </div>
@@ -24,6 +24,7 @@ export default function Campaigns() {
 }
 
 export function CampaignGrid({ campaigns, onNew, hideClient }: { campaigns?: Campaign[]; onNew: () => void; hideClient?: boolean }) {
+  const tenants = useTenants();
   if (campaigns && !campaigns.length) {
     return (
       <div className="card">
@@ -42,7 +43,7 @@ export function CampaignGrid({ campaigns, onNew, hideClient }: { campaigns?: Cam
             <div className="avatar" style={{ background: "var(--primary-soft)", color: "var(--primary)" }}><MegaphoneIcon size={18} /></div>
             <div style={{ minWidth: 0 }}>
               <h2 className="ellipsis">{c.name}</h2>
-              {!hideClient && <div className="small muted ellipsis">{c.tenant_name}</div>}
+              {!hideClient && <div className="small muted"><TenantTag tenants={tenants} id={c.tenant_id} name={c.tenant_name} /></div>}
             </div>
           </div>
           <p className="small muted clamp">{c.brief || "No brief yet."}</p>
@@ -54,7 +55,7 @@ export function CampaignGrid({ campaigns, onNew, hideClient }: { campaigns?: Cam
 }
 
 export function CampaignModal({ tenantId, onClose }: { tenantId?: number; onClose: () => void }) {
-  const { data: tenants } = useApi<Tenant[]>("/tenants");
+  const tenants = useTenants();
   const [tenant, setTenant] = useState(tenantId ?? 0);
   const [name, setName] = useState("");
   const [brief, setBrief] = useState("");
@@ -70,11 +71,7 @@ export function CampaignModal({ tenantId, onClose }: { tenantId?: number; onClos
       footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={!name.trim() || !tid} onClick={save}>Create campaign</button></>}>
       <div className="stack" style={{ gap: 14 }}>
         {!tenantId && (
-          <Field label="Company">
-            <select className="select" value={tid ?? ""} onChange={(e) => setTenant(Number(e.target.value))}>
-              {tenants?.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
-          </Field>
+          <div className="field"><span>Brand</span><TenantPicker tenants={tenants} value={tid} onChange={(id) => id && setTenant(id)} /></div>
         )}
         <Field label="Campaign name"><input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Eid offer 2027" autoFocus /></Field>
         <Field label="Brief" hint="what it promotes, offer, audience, CTA, dates">

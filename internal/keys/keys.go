@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 
 	"github.com/Shaitrish/37studio/internal/config"
 	"github.com/Shaitrish/37studio/internal/httpapi"
@@ -22,12 +23,18 @@ var Names = []struct{ Name, Label, Hint string }{
 	{"CLAUDE_CODE_OAUTH_TOKEN", "Claude subscription token", "Instead of an API key, uses your Claude Pro/Max plan. In the 37Studio folder run `docker compose exec studio claude setup-token`, sign in, and paste the token here. Claude Desktop's sign-in doesn't carry over."},
 	{"GEMINI_API_KEY", "Gemini API key", "aistudio.google.com → API keys. Image and video generation, smarter website scans."},
 	{"ELEVENLABS_API_KEY", "ElevenLabs API key", "elevenlabs.io → Developers → API keys. Voiceover, sound effects and music."},
-	// Optional: the user's own Meta app instead of the shared one (Company → Social → Use your own Meta app).
+	{"FAL_KEY", "fal.ai API key", "fal.ai → Dashboard → API keys. Video models such as Seedance, Kling, Veo and Wan."},
+	// Other agent models, run through OpenCode: each key adds that provider's models to the model pickers.
+	{"OPENCODE_API_KEY", "OpenCode API key", "opencode.ai → Zen or Go. Many models (GPT, Grok, Kimi, GLM, DeepSeek…) on one bill."},
+	{"OPENAI_API_KEY", "OpenAI API key", "platform.openai.com → API keys. GPT models."},
+	{"XAI_API_KEY", "xAI API key", "console.x.ai → API keys. Grok models."},
+	{"OPENROUTER_API_KEY", "OpenRouter API key", "openrouter.ai → Keys. Hundreds of models through one key."},
+	// Optional: the user's own Meta app instead of the shared one (Brand → Social → Use your own Meta app).
 	{"META_APP_ID", "Meta app ID", "Your own Meta app, for Facebook and Instagram. Used only together with its secret."},
 	{"META_APP_SECRET", "Meta app secret", "developers.facebook.com → your app → App settings → Basic."},
 	{"META_CONFIG_ID", "Meta login configuration ID", "Facebook Login for Business → Configurations. Needed for Instagram video uploads."},
 	{"META_VERIFY_TOKEN", "WhatsApp webhook verify token", "Only for WhatsApp through a Cloudflare Tunnel: any long random text, entered again in your Meta app's WhatsApp webhook settings."},
-	// Each platform's own developer app, for Company → Social (README → Platform setup).
+	// Each platform's own developer app, for Brand → Social (README → Platform setup).
 	{"GOOGLE_CLIENT_ID", "Google OAuth client ID", "YouTube: console.cloud.google.com → Credentials → OAuth client ID (Web application)."},
 	{"GOOGLE_CLIENT_SECRET", "Google OAuth client secret", "The same OAuth client's secret."},
 	{"TIKTOK_CLIENT_KEY", "TikTok client key", "developers.tiktok.com → your app (Desktop platform, Login Kit and Content Posting API)."},
@@ -126,6 +133,11 @@ func OpenText(s string) string {
 	return v
 }
 
+var version atomic.Int64 // bumped when a key changes, so lists built from the keys (OpenCode's models) refresh
+
+// Version changes whenever a key is saved or removed.
+func Version() int64 { return version.Load() }
+
 // envOrig remembers keys from the real environment (or .env): the Keys page says so, and removing an override restores them.
 var envOrig = map[string]string{}
 
@@ -187,6 +199,7 @@ func Put(r *http.Request) (any, error) {
 		}
 		os.Setenv(name, val)
 	}
+	version.Add(1)
 	return List(r)
 }
 

@@ -46,7 +46,7 @@ func genAny(kind string, pid, tenant int64, o genOpts, out string) error {
 	return fmt.Errorf("unknown kind %q", kind)
 }
 
-// ProjectLanguage is the video's language: set per project, else the company's.
+// ProjectLanguage is the video's language: set per project, else the brand's.
 func ProjectLanguage(p map[string]any) string {
 	if l := store.Str(p["language"]); l != "" {
 		return l
@@ -87,6 +87,37 @@ func GenerateMedia(r *http.Request) (any, error) {
 	return map[string]bool{"ok": true}, nil
 }
 
+// mediaEstimate is roughly what one generation will cost, in USD, from the unit prices in Settings.
+func mediaEstimate(kind string, o genOpts) float64 {
+	switch kind {
+	case "image":
+		return store.SettingF("image_price")
+	case "video":
+		return 8 * store.SettingF("video_price_per_sec") // ponytail: clips run about 5-10 s; the real length is billed after
+	case "voice":
+		return float64(len(o.prompt)) / 1000 * store.SettingF("voice_price_per_1k")
+	case "sfx":
+		return max(o.seconds, 2) * store.SettingF("sfx_price_per_sec")
+	case "music":
+		return max(o.seconds, 30) / 60 * store.SettingF("music_price_per_min")
+	}
+	return 0
+}
+
+// overMediaLimit says whether this generation would take the project's generated media past the amount the agent may
+// spend without asking (Settings → Spending); "" when it may go ahead.
+func overMediaLimit(pid int64, kind string, o genOpts) string {
+	limit := store.SettingF("gen_ask_above_usd")
+	var spent float64
+	store.DB.QueryRow("select coalesce(sum(cost),0) from usage where project_id=? and provider in ('gemini','elevenlabs','fal')", pid).Scan(&spent)
+	if est := mediaEstimate(kind, o); spent+est > limit {
+		return fmt.Sprintf("This %s would cost about $%.2f, bringing generated media on this project to about $%.2f, over the $%.2f "+
+			"the editor allows without asking (Settings → Spending). Ask the editor first, saying what you want to make and roughly what it costs; "+
+			"if they agree, run the same command again with --approved.", kind, est, spent+est, limit)
+	}
+	return ""
+}
+
 type multiFlag []string
 
 func (m *multiFlag) String() string { return strings.Join(*m, ",") }
@@ -107,6 +138,7 @@ func GenCLI(args []string) int {
 	image := fs.String("image", "", "video only: first-frame image")
 	seconds := fs.Float64("seconds", 0, "sfx and music: length in seconds")
 	voice := fs.String("voice", "", "voice only: ElevenLabs voice id (default: the configured voice for the video's language)")
+	approved := fs.Bool("approved", false, "the editor agreed to go over the spending limit for generated media")
 	var refs multiFlag
 	fs.Var(&refs, "ref", "image only: reference image (repeatable)")
 	if err := fs.Parse(args[1:]); err != nil {
@@ -129,8 +161,12 @@ func GenCLI(args []string) int {
 	}
 	*out, _ = filepath.Abs(*out)
 	os.MkdirAll(filepath.Dir(*out), 0o755)
-	err := genAny(args[0], pid, tenant, genOpts{prompt: *prompt, aspect: *aspect, size: *size, image: *image,
-		refs: refs, seconds: *seconds, voice: *voice}, *out)
+	o := genOpts{prompt: *prompt, aspect: *aspect, size: *size, image: *image, refs: refs, seconds: *seconds, voice: *voice}
+	if msg := overMediaLimit(pid, args[0], o); msg != "" && !*approved {
+		fmt.Fprintln(os.Stderr, msg)
+		return 3
+	}
+	err := genAny(args[0], pid, tenant, o, *out)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		return 1

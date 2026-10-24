@@ -23,21 +23,21 @@ Videos made, posted and answered, with your own keys and no monthly bill.</p>
 
 ![The project page: the editor agent's chat beside a live preview of a reel](worker/public/shots/project.webp)
 
-37Studio makes videos for a business and runs its social accounts, from one app on your own computer. Add a company from its website and it builds a brand library and a knowledge base. Brief a video and Claude Code, the editor agent, builds it as a [HyperFrames](https://github.com/heygen-com/hyperframes) composition in that brand, checks its own frames and renders it on your machine. Publish it to the company's accounts with a caption written for each platform, now, on a schedule or on Autopilot. Messages and comments land in one inbox with replies drafted from the knowledge base.
+37Studio makes videos for a business and runs its social accounts, from one app on your own computer. Add a brand from its website and it builds a brand library and a knowledge base. Brief a video and Claude Code, the editor agent, builds it as a [HyperFrames](https://github.com/heygen-com/hyperframes) composition in that brand, checks its own frames and renders it on your machine. Publish it to the brand's accounts with a caption written for each platform, now, on a schedule or on Autopilot. Messages and comments land in one inbox with replies drafted from the knowledge base.
 
-You bring your own keys (a Claude plan or an Anthropic API key; Gemini and ElevenLabs optional) and pay the providers directly. Every project shows what it cost in AI usage, in USD by default. 37Studio is free and open source under the MIT License, made by [Shaitrish](https://shaitrish.com), a software team in Dhaka.
+You bring your own keys (a Claude plan or an Anthropic API key; optionally OpenAI, xAI, OpenRouter or OpenCode for other agent models, Gemini or fal.ai for images and video, ElevenLabs for voice) and pay the providers directly. Every project shows what it cost in AI usage, in USD by default. 37Studio is free and open source under the MIT License, made by [Shaitrish](https://shaitrish.com), a software team in Dhaka.
 
 ## What it does
 
-- **Brand library from a website or folder.** Paste a URL, or pick the company's own project folder, and get its logos, people, photos, fonts and exact colours sorted and captioned, plus a design system (`design.md`) and a knowledge base (`knowledge.md`).
+- **Brand library from a website or folder.** Paste a URL, or pick the brand's own project folder, and get its logos, people, photos, fonts and exact colours sorted and captioned, plus a design system (`design.md`) and a knowledge base (`knowledge.md`).
 - **An editor agent.** Claude Opus 5.5 builds each video as an animated HyperFrames composition, checks its own frames and takes changes in plain words. Edit by hand on a real timeline when you want to.
 - **Many kinds of output.** Hook reels, captioned clips, motion-graphics explainers, podcast clips, promo ads, square and portrait posts, and thumbnails. Save any finished video as a template for the next one.
 - **Long recordings into many videos.** A 2-hour class becomes ten reels. Transcription runs locally with faster-whisper: free, private, about 100 languages. YouTube and Google Drive links import directly.
-- **Generated media.** Gemini images and video clips; ElevenLabs voiceover, sound effects and music. The agent uses them only when the footage and brand library can't do the job, and says what it made.
-- **Publishing and Autopilot.** Post to any mix of a company's accounts on nine platforms now or on a schedule, or let a content plan make a fresh video before every slot and wait for one-click approval.
-- **One inbox.** Messenger, Instagram and WhatsApp messages and Facebook and Instagram comments, with replies drafted in the customer's language, following the company's own rules. Off, drafts to approve, or fully automatic, per company.
-- **Assistant and MCP.** Run everything by chatting with the Assistant in the sidebar, or from your own AI agent (Claude Code, Claude Desktop, Cursor) through 37Studio's MCP server: companies, campaigns, videos, publishing, Autopilot, settings and connections.
-- **Real costs.** Every project, campaign and company shows its AI spend in your currency. No markup: you pay Anthropic, Google and ElevenLabs directly.
+- **Generated media.** Gemini images; video clips from Gemini or, through fal.ai, Seedance, Kling, Veo, Wan and others; ElevenLabs voiceover, sound effects and music. The agent asks before media on one project costs more than the limit in Settings → Spending, and keeps a person or product consistent by reusing one reference image across shots. The agent uses them only when the footage and brand library can't do the job, and says what it made.
+- **Publishing and Autopilot.** Post to any mix of a brand's accounts on nine platforms now or on a schedule, or let a content plan make a fresh video before every slot and wait for one-click approval.
+- **One inbox.** Messenger, Instagram and WhatsApp messages and Facebook and Instagram comments, with replies drafted in the customer's language, following the brand's own rules. Off, drafts to approve, or fully automatic, per brand.
+- **Assistant and MCP.** Run everything by chatting with the Assistant in the sidebar, or from your own AI agent (Claude Code, Claude Desktop, Cursor) through 37Studio's MCP server: brands, campaigns, videos, publishing, Autopilot, settings and connections.
+- **Real costs.** Every project, campaign and brand shows its AI spend in your currency. No markup: you pay Anthropic, Google and ElevenLabs directly.
 
 Everything runs in one Docker container, on your computer or your own server. Footage, brands and messages stay there; API keys and platform credentials are encrypted on disk.
 
@@ -109,11 +109,11 @@ Run it on a server when a team shares it, or when Autopilot and auto-replies sho
 What is different on a server:
 
 - **Password.** The cloud file won't start without `STUDIO37_PASSWORD`. It is HTTP basic auth on every page, API call and timeline editor, over HTTPS. Use a long random one and share it only with people you trust with the agent (next point).
-- **Agent permissions.** The cloud file sets `STUDIO37_AGENT_PERMISSIONS=bypass`, like the launcher: the agent can run any command inside the container. Anyone who can sign in can therefore have it run commands there, read every company's files in `/data`, and reach the internet. The container runs as an unprivileged user (uid 1000) with no access to the Docker socket or the host's files beyond `./data`. For the allowlist instead, change that line to `safe` in the compose file; commands outside the allowlist are then refused, which can block some tasks. It narrows what the agent runs, but whoever can sign in can still steer the agent, so treat the password as access to everything in the container either way.
+- **Agent permissions.** The cloud file sets `STUDIO37_AGENT_PERMISSIONS=bypass`, like the launcher: the agent can run any command inside the container. Anyone who can sign in can therefore have it run commands there, read every brand's files in `/data`, and reach the internet. The container runs as an unprivileged user (uid 1000) with no access to the Docker socket or the host's files beyond `./data`. For the allowlist instead, change that line to `safe` in the compose file; commands outside the allowlist are then refused, which can block some tasks. It narrows what the agent runs, but whoever can sign in can still steer the agent, so treat the password as access to everything in the container either way.
 - **Sign-in redirects.** The cloud file sets `STUDIO37_PUBLIC_URL=https://<your domain>`, so register `https://<your domain>/api/oauth/<platform>/callback` with each platform. Use the **Web** platform for TikTok.
 - **Timeline editor.** The UI opens each project's editor at the page's own address on a port from 3100 to 3109 (`https://studio.example.com:3100`, ...). Caddy serves HTTPS on those ports with the same certificate and passes each one to the same port on the app, so the editor works once the ports are open. Your browser asks for the password once more the first time, because a different port counts as a different site. Up to ten editors can be open at once. If you'd rather not open those ports, everything else still works; make changes by chatting with the agent.
 - **Updates.** The sidebar says when a new version is out. Then: `docker compose -f docker-compose.cloud.yml pull && docker compose -f docker-compose.cloud.yml up -d`.
-- **Backups.** Everything lives in `./data`: the database, `secret.key` (which decrypts the keys in it), company files, footage and videos. The database is SQLite in WAL mode, so copy it while the app is stopped, or snapshot the whole disk:
+- **Backups.** Everything lives in `./data`: the database, `secret.key` (which decrypts the keys in it), brand files, footage and videos. The database is SQLite in WAL mode, so copy it while the app is stopped, or snapshot the whole disk:
 
   ```bash
   docker compose -f docker-compose.cloud.yml stop studio
@@ -130,17 +130,17 @@ To build the image from your own checkout on the server, clone the repo and repl
 ## First steps
 
 1. **Add keys.** Settings → Keys: an Anthropic API key, or a Claude subscription token (run `docker compose exec studio claude setup-token` in the launcher's folder; from source the service is `37studio`). Gemini and ElevenLabs are optional. Keys are encrypted at rest and sent only to the provider they belong to. Anthropic's terms govern using a Claude subscription in other apps; an API key is the fully supported route.
-2. **Add a company.** Companies → **Add from website or folder**. In 5 to 10 minutes the brand library, design system and knowledge base are ready. Read the **Knowledge** tab and fix anything wrong: every video and reply uses it.
+2. **Add a brand.** Brands → **Add from website or folder**. In 5 to 10 minutes the brand library, design system and knowledge base are ready. Read the **Knowledge** tab and fix anything wrong: every video and reply uses it.
 3. **Make a video.** **New project** asks a few questions: what to make, the language, where it runs, how long, what it's about, and optional footage or a YouTube or Drive link. The agent narrates as it works. Ask for changes in the chat, or click **Edit timeline** to change things by hand, then **Export**.
-4. **Connect accounts.** On the company's **Social** tab, click **Connect** for each platform. Most platforms need a developer app of your own first: see [Social publishing](#social-publishing).
+4. **Connect accounts.** On the brand's **Social** tab, click **Connect** for each platform. Most platforms need a developer app of your own first: see [Social publishing](#social-publishing).
 5. **Publish.** On the project, **Publish** → pick accounts → **Write with AI** for the captions (or write your own) → post now or schedule it. The **Posts** tab shows each upload's status and a link to the live post.
-6. **Autopilot and the inbox.** On the company's **Autopilot** tab, write a content plan ("3 reels a week with one product tip each, 8 pm, to our Page and Instagram"). Each video is made three hours before its slot and waits for your approval, or posts on its own if you allow it. On the **Social** tab, choose how inbox replies go out and write the company's reply rules; the **Inbox** in the sidebar has every message and comment.
+6. **Autopilot and the inbox.** On the brand's **Autopilot** tab, write a content plan ("3 reels a week with one product tip each, 8 pm, to our Page and Instagram"). Each video is made three hours before its slot and waits for your approval, or posts on its own if you allow it. On the **Social** tab, choose how inbox replies go out and write the brand's reply rules; the **Inbox** in the sidebar has every message and comment.
 
 Autopilot, scheduled posts and auto-replies work while 37Studio runs. Keep the computer awake, or run it in the cloud.
 
 ## Social publishing
 
-Each company's **Social** tab connects its accounts: sign in once per platform, then tick which of the returned accounts belong to that company. **Publish** sends one final video to any mix of them, now or at a scheduled time. Claude writes a caption for each platform (X and Bluesky stay short, LinkedIn professional, YouTube and Pinterest get a title and description), and you can edit every one. Scheduled posts go out only while 37Studio is running; a post more than 12 hours overdue is marked missed instead of going out late.
+Each brand's **Social** tab connects its accounts: sign in once per platform, then tick which of the returned accounts belong to that brand. **Publish** sends one final video to any mix of them, now or at a scheduled time. Claude writes a caption for each platform (X and Bluesky stay short, LinkedIn professional, YouTube and Pinterest get a title and description), and you can edit every one. Scheduled posts go out only while 37Studio is running; a post more than 12 hours overdue is marked missed instead of going out late.
 
 Every OAuth platform needs a developer app, and that is your own (free) app: 37Studio has no built-in one. Put its credentials in **Settings → Keys** (encrypted at rest; the only way in the launcher, which has no `.env`), or in `.env` when running from source. Register the redirect URI with the platform: `STUDIO37_PUBLIC_URL` (default `http://localhost:8080`) followed by the path below.
 
@@ -157,7 +157,7 @@ Every OAuth platform needs a developer app, and that is your own (free) app: 37S
 
 **[docs/platforms.md](docs/platforms.md) has the step-by-step setup for each one**, also on the website in plain words as [Connect your social accounts](https://studio.shaitrish.com/connect), with a [plain-text copy](https://studio.shaitrish.com/connect.txt) to paste into ChatGPT or Claude so it walks you through. The short version:
 
-- **Facebook + Instagram.** A Meta Business app with Facebook Login for Business, left in Development mode with your team as app roles: no App Review needed. Company → Social → **Set up your Meta app** walks through it, about 15 minutes. Messenger and Instagram messages from the public need Meta's App Review of your app. Instagram must be a Business or Creator account linked to the Page. Vertical videos of 3–90 seconds post as Reels.
+- **Facebook + Instagram.** A Meta Business app with Facebook Login for Business, left in Development mode with your team as app roles: no App Review needed. Brand → Social → **Set up your Meta app** walks through it, about 15 minutes. Messenger and Instagram messages from the public need Meta's App Review of your app. Instagram must be a Business or Creator account linked to the Page. Vertical videos of 3–90 seconds post as Reels.
 - **YouTube.** A Google Cloud project with YouTube Data API v3 and a *Web application* OAuth client, consent screen set to *In production*. Uploads stay private until the project passes YouTube's API audit.
 - **TikTok.** Login Kit and Content Posting API, Desktop platform for `localhost` (Web for an HTTPS domain). Until TikTok audits the app, posts must be *Only me*, or go to the creator's drafts.
 - **LinkedIn.** Products *Sign In with LinkedIn using OpenID Connect* and *Share on LinkedIn* (scopes `openid profile w_member_social`). Posts to your own profile. Company Pages need LinkedIn's Community Management API; once LinkedIn approves it, set `LINKEDIN_PAGES=1` and reconnect. Tokens last 60 days; then connect again.
@@ -176,18 +176,18 @@ Environment-only settings (`LINKEDIN_PAGES`, `PINTEREST_API`, `STUDIO37_PUBLIC_U
 
 ## Social inbox
 
-**Inbox** in the sidebar shows Messenger, Instagram and WhatsApp messages plus Facebook and Instagram comments for every connected account, newest first. Click **Draft with AI** and Claude writes a reply from the company's `knowledge.md`, in the customer's language (about $0.05 a draft, counted in the company's costs); edit it and **Send**. Nothing goes out without a person clicking Send unless you turn on auto-replies.
+**Inbox** in the sidebar shows Messenger, Instagram and WhatsApp messages plus Facebook and Instagram comments for every connected account, newest first. Click **Draft with AI** and Claude writes a reply from the brand's `knowledge.md`, in the customer's language (about $0.05 a draft, counted in the brand's costs); edit it and **Send**. Nothing goes out without a person clicking Send unless you turn on auto-replies.
 
-**Auto-replies** (Company → Social → Inbox replies): *Off*, *Claude drafts, you approve*, or *Claude replies on its own*, plus the company's own rules for how Claude replies (tone, sign-off, what never to promise, when to hand over to a person). Facts only come from the knowledge base; when the answer isn't there, Claude says a team member will reply. A background loop checks every 2 minutes while 37Studio runs, and catches up on what arrived while it was off if the platform still allows a reply (messages within 24 hours, comments up to 2 days old).
+**Auto-replies** (Brand → Social → Inbox replies): *Off*, *Claude drafts, you approve*, or *Claude replies on its own*, plus the brand's own rules for how Claude replies (tone, sign-off, what never to promise, when to hand over to a person). Facts only come from the knowledge base; when the answer isn't there, Claude says a team member will reply. A background loop checks every 2 minutes while 37Studio runs, and catches up on what arrived while it was off if the platform still allows a reply (messages within 24 hours, comments up to 2 days old).
 
 The inbox needs extra Meta permissions on top of publishing, and WhatsApp needs a number on the WhatsApp Business API and a public address for Meta's webhook: a Cloudflare Tunnel that publishes only `/webhooks/meta` of your copy, or a small relay on your own Cloudflare account. See [docs/platforms.md](docs/platforms.md#whatsapp). Until Meta grants your app Advanced Access, only messages from people with a role on the app or Page appear.
 
 ## Assistant and MCP
 
-**Assistant** in the sidebar runs the studio by chatting: "add this company from its website", "plan three reels a week for Dhaka Bites at 8 pm with my approval", "publish yesterday's video to all its Pages", "what did we spend this month?". It is Claude Code connected to 37Studio's own MCP server and nothing else (no shell, no file edits), so it can only do what the app's buttons do. It asks before it deletes anything, publishes, approves an Autopilot video or replies to a customer. Each reply's cost shows in the chat and on the Costs page, under "Assistant".
+**Assistant** in the sidebar runs the studio by chatting: "add this brand from its website", "plan three reels a week for Dhaka Bites at 8 pm with my approval", "publish yesterday's video to all its Pages", "what did we spend this month?". It is Claude Code connected to 37Studio's own MCP server and nothing else (no shell, no file edits), so it can only do what the app's buttons do. It asks before it deletes anything, publishes, approves an Autopilot video or replies to a customer. Each reply's cost shows in the chat and on the Costs page, under "Assistant".
 
 **MCP server.** Any MCP client on the same computer can manage 37Studio from its own chat, through the same tools. That includes Claude Code, Claude Desktop and Cursor. There are 65 tools:
-- companies, their brand library and knowledge base
+- brands, their brand library and knowledge base
 - campaigns, and videos made by the editor agent
 - generated media and templates
 - publishing and Autopilot
@@ -224,6 +224,8 @@ Settings are environment variables: in `.env` when running from source, under `e
 | --- | --- | --- | --- |
 | `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` | unset | yes | Claude for the editor agent, captions and replies |
 | `GEMINI_API_KEY`, `ELEVENLABS_API_KEY` | unset | yes | Generated images and video; voice, sound effects and music |
+| `FAL_KEY` | unset | yes | fal.ai video models (Seedance, Kling, Veo, Wan…); pick one in Settings → AI services → Video clips |
+| `OPENCODE_API_KEY`, `OPENAI_API_KEY`, `XAI_API_KEY`, `OPENROUTER_API_KEY` | unset | yes | More models for the editor agent, run through OpenCode: each adds its provider's newest models to the model menus |
 | `META_APP_ID`, `META_APP_SECRET`, `META_CONFIG_ID` | unset | yes | Your own Meta app for Facebook Pages + Instagram |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | unset | yes | YouTube |
 | `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET` | unset | yes | TikTok |
@@ -249,7 +251,7 @@ Settings are environment variables: in `.env` when running from source, under `e
 ## How it works
 
 ```
-Browser ──► 37studio (Go, one binary) ──► SQLite + data/ (companies, projects, encrypted tokens and keys)
+Browser ──► 37studio (Go, one binary) ──► SQLite + data/ (brands, projects, encrypted tokens and keys)
              ├─ claude -p, the editor agent ──► ffmpeg · npx hyperframes · 37studio gen / transcribe / clip
              ├─ hyperframes render (Chrome + ffmpeg) ──► out/*.mp4, *.png
              ├─ post queue ──► Facebook · Instagram · YouTube · TikTok · LinkedIn · X · Pinterest · Bluesky · Mastodon
@@ -258,10 +260,10 @@ Browser ──► 37studio (Go, one binary) ──► SQLite + data/ (companies,
 
 **Claude Code does the editing. HyperFrames renders. Go serves. React is the UI.** All of it, with ffmpeg, Chrome, Node.js, Python and fonts, ships in one Docker image for amd64 and arm64.
 
-- **The agent.** Each turn runs `claude -p` in the project's folder with a harness prompt (`internal/agent/agent.go`), the company's knowledge base, design system and brand library, and a hard per-turn budget on Claude's own spend. It probes and transcribes footage, cuts with ffmpeg, writes the composition, renders stills to check its own work, and fixes what's off. Quality tiers pick the model: Haiku 5.5, Sonnet 5.5 or Opus 5.5 (the default), or, through OpenCode, Kimi K3, Qwen, GLM and DeepSeek: frontier models that are strong at visual work, often for less.
+- **The agent.** Each turn runs `claude -p` in the project's folder with a harness prompt (`internal/agent/agent.go`), the brand's knowledge base, design system and brand library, and a hard per-turn budget on Claude's own spend. It probes and transcribes footage, cuts with ffmpeg, writes the composition, renders stills to check its own work, and fixes what's off. Quality tiers pick the model: Haiku 5.5, Sonnet 5.5 or Opus 5.5 (the default). Through OpenCode it can also run GPT, Grok, Kimi, GLM, DeepSeek and others: the model menus list the newest models of each provider you've connected in Settings → AI services.
 - **HyperFrames.** A video is an HTML page with `data-*` timing attributes, which an agent writes reliably and which plays live in the browser with no render step. *Edit timeline* opens HyperFrames Studio on the same files, and the agent picks up your hand edits on its next turn. *Export* renders frame by frame with headless Chrome and encodes with ffmpeg.
 - **Transcription.** `37studio transcribe` runs faster-whisper on your CPU (`large-v3-turbo` by default), so long recordings cost nothing and the audio stays local. On a 12-core laptop it takes about 1.3× the recording's length.
-- **Costs.** Claude reports each run's cost; Gemini and ElevenLabs use the unit prices in Settings. Rendering and storage are free because they run on your machine. Costs are recorded in USD and shown in your currency on every project, campaign and company, and by provider and month on the **Costs** page.
+- **Costs.** Claude and OpenCode report each run's cost; Gemini, fal.ai and ElevenLabs use the unit prices in Settings. Rendering and storage are free because they run on your machine. Costs are recorded in USD and shown in your currency on every project, campaign and brand, and by provider and month on the **Costs** page.
 
 **[docs/architecture.md](docs/architecture.md)** has the full job flow, the agent harness, transcription details, the project folder, a code map and the release process.
 
@@ -269,7 +271,7 @@ Browser ──► 37studio (Go, one binary) ──► SQLite + data/ (companies,
 
 **Is it really free?** Yes: MIT licensed, no license key, no paid tier. You pay the AI providers for what you use.
 
-**What leaves my computer?** Calls to the AI providers you set up (Anthropic, and Gemini and ElevenLabs if you add them), uploads to the platforms you connect, the update check (GitHub Releases), and, only if you set up WhatsApp, Meta's webhooks coming in through your own Cloudflare Tunnel (or waiting on your own relay until your copy pulls them, at most 7 days). Nothing is sent to Shaitrish or studio.shaitrish.com. Any agent may read a company's brand files and source folder, so they go to Anthropic as part of its work.
+**What leaves my computer?** Calls to the AI providers you set up (Anthropic, and any of OpenAI, xAI, OpenRouter, OpenCode, Gemini, fal.ai and ElevenLabs you add), uploads to the platforms you connect, the update check (GitHub Releases), and, only if you set up WhatsApp, Meta's webhooks coming in through your own Cloudflare Tunnel (or waiting on your own relay until your copy pulls them, at most 7 days). Nothing is sent to Shaitrish or studio.shaitrish.com. Any agent may read a brand's files and source folder, so they go to Anthropic as part of its work.
 
 **The page doesn't open, or port 8080 is in use.** Another program has port 8080. Close it and run the start file again. `docker compose logs` shows what the app is doing.
 
@@ -293,9 +295,9 @@ Browser ──► 37studio (Go, one binary) ──► SQLite + data/ (companies,
 
 **Can I use my Claude subscription?** Yes, with a token from `claude setup-token`. Anthropic's terms govern using a subscription in other apps; an API key is the fully supported route.
 
-**Can I use my Runway, Kling or other video subscription?** Not directly. Monthly plans for video tools (Runway, Kling, Google AI Pro and the like) work only on their own websites; using a model from another app needs a separate API key, billed on its own. Make the clip on their site, then upload it to a project or paste a Google Drive link, and the agent edits it like any other footage. For clips generated inside 37Studio, add a Gemini key.
+**Can I use my Runway, Kling or other video subscription?** Not directly. Monthly plans for video tools (Runway, Kling, Google AI Pro and the like) work only on their own websites; using a model from another app needs a separate API key, billed on its own. Make the clip on their site, then upload it to a project or paste a Google Drive link, and the agent edits it like any other footage. For clips generated inside 37Studio, add a Gemini or fal.ai key; fal.ai's API includes Kling and Seedance.
 
-**When does the agent generate images, clips or voice?** Only when the footage and the company's brand library can't do the job, because every generation is billed. It says what it generated, and the cost shows on the project. On Autopilot it decides on its own. The per-turn budget in Settings caps Claude's spend only; generated media is billed on top, so keep an eye on the **Costs** page.
+**When does the agent generate images, clips or voice?** Only when the footage and the brand's library can't do the job, because every generation is billed. It says what it generated, and the cost shows on the project. On Autopilot it decides on its own. The per-turn budget in Settings caps Claude's spend only; generated media is billed on top, so keep an eye on the **Costs** page.
 
 More questions: [open an issue](https://github.com/Shaitrish/37studio/issues).
 

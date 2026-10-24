@@ -4,7 +4,7 @@ Guidance for AI coding agents (Claude Code, Codex, Cursor and others) and for pe
 
 ## What this is
 
-37Studio is a free, open-source (MIT) AI video studio and social media desk that runs on the user's own computer or server in Docker. Claude Code, the editor agent, builds videos as HyperFrames compositions from a company's brand library and knowledge base. The app renders them locally, publishes them to nine platforms and drafts inbox replies. Users bring their own keys. Other agents can run the whole app through its MCP server, and so can the in-app Assistant.
+37Studio is a free, open-source (MIT) AI video studio and social media desk that runs on the user's own computer or server in Docker. Claude Code, the editor agent, builds videos as HyperFrames compositions from a brand's library and knowledge base. The app renders them locally, publishes them to nine platforms and drafts inbox replies. Users bring their own keys. Other agents can run the whole app through its MCP server, and so can the in-app Assistant.
 
 ## Layout
 

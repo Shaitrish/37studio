@@ -1,4 +1,4 @@
-// Package costs records what AI providers charge and reports it per project, company, provider and month.
+// Package costs records what AI providers charge and reports it per project, brand, provider and month.
 package costs
 
 import (
@@ -26,6 +26,9 @@ func Quote(p map[string]any) map[string]any {
 		if u["provider"] == "elevenlabs" {
 			label = "ElevenLabs " + store.Str(u["item"])
 		}
+		if u["provider"] == "fal" {
+			label = "fal.ai " + store.Str(u["item"])
+		}
 		if u["provider"] == "anthropic" || u["provider"] == "opencode" {
 			name := map[string]string{"anthropic": "Claude", "opencode": "OpenCode"}[store.Str(u["provider"])]
 			label, detail = name+" agent ("+store.Str(u["item"])+")", fmt.Sprintf("%v runs, %.1fM tokens", u["n"], qty/1e6)
@@ -38,7 +41,7 @@ func Quote(p map[string]any) map[string]any {
 	return map[string]any{"lines": lines, "cost": Round2(cost)}
 }
 
-// Report is the spend report: by provider, by company and by month, plus the total.
+// Report is the spend report: by provider, by brand and by month, plus the total.
 func Report(r *http.Request) (any, error) {
 	byProvider, err := store.Rows("select provider, item, count(*) n, sum(quantity) qty, sum(cost) cost from usage group by provider, item order by cost desc")
 	if err != nil {

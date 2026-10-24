@@ -1,4 +1,4 @@
-// Package autopilot makes and posts videos on a schedule from each company's content plans.
+// Package autopilot makes and posts videos on a schedule from each brand's content plans.
 package autopilot
 
 import (
@@ -157,7 +157,7 @@ func Loop() {
 	}
 }
 
-// autopilotTick starts the next due video. ponytail: one at a time across all companies; a PC renders one well, not three badly.
+// autopilotTick starts the next due video. ponytail: one at a time across all brands; a PC renders one well, not three badly.
 func autopilotTick() {
 	if Busy() {
 		return
@@ -179,7 +179,7 @@ const autopilotRules = `
 
 ## Autopilot
 This video is made on autopilot for %s. Nobody will answer questions: decide everything yourself from the brief, the knowledge base and the brand library, then build the video, check it visually and finish it in this one turn. Don't render the final; the app does that when you stop.
-Pick a fresh topic or angle the company hasn't covered yet.%s
+Pick a fresh topic or angle the brand hasn't covered yet.%s
 Before you stop, write work/social.json (the post captions) and work/topic.txt (the topic in 3-8 words).`
 
 func autopilotStart(ap map[string]any, slot time.Time) (int64, error) {

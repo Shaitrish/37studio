@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { CheckIcon, LightningIcon, PencilSimpleIcon, PlayIcon, PlusIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import { ago, api, fail, languageName, languages, Meta, parseTime, SocialAccount, Tenant, toast, useApi } from "../api";
-import { Empty, Field, Modal, Seg, Status } from "../ui";
+import { Empty, Field, Modal, ModelOptions, Seg, Status } from "../ui";
 
 export interface AutopilotVideo { id: number; title: string; autopilot_slot: string; autopilot_stage: string; created_at: string }
 interface Plan {
@@ -17,7 +17,7 @@ export const approve = (id: number, then: () => void) => api(`/projects/${id}/ap
 export const skip = (id: number, then: () => void) =>
   confirm("Skip this video? Its posts are cancelled; the video stays in the project.") && api(`/projects/${id}/skip`, { body: {} }).then(then, fail);
 
-/** Company → Autopilot: content plans that make, caption and schedule videos on their own. */
+/** Brand → Autopilot: content plans that make, caption and schedule videos on their own. */
 export function AutopilotTab({ tenant }: { tenant: Tenant }) {
   const { data: plans, reload } = useApi<Plan[]>(`/autopilots?tenant=${tenant.id}`);
   const { data: social } = useApi<{ accounts: SocialAccount[] }>(`/tenants/${tenant.id}/social`);
@@ -141,13 +141,13 @@ function PlanModal({ tenant, plan, accounts, onClose, onSaved }: {
         <Field label="Length" hint="seconds"><input className="input" type="number" min={10} max={180} value={f.seconds} onChange={(e) => set("seconds", Number(e.target.value))} /></Field>
         <Field label="Language">
           <select className="select" value={f.language} onChange={(e) => set("language", e.target.value)}>
-            <option value="">Company default ({languageName(tenant.language)})</option>
+            <option value="">Brand default ({languageName(tenant.language)})</option>
             {languages.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
         </Field>
         <Field label="Quality" hint={meta?.qualities.find((q) => q.id === f.quality)?.note}>
           <select className="select" value={f.quality} onChange={(e) => set("quality", e.target.value)}>
-            {meta?.qualities.map((q) => <option key={q.id} value={q.id}>{q.label}</option>)}
+            <ModelOptions qualities={meta?.qualities ?? []} />
           </select>
         </Field>
         <Field label="Post to" full>

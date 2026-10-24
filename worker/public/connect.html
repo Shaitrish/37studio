@@ -76,7 +76,7 @@
     <h2 id="ai">Get help from an AI assistant</h2>
     <p>Stuck on a screen that looks different? Copy this guide into ChatGPT, Claude or any other AI assistant, tell it which platforms you want, and it will walk you through one step at a time.</p>
     <p><button class="btn ink" type="button" id="copy-guide" disabled>Copy the guide for your AI assistant</button> <a href="/connect.txt" style="margin-left:10px">Open as text</a></p>
-    <div class="note"><b>Never paste an app secret, token or password into the chat.</b> The assistant only needs to tell you where to click. Secrets go straight into 37Studio: <b>Settings → Keys</b>, or the Connect windows on a company's <b>Social</b> tab.</div>
+    <div class="note"><b>Never paste an app secret, token or password into the chat.</b> The assistant only needs to tell you where to click. Secrets go straight into 37Studio: <b>Settings → Keys</b>, or the Connect windows on a brand's <b>Social</b> tab.</div>
 
     <h2 id="what">What you can do once connected</h2>
     <table>
@@ -97,7 +97,7 @@
 
     <h2 id="words">Words you'll see</h2>
     <ul>
-      <li><b>Developer app:</b> a free registration on the platform's developer website that lets a program, here your copy of 37Studio, post for you. You make it once, and every company you manage can use it.</li>
+      <li><b>Developer app:</b> a free registration on the platform's developer website that lets a program, here your copy of 37Studio, post for you. You make it once, and every brand you manage can use it.</li>
       <li><b>App ID and app secret</b> (sometimes "client ID" and "client secret"): like a username and password for your developer app. The ID isn't secret; the secret is, so keep it private and paste it only into 37Studio.</li>
       <li><b>Redirect URI</b> (or "callback URL"): the address the platform sends you back to after you sign in. It always points at your own 37Studio, like <code>http://localhost:8080/api/oauth/google/callback</code>. Copy it exactly, with no slash at the end. If you run 37Studio on a server, start it with your server's <code>https://</code> address instead of <code>http://localhost:8080</code>.</li>
       <li><b>Development mode</b> and <b>App Review:</b> a new app works right away for you and the people you add to it. For anything that touches the public, like messages from customers, some platforms first review your app. The table above says where.</li>
@@ -105,7 +105,7 @@
     </ul>
 
     <h2 id="meta">Facebook &amp; Instagram</h2>
-    <p>One Meta app covers your Facebook Pages and the Instagram accounts linked to them. Inside 37Studio, a company's <b>Social</b> tab → <b>Set up your Meta app</b> shows these same steps.</p>
+    <p>One Meta app covers your Facebook Pages and the Instagram accounts linked to them. Inside 37Studio, a brand's <b>Social</b> tab → <b>Set up your Meta app</b> shows these same steps.</p>
     <h3>Before you start</h3>
     <ul>
       <li>You need a Facebook account that manages the Page.</li>
@@ -117,18 +117,18 @@
       <li>In each of those use cases, click <b>Customize</b> and add these permissions: <code>pages_show_list</code>, <code>pages_read_engagement</code>, <code>pages_manage_posts</code>, <code>business_management</code>, <code>instagram_basic</code>, <code>instagram_content_publish</code>. For messages and comments, also add <code>pages_read_user_content</code>, <code>pages_manage_engagement</code>, <code>pages_manage_metadata</code>, <code>pages_messaging</code>, <code>instagram_manage_comments</code>, <code>instagram_manage_messages</code>.</li>
       <li>In the left menu, open <b>Facebook Login for Business → Configurations → Create</b>. Choose <b>User access token</b>, select your Pages and Instagram accounts, and the same permissions. Save, and copy the <b>Configuration ID</b>.</li>
       <li>Open <b>App settings → Basic</b> and copy the <b>App ID</b> and <b>App secret</b>. If Meta asks for a redirect URI anywhere, use <code>http://localhost:8080/api/oauth/meta/callback</code>.</li>
-      <li>In 37Studio, open a company's <b>Social</b> tab → <b>Set up your Meta app</b>, paste the App ID, App secret and Configuration ID, and click <b>Save</b>.</li>
-      <li>Click <b>Connect Facebook &amp; Instagram</b>, sign in with Facebook, allow everything it asks, then tick the Pages and Instagram accounts that belong to this company.</li>
+      <li>In 37Studio, open a brand's <b>Social</b> tab → <b>Set up your Meta app</b>, paste the App ID, App secret and Configuration ID, and click <b>Save</b>.</li>
+      <li>Click <b>Connect Facebook &amp; Instagram</b>, sign in with Facebook, allow everything it asks, then tick the Pages and Instagram accounts that belong to this brand.</li>
     </ol>
     <div class="note"><b>Leave the app in Development mode.</b> That way it works right away for you, without Meta's review. Anyone else on your team who connects Pages needs a role on the app: <b>App roles → Add people</b>.</div>
 
     <h2 id="replies">Answering messages and comments</h2>
-    <p>Once Facebook and Instagram are connected, everything lands in <b>Inbox</b> in the sidebar. Click a message, press <b>Draft with AI</b>, check the reply, and press <b>Send</b>. Claude writes replies only from what you've put in the company's knowledge base.</p>
+    <p>Once Facebook and Instagram are connected, everything lands in <b>Inbox</b> in the sidebar. Click a message, press <b>Draft with AI</b>, check the reply, and press <b>Send</b>. Claude writes replies only from what you've put in the brand's knowledge base.</p>
     <ol>
       <li><b>Comments</b> work as soon as you've added the comment permissions in step 2 above and connected again.</li>
       <li><b>Instagram messages:</b> in the Instagram app, open <b>Settings → Messages and story replies → Message controls → Connected tools</b> and turn on <b>Allow access to messages</b>.</li>
       <li><b>Messages from customers</b> (Messenger and Instagram) appear once Meta approves your app for those permissions in <b>App Review</b>. Until then you only see messages from people who have a role on your app or Page, which is enough to test.</li>
-      <li>On the company's <b>Social</b> tab, under <b>Inbox replies</b>, choose how replies go out: <b>Off</b> (you write them), <b>Claude drafts, you approve</b> (recommended), or <b>Claude replies on its own</b>. Add your own rules, like your sign-off or what never to promise, in <b>How Claude should reply</b>.</li>
+      <li>On the brand's <b>Social</b> tab, under <b>Inbox replies</b>, choose how replies go out: <b>Off</b> (you write them), <b>Claude drafts, you approve</b> (recommended), or <b>Claude replies on its own</b>. Add your own rules, like your sign-off or what never to promise, in <b>How Claude should reply</b>.</li>
     </ol>
     <div class="note">Platforms only allow replies within a time window: messages within 24 hours, and 37Studio answers comments up to 2 days old. Replies go out only while 37Studio is running.</div>
 
@@ -138,7 +138,7 @@
       <li>Open <b>OAuth consent screen</b>: choose <b>External</b>, fill in the app name and your email, and add the scopes <code>youtube.upload</code> and <code>youtube.readonly</code>. Then click <b>Publish app</b> so it's <b>In production</b>; otherwise Google signs you out every 7 days.</li>
       <li>Open <b>Credentials → Create credentials → OAuth client ID</b>, choose <b>Web application</b>, and add the redirect URI <code>http://localhost:8080/api/oauth/google/callback</code>.</li>
       <li>Copy the <b>Client ID</b> and <b>Client secret</b> into 37Studio → <b>Settings → Keys</b> (Google OAuth client ID and secret).</li>
-      <li>On the company's Social tab, click <b>Connect YouTube</b>. Google warns that the app isn't verified: click <b>Advanced → Go to …</b> to continue, since it's your own app. Pick the channel.</li>
+      <li>On the brand's Social tab, click <b>Connect YouTube</b>. Google warns that the app isn't verified: click <b>Advanced → Go to …</b> to continue, since it's your own app. Pick the channel.</li>
     </ol>
     <p><b>Good to know:</b> YouTube keeps every upload private until your project passes Google's free API audit (search "YouTube API Services audit and quota extension form"). You can make videos public by hand in YouTube Studio meanwhile.</p>
 
@@ -148,7 +148,7 @@
       <li>Add the products <b>Login Kit</b> and <b>Content Posting API</b> (turn on <b>Direct Post</b>), with the scopes <code>user.info.basic</code>, <code>video.publish</code> and <code>video.upload</code>. Add the redirect URI <code>http://localhost:8080/api/oauth/tiktok/callback</code>.</li>
       <li>Copy the <b>Client key</b> and <b>Client secret</b> into <b>Settings → Keys</b>.</li>
       <li>Until TikTok reviews your app, use its <b>Sandbox</b> and add each TikTok account you'll post to as a target user.</li>
-      <li>Click <b>Connect TikTok</b> on the company's Social tab and sign in with that company's TikTok account.</li>
+      <li>Click <b>Connect TikTok</b> on the brand's Social tab and sign in with that brand's TikTok account.</li>
     </ol>
     <p><b>Good to know:</b> until TikTok audits your app, posts can only be <b>Only me</b>. Or choose <b>Send to TikTok drafts</b> when publishing, and tap Post in the TikTok app yourself.</p>
 
@@ -157,7 +157,7 @@
       <li>At <a href="https://www.linkedin.com/developers/apps">linkedin.com/developers</a>, click <b>Create app</b> (LinkedIn asks you to link a company Page to it).</li>
       <li>Under <b>Products</b>, add <b>Sign In with LinkedIn using OpenID Connect</b> and <b>Share on LinkedIn</b>.</li>
       <li>Under <b>Auth</b>, add the redirect URI <code>http://localhost:8080/api/oauth/linkedin/callback</code>, and copy the <b>Client ID</b> and <b>Client secret</b> into <b>Settings → Keys</b>.</li>
-      <li>Click <b>Connect LinkedIn</b> on the company's Social tab.</li>
+      <li>Click <b>Connect LinkedIn</b> on the brand's Social tab.</li>
     </ol>
     <p><b>Good to know:</b> this posts to your own profile. Posting to a company Page needs LinkedIn to approve your app for its Community Management API. LinkedIn logins last 60 days, then click Connect LinkedIn again.</p>
 
@@ -166,7 +166,7 @@
       <li>At <a href="https://developer.x.com">developer.x.com</a>, create a project and an app in it.</li>
       <li>In the app's <b>User authentication settings</b>, turn on <b>OAuth 2.0</b>, choose <b>Web App, Automated App or Bot</b>, set permissions to <b>Read and write</b>, and add the callback <code>http://127.0.0.1:8080/api/oauth/x/callback</code> (X doesn't accept <code>localhost</code>, so this one uses <code>127.0.0.1</code>). It also asks for a website; any page about you works.</li>
       <li>Under <b>Keys and tokens</b>, copy the OAuth 2.0 <b>Client ID</b> and <b>Client Secret</b> into <b>Settings → Keys</b>.</li>
-      <li>Click <b>Connect X</b> on the company's Social tab.</li>
+      <li>Click <b>Connect X</b> on the brand's Social tab.</li>
     </ol>
     <p><b>Good to know:</b> posting videos needs an X API plan that allows posting and media uploads. Check yours before you start.</p>
 
@@ -174,7 +174,7 @@
     <ol>
       <li>At <a href="https://developers.pinterest.com">developers.pinterest.com</a>, create an app (it needs a Pinterest business account) and add the redirect URI <code>http://localhost:8080/api/oauth/pinterest/callback</code>.</li>
       <li>Copy the <b>App ID</b> and <b>App secret</b> into <b>Settings → Keys</b>.</li>
-      <li>Click <b>Connect Pinterest</b> and tick the boards this company posts to.</li>
+      <li>Click <b>Connect Pinterest</b> and tick the boards this brand posts to.</li>
     </ol>
     <p><b>Good to know:</b> new Pinterest apps start with "Trial" access, which only posts to Pinterest's test area. 37Studio needs a setting for that (<code>PINTEREST_API</code>); the <a href="#details">technical details</a> explain it. Once Pinterest grants Standard access, remove it.</p>
 
@@ -193,7 +193,7 @@
       <li>Add a route to the tunnel: a name like <code>wa.yourdomain.com</code>, the path <code>^/webhooks/meta$</code>, and the service <code>HTTP</code> → <code>localhost:8080</code>. <b>Don't skip the path:</b> it keeps the rest of 37Studio private.</li>
       <li>In your Meta app, add <b>Connect with customers through WhatsApp</b>. Set its webhook to <code>https://wa.yourdomain.com/webhooks/meta</code> with the same verify token, and subscribe to <b>messages</b>.</li>
       <li>From <b>WhatsApp → API Setup</b>, copy the <b>Phone number ID</b> and <b>WhatsApp Business Account ID</b>. Make a permanent token under <b>Business settings → System users</b>.</li>
-      <li>In 37Studio, click <b>Connect WhatsApp</b> on the company's Social tab and paste the three.</li>
+      <li>In 37Studio, click <b>Connect WhatsApp</b> on the brand's Social tab and paste the three.</li>
     </ol>
     <div class="note"><b>Don't use a "quick tunnel"</b> (<code>cloudflared tunnel --url</code>) for this. It puts your whole 37Studio on the internet, and its address changes every time it starts. Can't use a tunnel at all? The <a href="#details">technical details</a> describe a small relay you can deploy to your own Cloudflare account instead.</div>
 

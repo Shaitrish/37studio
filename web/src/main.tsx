@@ -27,7 +27,7 @@ const nav = [
     { path: "/projects", label: "Projects", icon: FilmSlateIcon },
     { path: "/library", label: "Library", icon: FilmStripIcon },
     { path: "/campaigns", label: "Campaigns", icon: MegaphoneIcon },
-    { path: "/clients", label: "Companies", icon: UsersThreeIcon },
+    { path: "/clients", label: "Brands", icon: UsersThreeIcon },
   ] },
   { group: "Social", items: [
     { path: "/inbox", label: "Inbox", icon: ChatsCircleIcon },

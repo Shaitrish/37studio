@@ -6,11 +6,11 @@ export interface Quote { lines: QuoteLine[]; cost: number }
 export interface Tenant {
   id: number; name: string; contact: string; email: string; phone: string; website: string; teacher: string; bio: string;
   language: string; brand_color: string; accent_color: string; font: string; notes: string;
-  project_count?: number; cost_usd?: number; assets?: FileInfo[]; projects?: Project[];
+  project_count?: number; cost_usd?: number; logo?: string; assets?: FileInfo[]; projects?: Project[];
   scan_status: "" | "running" | "done" | "failed"; scan_note: string; knowledge?: string; design?: string; scanning?: boolean;
   asset_meta?: Record<string, AssetMeta>; source?: SourceInfo | null;
 }
-/** The company's project folder, copied into the app (source.go). */
+/** The brand's project folder, copied into the app (source.go). */
 export interface SourceInfo { name: string; files: number; bytes: number; uploaded: string }
 export interface Project {
   id: number; tenant_id: number; tenant_name: string; campaign_id: number | null; campaign_name: string | null; title: string; kind: string; aspect: string; seconds: number;
@@ -27,7 +27,7 @@ export interface Project {
   transcript?: { state: "running" | "done" | "skipped" | "failed"; pct?: number; line?: string; from?: string } | null;
   import?: { url: string; pct: number; line: string; error?: string; done: boolean } | null;
 }
-/** A saved composition new projects can start from (template.go). tenant_id null: every company. */
+/** A saved composition new projects can start from (template.go). tenant_id null: every brand. */
 export interface Template {
   id: number; name: string; notes: string; tenant_id: number | null; tenant_name: string | null; project_id: number;
   kind: string; aspect: string; seconds: number; thumb?: string; created_at: string;
@@ -49,7 +49,7 @@ export interface Voice { id: string; name: string; language?: string; gender?: s
 export const languages: [string, string][] = [["bn", "Bangla"], ["en", "English"], ["hi", "Hindi"], ["ur", "Urdu"], ["ar", "Arabic"], ["es", "Spanish"]];
 export const languageName = (code: string) => languages.find(([c]) => c === code)?.[1] ?? code;
 export interface Preset { id: string; label: string; aspect: string; seconds: number; blurb: string }
-export interface Quality { id: string; label: string; model: string; effort: string; note: string; harness: string }
+export interface Quality { id: string; label: string; model: string; effort: string; note: string; harness: string; group?: string }
 export interface Meta { presets: Preset[]; qualities: Quality[]; hf_version: string; data_dir: string; env: Record<string, boolean> }
 export interface ChatEvent { id: number; kind: string; body: string; created_at: string }
 
@@ -108,6 +108,17 @@ export function useApi<T>(path: string | null) {
   }, [path]);
   useEffect(() => { reload(); }, [reload]);
   return { data, error, reload, setData };
+}
+
+// Pages that only need names and logos share one request, so a table of projects doesn't fetch it once per row.
+let tenantsReq: Promise<Tenant[]> | undefined;
+export function useTenants() {
+  const [data, setData] = useState<Tenant[]>();
+  useEffect(() => {
+    tenantsReq ??= api<Tenant[]>("/tenants").finally(() => setTimeout(() => (tenantsReq = undefined), 5000));
+    tenantsReq.then(setData, () => {});
+  }, []);
+  return data;
 }
 
 /** Taka uses lakh/crore grouping and the ৳ sign: ৳12,34,567.50. */

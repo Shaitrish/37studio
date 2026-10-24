@@ -44,8 +44,8 @@ export default function Overview() {
           <h1>{greeting()}</h1>
           <p>{active.length} project{active.length === 1 ? "" : "s"} in motion, {review.length} waiting for your review.</p>
         </div>
-        <a className="btn" href="#/clients">Companies</a>
-        <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New project</button>
+        <a className="btn" href="#/clients">Brands</a>
+        <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New video</button>
       </div>
 
       <div className="card kpis">
@@ -108,8 +108,8 @@ export default function Overview() {
             <div className="card-h"><h2 className="spacer">Recent projects</h2><a className="btn ghost sm" href="#/projects">View all</a></div>
             {projects && projects.length === 0 ? (
               <Empty icon={<SparkleIcon size={28} />} title="Your first edit is one upload away">
-                Add your company from its website, drop in a long video and pick "Hook reel".
-                <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New project</button>
+                Add your brand from its website, drop in a long video and pick "Hook reel".
+                <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New video</button>
               </Empty>
             ) : <ProjectTable projects={all.slice(0, 8)} />}
           </div>

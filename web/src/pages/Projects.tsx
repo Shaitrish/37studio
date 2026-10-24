@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { BookOpenIcon, ClosedCaptioningIcon, FilmSlateIcon, ImageIcon, MegaphoneIcon, PlusIcon, MagicWandIcon } from "@phosphor-icons/react";
-import { go, Project, cash, useApi, ago } from "../api";
-import { Empty, Seg, Status, projectStatus } from "../ui";
+import { go, Project, cash, useApi, useTenants, ago } from "../api";
+import { Empty, Seg, Status, TenantTag, projectStatus } from "../ui";
 import { NewProjectModal } from "./NewProject";
 
 export const presetIcon: Record<string, typeof FilmSlateIcon> = {
@@ -28,7 +28,7 @@ export default function Projects() {
           <h1>Projects</h1>
           <p>Every edit job: reels, captioned clips, explainers, promos and thumbnails.</p>
         </div>
-        <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New project</button>
+        <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New video</button>
       </div>
       <Seg value={filter} options={filters} onChange={setFilter} />
       <div className="card">
@@ -44,13 +44,14 @@ export default function Projects() {
 }
 
 export function ProjectTable({ projects, hideClient }: { projects: Project[]; hideClient?: boolean }) {
+  const tenants = useTenants();
   return (
     <div className="table-wrap">
       <table className="table">
         <thead>
           <tr>
             <th>Project</th>
-            {!hideClient && <th>Company</th>}
+            {!hideClient && <th>Brand</th>}
             <th>Status</th>
             <th className="num">Cost</th>
             <th className="num">Created</th>
@@ -68,7 +69,7 @@ export function ProjectTable({ projects, hideClient }: { projects: Project[]; hi
                     {p.campaign_name && <span className="pill violet">{p.campaign_name}</span>}
                   </a>
                 </td>
-                {!hideClient && <td className="muted">{p.tenant_name}</td>}
+                {!hideClient && <td className="muted"><TenantTag tenants={tenants} id={p.tenant_id} name={p.tenant_name} /></td>}
                 <td><Status value={projectStatus(p)} /></td>
                 <td className="num">{cash(p.quote?.cost)}</td>
                 <td className="num muted">{ago(p.created_at)}</td>

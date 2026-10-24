@@ -30,7 +30,7 @@ const aiProviders: Provider[] = [
   },
   {
     id: "gemini", title: "Gemini", brands: ["gemini"],
-    what: "Makes images and short video clips for your videos, and reads company websites better. Optional.",
+    what: "Makes images and short video clips for your videos, and reads brand websites better. Optional.",
     get: { label: "Get a key", url: "https://aistudio.google.com/apikey" },
     fields: [{ key: "GEMINI_API_KEY", label: "API key", help: "Google AI Studio → Get API key." }],
     ready: (set) => set("GEMINI_API_KEY"),
@@ -42,6 +42,49 @@ const aiProviders: Provider[] = [
     fields: [{ key: "ELEVENLABS_API_KEY", label: "API key", help: "elevenlabs.io → Developers → API keys." }],
     ready: (set) => set("ELEVENLABS_API_KEY"),
   },
+];
+
+// More models for the editor agent, run through OpenCode: each key adds its provider's newest models to every model picker.
+const agentProviders: Provider[] = [
+  {
+    id: "opencode", title: "OpenCode", brands: ["opencode"],
+    what: "One account for many models (GPT, Grok, Kimi, GLM, DeepSeek and more), billed by OpenCode. A few free models work even without it.",
+    get: { label: "Get a key", url: "https://opencode.ai/auth" },
+    fields: [{ key: "OPENCODE_API_KEY", label: "API key", help: "opencode.ai → sign in → API keys. Or sign in from a terminal: docker compose exec studio opencode auth login." }],
+    ready: (set) => set("OPENCODE_API_KEY"),
+  },
+  {
+    id: "openai", title: "OpenAI", brands: ["openai"], what: "GPT models, billed by OpenAI.",
+    get: { label: "Get a key", url: "https://platform.openai.com/api-keys" },
+    fields: [{ key: "OPENAI_API_KEY", label: "API key" }], ready: (set) => set("OPENAI_API_KEY"),
+  },
+  {
+    id: "xai", title: "xAI", brands: ["xai"], what: "Grok models, billed by xAI.",
+    get: { label: "Get a key", url: "https://console.x.ai" },
+    fields: [{ key: "XAI_API_KEY", label: "API key" }], ready: (set) => set("XAI_API_KEY"),
+  },
+  {
+    id: "openrouter", title: "OpenRouter", brands: ["openrouter"], what: "Hundreds of models from many labs through one key.",
+    get: { label: "Get a key", url: "https://openrouter.ai/settings/keys" },
+    fields: [{ key: "OPENROUTER_API_KEY", label: "API key" }], ready: (set) => set("OPENROUTER_API_KEY"),
+  },
+];
+
+const falProvider: Provider = {
+  id: "fal", title: "fal.ai", brands: ["fal"],
+  what: "Many video models through one key: Seedance, Kling, Veo, Wan and more. Pick which one under Video clips.",
+  get: { label: "Get a key", url: "https://fal.ai/dashboard/keys" },
+  fields: [{ key: "FAL_KEY", label: "API key" }], ready: (set) => set("FAL_KEY"),
+};
+
+// Video models the agent can use for clips. A slash means fal.ai; prices are fal's per second of 720p with sound, so the
+// Costs page is close. Any other fal model ID can be typed in.
+const videoModels: { id: string; label: string; price: string; needs: string }[] = [
+  { id: "gemini-omni-1.1-flash", label: "Gemini Omni (Google)", price: "0.10", needs: "GEMINI_API_KEY" },
+  { id: "bytedance/seedance-2.0/fast/text-to-video", label: "Seedance 2.0 Fast (ByteDance, via fal)", price: "0.2419", needs: "FAL_KEY" },
+  { id: "fal-ai/kling-video/v3/pro/text-to-video", label: "Kling 3.0 Pro (via fal)", price: "0.168", needs: "FAL_KEY" },
+  { id: "fal-ai/veo3.1", label: "Veo 3.1 (Google, via fal)", price: "0.40", needs: "FAL_KEY" },
+  { id: "alibaba/wan-3.0/text-to-video", label: "Wan 3.0 (Alibaba, via fal)", price: "0.10", needs: "FAL_KEY" },
 ];
 
 const socialProviders: Provider[] = [
@@ -81,6 +124,12 @@ const socialProviders: Provider[] = [
     fields: [{ key: "PINTEREST_APP_ID", label: "App ID" }, { key: "PINTEREST_APP_SECRET", label: "App secret" }],
     ready: (set) => set("PINTEREST_APP_ID") && set("PINTEREST_APP_SECRET"),
   },
+];
+
+const currencies: [string, string][] = [
+  ["USD", "US dollar"], ["EUR", "Euro"], ["GBP", "British pound"], ["INR", "Indian rupee"], ["BDT", "Bangladeshi taka"], ["PKR", "Pakistani rupee"],
+  ["CAD", "Canadian dollar"], ["AUD", "Australian dollar"], ["AED", "UAE dirham"], ["SAR", "Saudi riyal"], ["SGD", "Singapore dollar"],
+  ["MYR", "Malaysian ringgit"], ["IDR", "Indonesian rupiah"], ["JPY", "Japanese yen"], ["NGN", "Nigerian naira"], ["BRL", "Brazilian real"],
 ];
 
 const tabs: { id: string; label: string; Icon: Icon }[] = [
@@ -126,8 +175,10 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
     );
   };
   async function save() {
+    if (!/^[A-Za-z]{3}$/.test(s.currency ?? "")) return fail(new Error("Pick a currency, or type its 3-letter code."));
+    if (!(Number(s.fx_rate) > 0)) return fail(new Error(`Enter how many ${s.currency} one US dollar buys, so costs show correctly.`));
     try {
-      const saved = await api<Record<string, string>>("/settings", { method: "PUT", body: s });
+      const saved = await api<Record<string, string>>("/settings", { method: "PUT", body: { ...s, currency: s.currency.toUpperCase() } });
       setData(saved);
       setDisplay(saved);
       toast("Settings saved");
@@ -143,7 +194,7 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
   const local = (usd: number) => money(usd * (Number(s.fx_rate) || 1), s.currency || "USD"); // live preview before saving
   const card = (p: Provider, extra?: React.ReactNode, advanced?: React.ReactNode) =>
     <ProviderCard key={p.id} p={p} keys={keys ?? []} isSet={isSet} onSave={saveKey} extra={extra} advanced={advanced} />;
-  const grouped = new Set([...aiProviders, ...socialProviders].flatMap((p) => p.fields.map((f) => f.key)));
+  const grouped = new Set([...aiProviders, ...agentProviders, ...socialProviders].flatMap((p) => p.fields.map((f) => f.key)));
   const otherKeys = (keys ?? []).filter((k) => !grouped.has(k.name));
 
   return (
@@ -177,7 +228,7 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
                   <Step done={claudeReady} title="Connect Claude" required text="Edits your videos, writes captions and drafts replies." action="Connect" onClick={() => setTab("ai")} brands={["claude"]} />
                   <Step done={isSet("GEMINI_API_KEY")} title="Images and video clips" text="Add a Gemini key to make pictures and short clips for your videos." action="Add" onClick={() => setTab("ai")} brands={["gemini"]} />
                   <Step done={isSet("ELEVENLABS_API_KEY")} title="Voiceovers and music" text="Add an ElevenLabs key for narration, sound effects and music." action="Add" onClick={() => setTab("ai")} brands={["elevenlabs"]} />
-                  <Step done={socialReady > 0} title="Social apps" text={`${socialReady} of ${socialProviders.length} set up. Bluesky and Mastodon need no app: connect them on a company's Social tab.`}
+                  <Step done={socialReady > 0} title="Social apps" text={`${socialReady} of ${socialProviders.length} set up. Bluesky and Mastodon need no app: connect them on a brand's Social tab.`}
                     action="Set up" onClick={() => setTab("social")} brands={["facebook", "instagram", "youtube", "tiktok"]} />
                 </div>
               </div>
@@ -187,15 +238,39 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
 
           {tab === "ai" && (
             <>
+              <h3 className="settings-h">The editor agent</h3>
               {card(aiProviders[0])}
+              <p className="small muted" style={{ margin: "4px 0 0" }}>
+                Want GPT, Grok or other models too? Connect any of these, and their newest models appear in every model menu, next to Claude.
+                {(meta?.qualities ?? []).some((q) => q.harness) && <> Right now: {(meta?.qualities ?? []).filter((q) => q.harness).length} more models.</>}
+              </p>
+              {agentProviders.map((p) => p.id === "opencode" && (meta?.qualities ?? []).some((q) => q.group === "OpenCode Go")
+                ? card({ ...p, what: p.what + " Signed in from the terminal.", ready: () => true }) // `opencode auth login` instead of a key
+                : card(p))}
+              <h3 className="settings-h">Images, video, voice and music</h3>
               {card(aiProviders[1], null, (
                 <div className="form">
                   <Field label="Image model">{input("image_model")}</Field>
                   <Field label="Price per image" hint="USD, for the Costs page">{input("image_price", { type: "number", min: 0, step: 0.001 })}</Field>
-                  <Field label="Video model">{input("video_model")}</Field>
-                  <Field label="Video price" hint="USD per second">{input("video_price_per_sec", { type: "number", min: 0, step: 0.01 })}</Field>
                 </div>
               ))}
+              {card(falProvider)}
+              <Section title="Video clips" sub="Which model makes the short clips the agent puts in videos. Seedance, Kling, Veo and Wan need a fal.ai key; Gemini Omni needs a Gemini key.">
+                <Field label="Video model" full>
+                  <select className="select" value={videoModels.some((m) => m.id === s.video_model) ? s.video_model : "custom"}
+                    onChange={(e) => {
+                      const m = videoModels.find((x) => x.id === e.target.value);
+                      setS({ ...s, video_model: m ? m.id : "", video_price_per_sec: m ? m.price : s.video_price_per_sec });
+                    }}>
+                    {videoModels.map((m) => <option key={m.id} value={m.id}>{m.label}{isSet(m.needs) ? "" : " · needs a key"}</option>)}
+                    <option value="custom">Another fal.ai model…</option>
+                  </select>
+                </Field>
+                {!videoModels.some((m) => m.id === s.video_model) && (
+                  <Field label="fal.ai model ID" hint="from the model's page on fal.ai, like fal-ai/minimax/hailuo-02/standard/text-to-video">{input("video_model", { placeholder: "owner/model/text-to-video" })}</Field>
+                )}
+                <Field label="Price per second" hint="USD, for the Costs page and the spending check">{input("video_price_per_sec", { type: "number", min: 0, step: 0.01 })}</Field>
+              </Section>
               {card(aiProviders[2], meta?.env.eleven && (
                 <div className="form">
                   <Field label="Voice for Bangla videos">{voicePicker("voice_bn", "bn")}</Field>
@@ -216,7 +291,7 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
           {tab === "social" && (
             <>
               <div className="note-box small">
-                Each platform needs a free developer app of your own; you make it once, and every company uses it. Then connect accounts on a company's <b>Social</b> tab.{" "}
+                Each platform needs a free developer app of your own; you make it once, and every brand uses it. Then connect accounts on a brand's <b>Social</b> tab.{" "}
                 <a href={connectGuideURL} target="_blank" rel="noreferrer">Step-by-step guide <ArrowSquareOutIcon size={12} /></a>
               </div>
               {socialProviders.map((p) => card(p))}
@@ -226,10 +301,27 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
 
           {tab === "spending" && (
             <Section title="Spending and currency" sub="AI services charge in US dollars. 37Studio records costs in dollars and shows them in your currency.">
+              <Field label="Ask before media costs more than" hint={`USD per project; the agent asks you before images, clips, voice and music go past it (0 = always ask) · about ${local(Number(s.gen_ask_above_usd) || 0)}`}>{input("gen_ask_above_usd", { type: "number", min: 0, step: 1 })}</Field>
               <Field label="Spending limit per agent turn" hint={`USD; the agent stops if one turn would cost more · about ${local(Number(s.run_budget_usd) || 0)}`}>{input("run_budget_usd", { type: "number", min: 1 })}</Field>
-              <div />
-              <Field label="Your currency" hint="a code such as USD, EUR, GBP, INR or BDT">{input("currency", { maxLength: 3 })}</Field>
-              <Field label="Exchange rate" hint="how much of your currency 1 US dollar buys (1 for USD)">{input("fx_rate", { type: "number", min: 0, step: 0.01 })}</Field>
+              <Field label="Your currency">
+                <select className="select" value={currencies.some((c) => c[0] === s.currency) ? s.currency : "other"}
+                  onChange={(e) => {
+                    const v = e.target.value === "other" ? "" : e.target.value;
+                    // A rate belongs to one currency: USD is always 1; for anything else the old rate would be wrong.
+                    setS({ ...s, currency: v, fx_rate: v === "USD" ? "1" : v === s.currency ? s.fx_rate : "" });
+                  }}>
+                  {currencies.map(([code, name]) => <option key={code} value={code}>{code} · {name}</option>)}
+                  <option value="other">Other…</option>
+                </select>
+              </Field>
+              {currencies.some((c) => c[0] === s.currency)
+                ? <div />
+                : <Field label="Currency code" hint="3 letters, like CHF">{input("currency", { maxLength: 3, placeholder: "CHF", style: { textTransform: "uppercase" } })}</Field>}
+              {s.currency !== "USD" && (
+                <Field label={`How many ${s.currency || "units"} one US dollar buys`} hint={!Number(s.fx_rate) ? "needed to show costs in your currency; check today's rate" : `$10 shows as ${local(10)}`}>
+                  {input("fx_rate", { type: "number", min: 0, step: 0.01, placeholder: "e.g. 123" })}
+                </Field>
+              )}
             </Section>
           )}
 
@@ -408,7 +500,7 @@ function McpSection({ password }: { password: boolean }) {
     <div className="card">
       <div className="card-h" style={{ display: "block" }}>
         <h2>Use 37Studio from other AI apps</h2>
-        <p className="small muted">Claude Code, Claude Desktop, Cursor and other apps that support MCP can manage your companies, videos and posts from their own chat, with the same tools as the Assistant.</p>
+        <p className="small muted">Claude Code, Claude Desktop, Cursor and other apps that support MCP can manage your brands, videos and posts from their own chat, with the same tools as the Assistant.</p>
       </div>
       <div className="card-b stack" style={{ gap: 10 }}>
         <Field label="Server address"><input className="input mono" readOnly value={url} onFocus={(e) => e.target.select()} /></Field>

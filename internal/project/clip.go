@@ -166,7 +166,7 @@ func clipStep(id int64) {
 	}
 }
 
-// ListLibrary is every finished video and image (each project's out/, not drafts) across companies, newest first.
+// ListLibrary is every finished video and image (each project's out/, not drafts) across brands, newest first.
 func ListLibrary(r *http.Request) (any, error) {
 	ps, err := store.Rows("select p.id, p.title, p.tenant_id, t.name as tenant_name, p.parent_id from projects p join tenants t on t.id=p.tenant_id")
 	out := []map[string]any{}

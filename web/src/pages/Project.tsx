@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from
 import { ArrowUpIcon, BookmarkSimpleIcon, CheckCircleIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FileTextIcon, FilmStripIcon, GlobeIcon, ListChecksIcon, PencilLineIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MicrophoneSlashIcon, MusicNotesIcon, SpeakerHighIcon, ImageIcon, PlayIcon, PauseIcon, PaperclipIcon, MagnifyingGlassIcon, SlidersHorizontalIcon, SparkleIcon, SquareIcon, TerminalWindowIcon, TrashIcon, MagicWandIcon, WrenchIcon, XIcon } from "@phosphor-icons/react";
 import { Quality } from "../api";
 import { api, bytes, ChatEvent, clock, fail, FileInfo, go, languageName, Meta, Project, toast, upload, cash, useApi } from "../api";
-import { DropZone, Empty, FileTile, KindIcon, Progress, Seg, Status, projectStatus } from "../ui";
+import { DropZone, Empty, FileTile, KindIcon, ModelOptions, ModelPicker, Progress, Seg, Status, projectStatus } from "../ui";
 import { presetIcon } from "./Projects";
 import { PostsCard, PublishModal } from "./Social";
 import { SaveTemplate } from "./Library";
@@ -127,7 +127,7 @@ export default function ProjectPage({ id }: { id: number }) {
             <BookmarkSimpleIcon size={15} /> Save as template
           </button>
           <button className="btn" disabled={!finals.some((f) => f.kind === "video")} onClick={() => setPublishing(true)}
-            title={finals.some((f) => f.kind === "video") ? "Post to the company's connected social accounts" : "Export a final video first"}>
+            title={finals.some((f) => f.kind === "video") ? "Post to the brand's connected social accounts" : "Export a final video first"}>
             <ShareNetworkIcon size={15} /> Publish
           </button>
           <button className="btn primary" disabled={!p.composition || p.running} onClick={() => act("render", { quality: "high" }, "Export started; it appears in Versions")}
@@ -377,7 +377,7 @@ function BriefCard({ p, meta, reload, onDelete }: { p: Project; meta?: Meta; rel
         <textarea className="textarea" rows={4} value={brief} onChange={(e) => setBrief(e.target.value)} placeholder="No brief." />
         <input className="input" value={focus} onChange={(e) => setFocus(e.target.value)} placeholder="Page or feature this is about (URL or name), optional" aria-label="Focus page or feature" />
         <div className="row wrap">
-          <Seg value={quality} options={(meta?.qualities ?? []).map((q) => ({ value: q.id, label: q.label }))} onChange={setQuality} />
+          <ModelPicker value={quality} qualities={meta?.qualities ?? []} onChange={setQuality} />
           <span className="spacer" />
           <button className="btn" disabled={!dirty} onClick={save}>Save</button>
         </div>
@@ -536,12 +536,7 @@ function Chat({ p, events, qualities, onSend, onStop }: {
               )}
               <select className="cselect" value={quality} onChange={(e) => setQuality(e.target.value)} aria-label="Model for this message"
                 title={qualities.find((q) => q.id === quality)?.note}>
-                <optgroup label="Claude Code">
-                  {qualities.filter((q) => !q.harness).map((q) => <option key={q.id} value={q.id}>{modelName(q.model)}{q.effort === "xhigh" ? " max" : ""}</option>)}
-                </optgroup>
-                <optgroup label="OpenCode">
-                  {qualities.filter((q) => q.harness === "opencode").map((q) => <option key={q.id} value={q.id}>{q.label}</option>)}
-                </optgroup>
+                <ModelOptions qualities={qualities} claudeLabel={(q) => modelName(q.model) + (q.effort === "xhigh" ? " max" : "")} />
               </select>
               <span className="spacer" />
               {p.running && (
@@ -661,7 +656,7 @@ function inline(s: string): ReactNode[] {
  * Dictation with the browser's built-in speech recognition (Chrome, Edge, Safari). No key, no cost.
  * ponytail: Chrome sends the audio to Google's recognizer; switch to ElevenLabs Scribe if that matters.
  */
-function useDictation(videoLang: string, onFinal: (text: string) => void) {
+export function useDictation(videoLang: string, onFinal: (text: string) => void) {
   const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
   const [lang, setLang] = useState(videoLang === "bn" ? "bn-BD" : "en-US");
   const [listening, setListening] = useState(false);
@@ -695,7 +690,7 @@ function useDictation(videoLang: string, onFinal: (text: string) => void) {
 }
 
 /** "claude-opus-5-5" -> "Opus 5.5" */
-const modelName = (id: string) => id.replace(/^.*\//, "").replace(/^claude-/, "").replace(/-(\d+)-(\d+)$/, " $1.$2").replace(/^\w/, (c) => c.toUpperCase());
+export const modelName = (id: string) => id.replace(/^.*\//, "").replace(/^claude-/, "").replace(/-(\d+)-(\d+)$/, " $1.$2").replace(/^\w/, (c) => c.toUpperCase());
 
 /** Inline-playable media list: audio gets a player, images and video a thumbnail. */
 type MediaFile = FileInfo & { item?: string; cost?: number };
@@ -719,6 +714,7 @@ const mediaName = (path: string) => {
 
 function MediaSection({ title, hint, files, empty }: { title: string; hint: string; files: MediaFile[]; empty?: string }) {
   const [playing, setPlaying] = useState<string>();
+  const [pick, setPick] = useState<string>();
   const player = useRef<HTMLAudioElement>(null);
   useEffect(() => () => player.current?.pause(), []);
   if (!files.length && !empty) return null;
@@ -728,6 +724,7 @@ function MediaSection({ title, hint, files, empty }: { title: string; hint: stri
     list.forEach((f) => used.add(f));
     return { ...g, list };
   }).filter((g) => g.list.length);
+  const g = groups.find((x) => x.id === pick) ?? groups[0];
   // One player for the whole list, so starting one track stops the last.
   const toggle = (url: string) => {
     const a = player.current!;
@@ -740,41 +737,42 @@ function MediaSection({ title, hint, files, empty }: { title: string; hint: stri
     <div className="card-b stack" style={{ gap: 12, borderTop: "1px solid var(--border)" }}>
       <div className="row wrap"><h3>{title}</h3><span className="small faint">{hint}</span></div>
       <audio ref={player} onEnded={() => setPlaying(undefined)} hidden />
-      {!files.length ? <p className="small muted">{empty}</p> : groups.map((g) => (
-        <details key={g.id} className="media-group" open>
-          <summary>
-            <g.Icon size={16} /> <strong>{g.label}</strong> <span className="faint">{g.list.length}</span>
-            <CaretRightIcon size={12} className="caret" />
-          </summary>
-          {g.list[0].kind === "audio" ? (
-            <div className="media-list">
-              {g.list.map((f) => (
-                <div key={f.url} className={`media-row ${playing === f.url ? "on" : ""}`}>
-                  <button className="btn icon sm" onClick={() => toggle(f.url)} aria-label={`${playing === f.url ? "Pause" : "Play"} ${mediaName(f.path)}`}>
-                    {playing === f.url ? <PauseIcon size={14} weight="fill" /> : <PlayIcon size={14} weight="fill" />}
-                  </button>
-                  <span className="spacer ellipsis" title={f.path}>{mediaName(f.path)}{f.item && <span className="faint"> · {f.item}</span>}</span>
+      {!files.length ? <p className="small muted">{empty}</p> : <>
+        <div className="media-tabs" role="tablist">
+          {groups.map((x) => (
+            <button key={x.id} role="tab" aria-selected={x === g} className={x === g ? "on" : ""} onClick={() => setPick(x.id)}>
+              <x.Icon size={15} /> {x.label} <span className="count">{x.list.length}</span>
+            </button>
+          ))}
+        </div>
+        {g.list[0].kind === "audio" ? (
+          <div className="media-list">
+            {g.list.map((f) => (
+              <div key={f.url} className={`media-row ${playing === f.url ? "on" : ""}`}>
+                <button className="btn icon sm" onClick={() => toggle(f.url)} aria-label={`${playing === f.url ? "Pause" : "Play"} ${mediaName(f.path)}`}>
+                  {playing === f.url ? <PauseIcon size={14} weight="fill" /> : <PlayIcon size={14} weight="fill" />}
+                </button>
+                <span className="spacer ellipsis" title={f.path}>{mediaName(f.path)}{f.item && <span className="faint"> · {f.item}</span>}</span>
+                {meta(f)}
+                <a className="btn ghost sm icon" href={f.url} download aria-label={`Download ${mediaName(f.path)}`} title="Download"><DownloadSimpleIcon size={14} /></a>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="media-grid">
+            {g.list.map((f) => (
+              <div key={f.url} className="media-item">
+                {f.kind === "image" ? <a href={f.url} target="_blank" rel="noreferrer"><img src={f.url} alt={mediaName(f.path)} loading="lazy" /></a> : <video src={f.url} controls preload="metadata" />}
+                <div className="small row" style={{ gap: 6 }}>
+                  <span className="ellipsis spacer" title={f.path}>{mediaName(f.path)}</span>
                   {meta(f)}
-                  <a className="btn ghost sm icon" href={f.url} download aria-label={`Download ${mediaName(f.path)}`} title="Download"><DownloadSimpleIcon size={14} /></a>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="media-grid">
-              {g.list.map((f) => (
-                <div key={f.url} className="media-item">
-                  {f.kind === "image" ? <a href={f.url} target="_blank" rel="noreferrer"><img src={f.url} alt={mediaName(f.path)} loading="lazy" /></a> : <video src={f.url} controls preload="metadata" />}
-                  <div className="small row" style={{ gap: 6 }}>
-                    <span className="ellipsis spacer" title={f.path}>{mediaName(f.path)}</span>
-                    {meta(f)}
-                  </div>
-                  {f.item && <div className="small faint">{f.item}</div>}
-                </div>
-              ))}
-            </div>
-          )}
-        </details>
-      ))}
+                {f.item && <div className="small faint">{f.item}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+      </>}
     </div>
   );
 }

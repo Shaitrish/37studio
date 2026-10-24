@@ -55,7 +55,7 @@
     <a href="#download">2. Download 37Studio</a>
     <a href="#start">3. Start it</a>
     <a href="#keys">4. AI keys</a>
-    <a href="#company">5. Add a company</a>
+    <a href="#brand">5. Add a brand</a>
     <a href="#social">6. Connect social accounts</a>
     <a href="#replies">7. Inbox replies</a>
     <a href="#running">8. Keep it running</a>
@@ -109,7 +109,7 @@ sudo usermod -aG docker $USER</pre>
       <li><a href="/37studio.zip" download>Download 37studio.zip</a>. It's small; the app itself downloads on the first start.</li>
       <li>Make a folder that will be 37Studio's home, for example <b>Documents/37Studio</b>, and unzip everything into it.</li>
     </ol>
-    <div class="note"><b>Keep this folder.</b> 37Studio creates a <code>data</code> folder inside it with your companies, footage, videos, messages and settings. Moving to a new computer later is copying this folder.</div>
+    <div class="note"><b>Keep this folder.</b> 37Studio creates a <code>data</code> folder inside it with your brands, footage, videos, messages and settings. Moving to a new computer later is copying this folder.</div>
 
     <h2 id="start">3. Start it</h2>
     <div data-os-panel="win">
@@ -155,9 +155,9 @@ sudo usermod -aG docker $USER</pre>
     <p>These have to be API keys. A Google AI Pro, Runway or Kling subscription doesn't include API access; make clips on their site and upload them to a project instead.</p>
     <p>Keys are encrypted on your computer and only ever sent to the provider they belong to.</p>
 
-    <h2 id="company">5. Add your first company</h2>
+    <h2 id="brand">5. Add your first brand</h2>
     <ol>
-      <li><b>Companies → Add from website</b>, paste the company's website and click <b>Scan website</b>.</li>
+      <li><b>Brands → Add from website</b>, paste the brand's website and click <b>Scan website</b>.</li>
       <li>In 5–10 minutes 37Studio collects the logo, colours, fonts and photos, and writes the knowledge base. The page updates by itself.</li>
       <li>Read the <b>Knowledge</b> tab and correct anything wrong: prices, offers, phone numbers. Every video and reply uses it.</li>
       <li>Click <b>New project</b>, answer the questions, and the agent starts. You can watch it work and ask for changes in the chat.</li>
@@ -165,9 +165,9 @@ sudo usermod -aG docker $USER</pre>
 
     <h2 id="social">6. Connect social accounts</h2>
     <div class="note">Every platform, step by step in plain words, is on <a href="/connect">Connect your social accounts</a>, with a copy you can paste into ChatGPT or Claude so it walks you through.</div>
-    <p>Each company's <b>Social</b> tab has a <b>Connect</b> button for every platform: Facebook &amp; Instagram, YouTube, TikTok, LinkedIn, X, Pinterest, Bluesky and Mastodon. You sign in once on the platform's own page, then tick the accounts that belong to this company.</p>
+    <p>Each brand's <b>Social</b> tab has a <b>Connect</b> button for every platform: Facebook &amp; Instagram, YouTube, TikTok, LinkedIn, X, Pinterest, Bluesky and Mastodon. You sign in once on the platform's own page, then tick the accounts that belong to this brand.</p>
     <h3>Facebook and Instagram</h3>
-    <p>Facebook and Instagram connect through a free Meta app of your own, made once in about 15 minutes. On the company's <b>Social</b> tab, click <b>Set up your Meta app</b> (or <b>Connect Facebook &amp; Instagram</b>, which opens the same steps until it's set up):</p>
+    <p>Facebook and Instagram connect through a free Meta app of your own, made once in about 15 minutes. On the brand's <b>Social</b> tab, click <b>Set up your Meta app</b> (or <b>Connect Facebook &amp; Instagram</b>, which opens the same steps until it's set up):</p>
     <ol>
       <li>At <a href="https://developers.facebook.com/apps">developers.facebook.com/apps</a>, click <b>Create app</b>. Pick the use cases <b>Manage everything on your Page</b> and <b>Manage messaging &amp; content on Instagram</b>, plus <b>Engage with customers on Messenger</b> for the Inbox. Connect your business portfolio; it doesn't need to be verified.</li>
       <li>In each use case, click <b>Customize</b> and add <code>pages_show_list</code>, <code>pages_read_engagement</code>, <code>pages_manage_posts</code>, <code>business_management</code>, <code>instagram_basic</code> and <code>instagram_content_publish</code>. For the Inbox, also add <code>pages_read_user_content</code>, <code>pages_manage_engagement</code>, <code>pages_manage_metadata</code>, <code>pages_messaging</code>, <code>instagram_manage_comments</code> and <code>instagram_manage_messages</code>.</li>
@@ -175,7 +175,7 @@ sudo usermod -aG docker $USER</pre>
       <li><b>App settings → Basic</b>: copy the App ID and App secret. If Meta asks for a redirect URI, use <code>http://localhost:8080/api/oauth/meta/callback</code>.</li>
       <li>Leave the app in <b>Development</b> mode. Anyone else who connects Pages needs a role under <b>App roles</b>.</li>
       <li>Paste the App ID, App secret and Login configuration ID into 37Studio and save. They're encrypted on your computer.</li>
-      <li>Click <b>Connect Facebook &amp; Instagram</b>, sign in with a Facebook account that manages the company's Pages, and tick the Pages and Instagram accounts that belong to this company. Instagram must be a Business or Creator account linked to the Page.</li>
+      <li>Click <b>Connect Facebook &amp; Instagram</b>, sign in with a Facebook account that manages the brand's Pages, and tick the Pages and Instagram accounts that belong to this brand. Instagram must be a Business or Creator account linked to the Page.</li>
       <li>For the Inbox to read Instagram messages: in the Instagram app, <b>Settings → Messages and story replies → Connected tools → Allow access to messages</b>.</li>
     </ol>
     <div class="note">You're the admin of your own app, so your Pages and Instagram work straight away for posting and comments. Messenger and Instagram messages from customers appear once Meta approves your app for those permissions in App Review; until then you see messages from people with a role on the app or the Page.</div>
@@ -184,7 +184,7 @@ sudo usermod -aG docker $USER</pre>
     <ol>
       <li>Create the app and add 37Studio's return address to it: <code>http://localhost:8080/api/oauth/<i>name</i>/callback</code>, where <i>name</i> is <code>google</code> for YouTube, or <code>tiktok</code>, <code>linkedin</code>, <code>x</code> or <code>pinterest</code>. X refuses <code>localhost</code>, so its address is <code>http://127.0.0.1:8080/api/oauth/x/callback</code>.</li>
       <li>Paste the app's ID and secret into <b>Settings → Keys</b>. They're encrypted on your computer.</li>
-      <li>On the company's Social tab, click <b>Connect</b> for that platform. For Pinterest, then tick the boards to post to.</li>
+      <li>On the brand's Social tab, click <b>Connect</b> for that platform. For Pinterest, then tick the boards to post to.</li>
     </ol>
     <p>The <a href="https://github.com/Shaitrish/37studio/blob/main/docs/platforms.md">platform guide</a> lists exactly which products, permissions and settings each developer site needs. Until a platform reviews your app, it limits what the app can do: YouTube keeps uploads private, TikTok posts only privately or to the creator's drafts, LinkedIn posts to your own profile (company Pages need LinkedIn's approval), and new Pinterest apps work in Pinterest's sandbox.</p>
     <h3>Bluesky and Mastodon</h3>
@@ -202,7 +202,7 @@ sudo usermod -aG docker $USER</pre>
       <li><b>Claude drafts, you approve:</b> drafts wait in the Inbox marked "Draft ready". One click sends. Recommended.</li>
       <li><b>Claude replies on its own:</b> for when you trust it.</li>
     </ul>
-    <p>Write the company's rules in <b>How Claude should reply</b>: sign-off, language, what never to promise, when to hand over to a person.</p>
+    <p>Write the brand's rules in <b>How Claude should reply</b>: sign-off, language, what never to promise, when to hand over to a person.</p>
 
     <h2 id="running">8. Keep it running</h2>
     <p>Autopilot and auto-replies work while 37Studio runs. Anything that arrives while the computer is off is picked up when it's back.</p>

@@ -10,15 +10,85 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
+	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Shaitrish/37studio/internal/config"
 	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/httpapi"
+	"github.com/Shaitrish/37studio/internal/keys"
 	"github.com/Shaitrish/37studio/internal/store"
 	"github.com/Shaitrish/37studio/internal/textutil"
 )
+
+// Provider names people know, for the pickers. Anthropic is left out: Claude runs through Claude Code's tiers.
+var ocProviders = map[string]string{"opencode": "OpenCode Zen", "opencode-go": "OpenCode Go", "openai": "OpenAI", "xai": "xAI (Grok)",
+	"openrouter": "OpenRouter", "google": "Google", "deepseek": "DeepSeek", "moonshotai": "Moonshot (Kimi)", "zai": "Z.ai (GLM)", "groq": "Groq"}
+
+const ocPerProvider = 8 // newest first; OpenRouter alone lists hundreds
+
+var (
+	ocMu   sync.Mutex
+	ocList []Quality
+	ocAt   time.Time
+	ocKeys int64
+)
+
+var ocHeader = regexp.MustCompile(`(?m)^[\w.-]+/\S+$`)
+
+// OpenCodeQualities lists what OpenCode can run with the keys and logins this copy has: per provider, the newest
+// active models that can call tools. `opencode models` takes a few seconds, so the list is kept until a key changes.
+func OpenCodeQualities() []Quality {
+	ocMu.Lock()
+	defer ocMu.Unlock()
+	if ocList != nil && ocKeys == keys.Version() && time.Since(ocAt) < time.Hour {
+		return ocList
+	}
+	ocAt, ocKeys, ocList = time.Now(), keys.Version(), []Quality{}
+	if _, err := exec.LookPath("opencode"); err != nil {
+		return ocList
+	}
+	cmd := exec.Command("opencode", "models", "--verbose")
+	cmd.Env = Env()
+	out, err := cmd.Output()
+	if err != nil {
+		return ocList
+	}
+	type model struct {
+		ID, ProviderID, Name, Status string
+		Release                      string `json:"release_date"`
+		Cost                         struct{ Input, Output float64 }
+		Capabilities                 struct{ Toolcall bool }
+	}
+	var all []model
+	dec := json.NewDecoder(strings.NewReader(ocHeader.ReplaceAllString(string(out), ""))) // "provider/id" lines, each followed by its JSON
+	for {
+		var m model
+		if dec.Decode(&m) != nil {
+			break
+		}
+		if group := ocProviders[m.ProviderID]; group != "" && m.Status == "active" && m.Capabilities.Toolcall {
+			all = append(all, m)
+		}
+	}
+	sort.SliceStable(all, func(i, j int) bool { return all[i].Release > all[j].Release })
+	n := map[string]int{}
+	for _, m := range all {
+		if n[m.ProviderID]++; n[m.ProviderID] > ocPerProvider {
+			continue
+		}
+		note := fmt.Sprintf("%s through OpenCode. $%.2f in, $%.2f out per million tokens.", m.Name, m.Cost.Input, m.Cost.Output)
+		if m.Cost.Input == 0 && m.Cost.Output == 0 {
+			note = m.Name + " through OpenCode, free while OpenCode offers it."
+		}
+		ocList = append(ocList, Quality{ID: "oc:" + m.ProviderID + "/" + m.ID, Label: m.Name, Model: m.ProviderID + "/" + m.ID, Note: note, Harness: "opencode", Group: ocProviders[m.ProviderID]})
+	}
+	sort.SliceStable(ocList, func(i, j int) bool { return ocList[i].Group < ocList[j].Group })
+	return ocList
+}
 
 func startOpenCode(id int64, p map[string]any, q Quality, text string, announce bool) error {
 	if _, err := exec.LookPath("opencode"); err != nil {

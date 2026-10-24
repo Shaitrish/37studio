@@ -90,7 +90,7 @@ func Save(r *http.Request) (any, error) {
 	id := httpapi.PathID(r)
 	if id == 0 {
 		if strings.TrimSpace(store.Str(b["title"])) == "" || b["tenant_id"] == nil {
-			return nil, httpapi.Bad("company and title are required")
+			return nil, httpapi.Bad("brand and title are required")
 		}
 		p := agent.PresetByID(store.Str(b["kind"]))
 		if b["aspect"] == nil {

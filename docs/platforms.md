@@ -18,7 +18,7 @@ How to set up each platform 37Studio posts to, plus the inbox (Messenger, Instag
 
 ## How connecting works
 
-Each company's **Social** tab has a **Connect** button per platform. For the OAuth platforms (Facebook & Instagram, YouTube, TikTok, LinkedIn, X, Pinterest) you sign in once on the platform's own page with an account that manages the company's Pages, channels or boards, then tick which of the returned accounts belong to that company. A company can have any number of accounts on each platform. Bluesky and Mastodon take a handle and app password, or a server and access token, instead.
+Each brand's **Social** tab has a **Connect** button per platform. For the OAuth platforms (Facebook & Instagram, YouTube, TikTok, LinkedIn, X, Pinterest) you sign in once on the platform's own page with an account that manages the brand's Pages, channels or boards, then tick which of the returned accounts belong to that brand. A brand can have any number of accounts on each platform. Bluesky and Mastodon take a handle and app password, or a server and access token, instead.
 
 Every OAuth platform needs a developer app: the platform only lets an app it knows ask for permission to post. 37Studio has no central server, so for every platform you register your own app (free) and give 37Studio its credentials:
 
@@ -44,20 +44,20 @@ On a server, `STUDIO37_PUBLIC_URL` is `https://your-domain` (the cloud compose f
 
 ### Captions and posting
 
-**Publish** on a project sends one final video to any mix of the company's accounts, now or at a scheduled time. Claude writes a caption for each platform from what the video shows and the company's knowledge base: X and Bluesky stay short (their posts are limited to 280 and 300 characters), LinkedIn reads professional, YouTube gets a title and description, and Pinterest gets a title and description. You can edit every caption before posting, or ask the editor agent for them in the project chat.
+**Publish** on a project sends one final video to any mix of the brand's accounts, now or at a scheduled time. Claude writes a caption for each platform from what the video shows and the brand's knowledge base: X and Bluesky stay short (their posts are limited to 280 and 300 characters), LinkedIn reads professional, YouTube gets a title and description, and Pinterest gets a title and description. You can edit every caption before posting, or ask the editor agent for them in the project chat.
 
 The **Posts** tab shows each upload's status, a link to the live post, and the platform's own error if one fails, with **Retry**. Scheduled posts go out only while 37Studio is running; a post more than 12 hours overdue is marked missed instead of going out late. Tokens live in `37studio.db` in the data folder and are only sent to the platform they belong to.
 
 ## Facebook Pages + Instagram
 
-**Connect Facebook & Instagram** signs in with Facebook Login for Business through your own Meta app and lists the Pages you manage, plus the Instagram Business or Creator account linked to each. 37Studio has no built-in Meta app: until you enter yours, the Connect button asks you to set one up. It takes about 15 minutes, and Company → Social → **Set up your Meta app** walks through the same steps inside the app:
+**Connect Facebook & Instagram** signs in with Facebook Login for Business through your own Meta app and lists the Pages you manage, plus the Instagram Business or Creator account linked to each. 37Studio has no built-in Meta app: until you enter yours, the Connect button asks you to set one up. It takes about 15 minutes, and Brand → Social → **Set up your Meta app** walks through the same steps inside the app:
 
 1. At [developers.facebook.com/apps](https://developers.facebook.com/apps), click **Create app**. Pick the use cases **Manage everything on your Page** and **Manage messaging & content on Instagram**, plus **Engage with customers on Messenger** for the Inbox. Connect your business portfolio; it doesn't need to be verified.
 2. In each use case, click **Customize** and add `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `business_management`, `instagram_basic` and `instagram_content_publish` (plus the [inbox permissions](#inbox-messenger-instagram-and-comments) if you want the Inbox).
 3. **Facebook Login for Business → Configurations → Create**: *User access token*, your Pages and Instagram accounts, the same permissions. Copy its ID; Instagram's video upload needs it.
 4. **App settings → Basic**: copy the App ID and App secret. If Meta asks for a redirect URI, use the one above.
 5. Enter the App ID, App secret and Login configuration ID in **Set up your Meta app** or Settings → Keys, or as `META_APP_ID`, `META_APP_SECRET` and `META_CONFIG_ID` in `.env`. The ID only takes effect together with its secret, and agents never get the secret.
-6. Leave the app in **Development** mode and give your team a role on it under **App roles** (Admin, Developer or Tester): no App Review is needed for people with a role. Each company gives your business portfolio access to its Page (or makes you a Page admin). Its Instagram must be a Business or Creator account linked to that Page.
+6. Leave the app in **Development** mode and give your team a role on it under **App roles** (Admin, Developer or Tester): no App Review is needed for people with a role. Each brand gives your business portfolio access to its Page (or makes you a Page admin). Its Instagram must be a Business or Creator account linked to that Page.
 
 Vertical videos of 3–90 seconds post as Reels; anything else posts as a regular Page video. Meta allows 30 API-published Reels per Page per 24 hours.
 
@@ -66,7 +66,7 @@ Vertical videos of 3–90 seconds post as Reels; anything else posts as a regula
 1. In [console.cloud.google.com](https://console.cloud.google.com) create a project and enable **YouTube Data API v3**.
 2. OAuth consent screen: External, with the `youtube.upload` and `youtube.readonly` scopes. Set it to **In production**: in Testing, Google expires the login after 7 days. Unverified apps show a warning screen during sign-in; continue past it.
 3. Credentials → OAuth client ID → *Web application*, with the redirect URI above. Put the ID and secret in `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (Settings → Keys or `.env`).
-4. Company → Social → **Connect YouTube** and pick the channel.
+4. Brand → Social → **Connect YouTube** and pick the channel.
 
 Until the project passes YouTube's free API audit, YouTube keeps every upload **private**. Apply through the *YouTube API Services audit and quota extension* form. The default daily quota also allows only a handful of uploads.
 
@@ -74,9 +74,9 @@ Until the project passes YouTube's free API audit, YouTube keeps every upload **
 
 1. At [developers.tiktok.com](https://developers.tiktok.com) create an app with the **Desktop** platform (the only kind TikTok lets redirect to `http://localhost`; 37Studio uses PKCE for it) and the redirect URI above. On a server with a real HTTPS domain, use the **Web** platform with the `https://` redirect instead.
 2. Add **Login Kit** and **Content Posting API** (turn on Direct Post) with the scopes `user.info.basic`, `video.publish`, `video.upload`. Put the client key and secret in `TIKTOK_CLIENT_KEY` and `TIKTOK_CLIENT_SECRET` (Settings → Keys or `.env`).
-3. Company → Social → **Connect TikTok**.
+3. Brand → Social → **Connect TikTok**.
 
-Until TikTok reviews the app, use its Sandbox and add each company's TikTok account as a target user. Until TikTok audits the app, direct posts must be **Only me**; or choose **Send to TikTok drafts** in the Publish dialog and the account owner taps Post in the TikTok app. Each company signs in with its own TikTok account, since TikTok has no agency access.
+Until TikTok reviews the app, use its Sandbox and add each brand's TikTok account as a target user. Until TikTok audits the app, direct posts must be **Only me**; or choose **Send to TikTok drafts** in the Publish dialog and the account owner taps Post in the TikTok app. Each brand signs in with its own TikTok account, since TikTok has no agency access.
 
 ## LinkedIn
 
@@ -85,7 +85,7 @@ Posts videos to the profile of the member who signs in, and, with LinkedIn's app
 1. At [linkedin.com/developers](https://www.linkedin.com/developers/apps) create an app. LinkedIn asks for a LinkedIn Page to associate it with.
 2. Under **Products**, add **Sign In with LinkedIn using OpenID Connect** and **Share on LinkedIn**. Together they grant the scopes 37Studio asks for: `openid profile w_member_social`.
 3. Under **Auth**, add the redirect URI above, and copy the Client ID and Client Secret into `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` (Settings → Keys or `.env`).
-4. Company → Social → **Connect LinkedIn**.
+4. Brand → Social → **Connect LinkedIn**.
 
 **Company Pages** need LinkedIn's **Community Management API**, which LinkedIn approves per app. Once it's approved, set the environment variable `LINKEDIN_PAGES=1`, restart, and connect again: the Pages you administer appear next to your profile.
 
@@ -96,7 +96,7 @@ LinkedIn tokens last 60 days. After that, posts to the account fail with a sign-
 1. At [developer.x.com](https://developer.x.com) create a project and an app inside it.
 2. In the app's **User authentication settings**, turn on **OAuth 2.0**, choose the type **Web App, Automated App or Bot** (a confidential client), set the app permissions to **Read and write**, and add the redirect URI above as a callback URI. X also asks for a website URL; any page about you works.
 3. Under **Keys and tokens**, copy the OAuth 2.0 **Client ID** and **Client Secret** into `X_CLIENT_ID` and `X_CLIENT_SECRET` (Settings → Keys or `.env`).
-4. Company → Social → **Connect X**. 37Studio signs in with OAuth 2.0 and PKCE and asks for `tweet.read tweet.write users.read media.write offline.access`.
+4. Brand → Social → **Connect X**. 37Studio signs in with OAuth 2.0 and PKCE and asks for `tweet.read tweet.write users.read media.write offline.access`.
 
 Posting needs an X API access level that allows creating posts and uploading media; check what your developer account's plan includes before connecting.
 
@@ -104,12 +104,12 @@ Posting needs an X API access level that allows creating posts and uploading med
 
 ## Pinterest
 
-Posts video Pins to the boards you choose. Each board is an account in 37Studio, so a company can post to one board or several.
+Posts video Pins to the boards you choose. Each board is an account in 37Studio, so a brand can post to one board or several.
 
 1. At [developers.pinterest.com](https://developers.pinterest.com) create an app (Pinterest asks for a business account) and add the redirect URI above.
 2. Copy the app ID and secret into `PINTEREST_APP_ID` and `PINTEREST_APP_SECRET` (Settings → Keys or `.env`). 37Studio asks for `boards:read pins:read pins:write user_accounts:read`.
 3. New apps get **Trial** access, which only allows creating Pins through Pinterest's sandbox API. Until Pinterest grants **Standard** access, set the environment variable `PINTEREST_API=https://api-sandbox.pinterest.com` and restart. Remove it once Standard access is granted.
-4. Company → Social → **Connect Pinterest**, then tick the boards that belong to this company.
+4. Brand → Social → **Connect Pinterest**, then tick the boards that belong to this brand.
 
 Each Pin gets a title and a description from the captions.
 
@@ -118,27 +118,27 @@ Each Pin gets a title and a description from the captions.
 No developer app needed.
 
 1. In Bluesky, open **Settings → Privacy and security → App passwords** and create one for 37Studio. An app password can post but can't change the account's password or delete it.
-2. Company → Social → **Connect Bluesky**, and enter the handle (for example `yourshop.bsky.social`) and the app password. For an account on a self-hosted PDS, also enter its host.
+2. Brand → Social → **Connect Bluesky**, and enter the handle (for example `yourshop.bsky.social`) and the app password. For an account on a self-hosted PDS, also enter its host.
 
 ## Mastodon
 
 No developer app needed.
 
 1. On your Mastodon server, open **Preferences → Development → New application**. Give it a name and the scopes `read:accounts`, `write:media` and `write:statuses`, and save. Open it and copy **Your access token**.
-2. Company → Social → **Connect Mastodon**, and enter the server URL (for example `https://mastodon.social`) and the token.
+2. Brand → Social → **Connect Mastodon**, and enter the server URL (for example `https://mastodon.social`) and the token.
 
 ## Inbox: Messenger, Instagram and comments
 
-**Inbox** in the sidebar shows Messenger, Instagram and WhatsApp messages, plus Facebook and Instagram comments, for every connected account, newest first, with a "needs reply" filter. The other platforms are for publishing only. Pick a message, click **Draft with AI** (Claude writes a reply from that company's `knowledge.md`, in the customer's language, and says a team member will follow up when the answer isn't there), edit, and **Send**. Nothing goes out without a person clicking Send unless you turn on auto-replies. A draft costs about $0.05 and counts toward the company's costs.
+**Inbox** in the sidebar shows Messenger, Instagram and WhatsApp messages, plus Facebook and Instagram comments, for every connected account, newest first, with a "needs reply" filter. The other platforms are for publishing only. Pick a message, click **Draft with AI** (Claude writes a reply from that brand's `knowledge.md`, in the customer's language, and says a team member will follow up when the answer isn't there), edit, and **Send**. Nothing goes out without a person clicking Send unless you turn on auto-replies. A draft costs about $0.05 and counts toward the brand's costs.
 
 It reads the Graph API live while the page is open (refreshing every minute), so Pages and Instagram need no public address.
 
-**Auto-replies** (Company → Social → Inbox replies): *Off*, *Claude drafts, you approve* (drafts wait in the Inbox marked "Draft ready", prefilled for one click), or *Claude replies on its own*. **How Claude should reply** on the same card holds the company's own rules (sign-off, language, what never to promise, when to hand over to a person). They are saved as `replies.md` next to `knowledge.md` and added to every draft; they override the default style but never the "facts only from the knowledge base" rule. A background loop checks every 2 minutes while 37Studio runs. Whatever arrived while the computer was off is answered when it's back, if the platform still allows it: messages within 24 hours, comments up to 2 days old. At most 20 replies go out per round, so a flood can't run up the Claude bill.
+**Auto-replies** (Brand → Social → Inbox replies): *Off*, *Claude drafts, you approve* (drafts wait in the Inbox marked "Draft ready", prefilled for one click), or *Claude replies on its own*. **How Claude should reply** on the same card holds the brand's own rules (sign-off, language, what never to promise, when to hand over to a person). They are saved as `replies.md` next to `knowledge.md` and added to every draft; they override the default style but never the "facts only from the knowledge base" rule. A background loop checks every 2 minutes while 37Studio runs. Whatever arrived while the computer was off is answered when it's back, if the platform still allows it: messages within 24 hours, comments up to 2 days old. At most 20 replies go out per round, so a flood can't run up the Claude bill.
 
 Meta setup, on top of the Facebook + Instagram steps:
 
 1. In the Meta app, add the **Engage with customers on Messenger** use case (`pages_messaging`). In *Manage everything on your Page* add `pages_manage_engagement`, `pages_manage_metadata` and `pages_read_user_content`. In the Instagram use case, under *API setup with Facebook login*, add the messaging permission (`instagram_manage_messages`) and `instagram_manage_comments`.
-2. Create a Login configuration with those six plus the six publishing permissions, put its ID in `META_CONFIG_ID`, and reconnect each company on its Social tab.
+2. Create a Login configuration with those six plus the six publishing permissions, put its ID in `META_CONFIG_ID`, and reconnect each brand on its Social tab.
 3. In the Instagram app: Settings → Messages and story replies → Message controls → Connected tools → **Allow access to messages**.
 4. Until Meta grants your app Advanced Access through App Review and Business Verification, the inbox only shows messages from people with a role on the app or the Page. Test with a team account; real customers appear after approval. Comments work without it.
 
@@ -148,7 +148,7 @@ Messenger and Instagram allow free-form replies within 24 hours of the customer'
 
 Inbox only: customers' WhatsApp messages appear in the Inbox; videos are not posted to WhatsApp.
 
-Company → Social → **Connect WhatsApp**. Meta delivers WhatsApp messages only by webhook, to a public HTTPS address, and a copy on someone's computer has none. There are two ways to give it one:
+Brand → Social → **Connect WhatsApp**. Meta delivers WhatsApp messages only by webhook, to a public HTTPS address, and a copy on someone's computer has none. There are two ways to give it one:
 
 - **A tunnel straight to your copy (recommended).** A Cloudflare Tunnel publishes only the path `/webhooks/meta` of your 37Studio on a hostname of yours. Meta posts each message to it and 37Studio stores it in `wa_messages` at once; nothing waits anywhere else. 37Studio accepts a post only if it is signed with your Meta app's secret, and that path skips `STUDIO37_PASSWORD` because Meta can't send it.
 - **[Your own relay](#run-your-own-relay-whatsapp)**, if you can't run a tunnel: a small Cloudflare Worker that holds messages until your copy pulls them.

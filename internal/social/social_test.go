@@ -63,7 +63,7 @@ func TestMetaApp(t *testing.T) {
 	}
 }
 
-// An auto-reply that carries a link or number the company never wrote down waits for the editor.
+// An auto-reply that carries a link or number the brand never wrote down waits for the editor.
 func TestUnsourced(t *testing.T) {
 	config.DataDir = t.TempDir()
 	os.MkdirAll(files.TenantRoot(3), 0o755)

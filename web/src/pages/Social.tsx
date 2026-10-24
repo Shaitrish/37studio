@@ -70,7 +70,7 @@ function AccountLabel({ a }: { a: Pick<SocialAccount, "platform" | "name" | "pic
   );
 }
 
-/** Company → Social: connect accounts through each platform's own sign-in, then pick which belong to this company. */
+/** Brand → Social: connect accounts through each platform's own sign-in, then pick which belong to this brand. */
 export function SocialTab({ tenantId }: { tenantId: number }) {
   const { data, reload } = useApi<SocialInfo>(`/tenants/${tenantId}/social`);
   const pendingKey = location.hash.split("/")[4]; // the OAuth callback lands on #/clients/<id>/social/<key>
@@ -100,13 +100,13 @@ export function SocialTab({ tenantId }: { tenantId: number }) {
           </div>
         ) : (
           <Empty icon={<ShareNetworkIcon size={28} />} title="No accounts connected">
-            Sign in once per platform with an account that manages the company's Pages or channels.
+            Sign in once per platform with an account that manages the brand's Pages or channels.
           </Empty>
         )}
         <div className="card-b row wrap" style={{ borderTop: "1px solid var(--border)" }}>
           {providers.map((p) => (
             <button key={p.id} className="btn" disabled={!data?.ready[p.id] && p.id !== "meta"} onClick={() => data?.ready[p.id] ? connect(p.id) : setMetaApp(true)}
-              title={data?.ready[p.id] ? "Sign in, then pick the accounts that belong to this company" : p.id === "meta" ? "Set up your Meta app first" : "Add its app keys in Settings → Social apps first"}>
+              title={data?.ready[p.id] ? "Sign in, then pick the accounts that belong to this brand" : p.id === "meta" ? "Set up your Meta app first" : "Add its app keys in Settings → Social apps first"}>
               <p.Icon size={15} /> Connect {p.label}
             </button>
           ))}
@@ -135,7 +135,7 @@ export function SocialTab({ tenantId }: { tenantId: number }) {
           <p className="small muted" style={{ margin: 0 }}>
             Checks every 2 minutes while 37Studio is running on this computer. Messages that came in while it was off get answered when
             it's back, if the platform still allows a reply (24 hours for messages, and comments up to 2 days old). Claude uses only the
-            company's knowledge base; when the answer isn't there, it says a team member will reply.
+            brand's knowledge base; when the answer isn't there, it says a team member will reply.
           </p>
           {data && <ReplyRules tenantId={tenantId} value={data.replies} onSaved={reload} />}
         </div>
@@ -157,7 +157,7 @@ export function SocialTab({ tenantId }: { tenantId: number }) {
   );
 }
 
-/** The company's own rules for replies: Claude follows them in every draft and auto-reply, ahead of its default style. */
+/** The brand's own rules for replies: Claude follows them in every draft and auto-reply, ahead of its default style. */
 function ReplyRules({ tenantId, value, onSaved }: { tenantId: number; value: string; onSaved: () => void }) {
   const [text, setText] = useState(value);
   useEffect(() => setText(value), [value]);
@@ -226,7 +226,7 @@ function ConnectPasted({ tenantId, kind, onDone }: { tenantId: number; kind: key
 }
 
 /** The user's own Meta app, which Facebook and Instagram sign in through: in Development mode the admin and anyone with
- *  an app role can connect Pages without App Review. Saved as keys (Settings → Keys), so it applies to every company. */
+ *  an app role can connect Pages without App Review. Saved as keys (Settings → Keys), so it applies to every brand. */
 function OwnMetaApp({ current, redirect, onDone }: { current: string; redirect: string; onDone: () => void }) {
   const [f, setF] = useState({ META_APP_ID: current, META_APP_SECRET: "", META_CONFIG_ID: "" });
   const [busy, setBusy] = useState(false);
@@ -260,7 +260,7 @@ function OwnMetaApp({ current, redirect, onDone }: { current: string; redirect: 
         <p className="small faint" style={{ margin: 0 }}>
           This covers posting to your Pages and Instagram, and comments in the Inbox. Messenger and Instagram messages from customers
           still need Meta's App Review on any app; until then only people with a role on your app show up. After saving, connect
-          Facebook &amp; Instagram again on each company. The secret is stored encrypted on this computer and never shown to the agents.
+          Facebook &amp; Instagram again on each brand. The secret is stored encrypted on this computer and never shown to the agents.
         </p>
       </div>
     </Modal>
@@ -279,7 +279,7 @@ function PickAccounts({ k, onDone }: { k: string; onDone: () => void }) {
   const save = () => api<{ connected: number }>(`/social/pending/${k}`, { body: { accounts: picked.map(id) } })
     .then((r) => { toast(`Connected ${r.connected} account${r.connected === 1 ? "" : "s"}`); onDone(); }, fail);
   return (
-    <Modal title="Which accounts belong to this company?" sub="Untick any that belong to your other companies." onClose={onDone}
+    <Modal title="Which accounts belong to this brand?" sub="Untick any that belong to your other brands." onClose={onDone}
       footer={<><button className="btn" onClick={onDone}>Cancel</button><button className="btn primary" disabled={!picked.length} onClick={save}>Connect {picked.length}</button></>}>
       <div className="stack" style={{ gap: 4 }}>
         {data.accounts.map((a) => (
@@ -293,7 +293,7 @@ function PickAccounts({ k, onDone }: { k: string; onDone: () => void }) {
   );
 }
 
-/** Project → Publish: one video, any mix of the company's accounts, a caption per platform, now or scheduled. */
+/** Project → Publish: one video, any mix of the brand's accounts, a caption per platform, now or scheduled. */
 export function PublishModal({ p, onClose, onQueued }: { p: Project; onClose: () => void; onQueued: () => void }) {
   const videos = (p.outputs ?? []).filter((f) => f.kind === "video");
   const { data } = useApi<SocialInfo>(`/tenants/${p.tenant_id}/social`);
@@ -366,7 +366,7 @@ export function PublishModal({ p, onClose, onQueued }: { p: Project; onClose: ()
           <div className="stack" style={{ gap: 12 }}>
             <div className="row">
               <span className="spacer" style={{ fontSize: 13, fontWeight: 500 }}>Captions</span>
-              <button className="btn sm" disabled={!!busy} onClick={write} title="Claude writes each caption from the video, brief and company knowledge base">
+              <button className="btn sm" disabled={!!busy} onClick={write} title="Claude writes each caption from the video, brief and brand knowledge base">
                 <SparkleIcon size={14} /> {busy === "ai" ? "Writing…" : "Write with AI"}
               </button>
             </div>

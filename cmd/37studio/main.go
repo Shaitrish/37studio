@@ -164,7 +164,7 @@ func getMeta(r *http.Request) (any, error) {
 	_, ffErr := exec.LookPath("ffmpeg")
 	return map[string]any{
 		"presets":    agent.Presets,
-		"qualities":  agent.Qualities,
+		"qualities":  agent.AllQualities(),
 		"hf_version": config.HFVersion,
 		"version":    update.Version,
 		"data_dir":   config.DataDir,

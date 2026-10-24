@@ -152,6 +152,9 @@ func Image(pid, tenant int64, prompt, aspect, size string, refs []string, out st
 }
 
 func Video(pid, tenant int64, prompt, aspect, firstFrame, out string) error {
+	if m := store.Setting("video_model"); IsFal(m) {
+		return falVideo(pid, tenant, m, prompt, aspect, firstFrame, out)
+	}
 	input := []map[string]any{{"type": "text", "text": prompt}}
 	if firstFrame != "" {
 		part, err := imagePart(firstFrame)

@@ -18,7 +18,7 @@ The internals: how a job flows, the agent, HyperFrames, transcription, costs, th
 **Claude Code does the editing. HyperFrames renders. Go serves. React is the UI.** Everything runs in one Docker container:
 
 - **`37studio`**, one Go binary: the HTTP API, the web UI's files, SQLite (`data/37studio.db`, pure Go, no cgo), the background loops (post queue, Autopilot, the video queue, inbox auto-replies), and the CLI commands the agent calls (`37studio gen`, `37studio clip`, `37studio transcribe`).
-- **Claude Code** (`claude -p`), started per agent turn in the project's folder. OpenCode is a second harness for other frontier models: Kimi K3, Qwen 3.8 Max, GLM 5.3 and DeepSeek.
+- **Claude Code** (`claude -p`), started per agent turn in the project's folder. OpenCode is a second harness for every other model: whatever `opencode models` lists for the keys and logins this copy has (OpenCode Zen and Go, OpenAI, xAI, OpenRouter…).
 - **HyperFrames** (`npx hyperframes`), pinned by `HF_VERSION`: compositions, the live preview player, the timeline editor (HyperFrames Studio) and `render`.
 - **Chrome** (HyperFrames' own Chrome for Testing on amd64, Playwright's headless shell on arm64), **ffmpeg**, and a Python venv with **faster-whisper** and **yt-dlp**.
 - **The web UI** (`web/`), React with plain CSS, built to static files the Go server serves.
@@ -27,25 +27,25 @@ Nothing a copy needs runs on a server of ours. Outside the container there are t
 
 ## How a job flows
 
-1. **Company.** *Add from website or folder* builds a knowledge base of the company in two stages. First `hyperframes capture` (no tokens) grabs pages, assets, fonts, screenshots, CSS variables and computed styles. Then an agent sorts every asset into the brand library and writes:
+1. **Brand.** *Add from website or folder* builds a knowledge base of the brand in two stages. First `hyperframes capture` (no tokens) grabs pages, assets, fonts, screenshots, CSS variables and computed styles. Then an agent sorts every asset into the brand library and writes:
    - `design.md`: the design system as a HyperFrames design spec (exact colors by role, type scale, fonts, radii, spacing, shadows, button/card/nav styles). It is copied into every project's `comp/`, where HyperFrames treats it as brand truth.
    - `knowledge.md`: what the business does, offers, proof, tone, site structure and video ideas.
    - `assets.json`: a caption for every file in the library (what it shows, which site section it came from, source URL, what it is good for). Editors can fix captions or move files between folders in the UI. If `GEMINI_API_KEY` is set, capture adds Gemini Vision descriptions.
-   - `profile.json`, which fills the company form (only fields still empty).
+   - `profile.json`, which fills the brand form (only fields still empty).
 
-   Brand library folders: `logo`, `people`, `images`, `graphics` (SVG icons and illustrations), `videos`, `fonts`, `audio`, `design` (screenshots, raw tokens), `other`. You can also add a company by hand. Companies are called tenants in the code.
+   Brand library folders: `logo`, `people`, `images`, `graphics` (SVG icons and illustrations), `videos`, `fonts`, `audio`, `design` (screenshots, raw tokens), `other`. You can also add a brand by hand. Brands are called tenants in the database and live in `internal/company`.
 
-   **From a project folder.** The same dialog takes the company's own folder (a website, app or docs project), with or without a website. The browser uploads a copy to `tenants/<id>/source/`, since Docker can't see the user's disk. Dependencies, build output, hidden files and anything that looks like a secret (`.env`, keys, databases) are left out twice: in the browser, and in `source.go`, because every agent may read the folder and so send it to Anthropic. The scan reads the README, manifests, marketing pages, locale strings, theme and CSS tokens and public assets, and copies real logos, images and fonts into the library. Every project agent also gets the folder as a read-only reference, so a video about a feature can use its real screens, UI text and flows. Choosing the folder again replaces the copy.
-2. **Campaign (optional).** Groups a company's videos around one launch, offer or product. Its brief reaches every video's agent.
-3. **Project.** *New project* is a short chat: company, campaign (or a new one), what to make, which page or feature it is about (a URL, or a feature name the agent finds on their site), where it runs, length, brief, footage (optional) and quality. No footage is fine: the agent builds from the page, the knowledge base and the brand library.
+   **From a project folder.** The same dialog takes the brand's own folder (a website, app or docs project), with or without a website. The browser uploads a copy to `tenants/<id>/source/`, since Docker can't see the user's disk. Dependencies, build output, hidden files and anything that looks like a secret (`.env`, keys, databases) are left out twice: in the browser, and in `source.go`, because every agent may read the folder and so send it to Anthropic. The scan reads the README, manifests, marketing pages, locale strings, theme and CSS tokens and public assets, and copies real logos, images and fonts into the library. Every project agent also gets the folder as a read-only reference, so a video about a feature can use its real screens, UI text and flows. Choosing the folder again replaces the copy.
+2. **Campaign (optional).** Groups a brand's videos around one launch, offer or product. Its brief reaches every video's agent.
+3. **Project.** *New project* is a short chat: brand, campaign (or a new one), what to make, which page or feature it is about (a URL, or a feature name the agent finds on their site), where it runs, length, brief, footage (optional) and quality. No footage is fine: the agent builds from the page, the knowledge base and the brand library.
 4. **Agent.** The app runs `claude -p` in the project folder. The agent probes and transcribes the footage, asks up to 3 questions if it is blocked, cuts with ffmpeg, and builds a HyperFrames composition in `comp/`.
 5. **Preview and edit.** The project page plays `comp/index.html` live in `<hyperframes-player>`, with no render needed. Chat with the agent to iterate, or click **Edit timeline** to open HyperFrames Studio and edit by hand: drag, trim and split clips, change text, timing and audio. Studio saves to the same files; on its next turn the agent reads your edits from `hyperframes history`, builds on them, and can ask Studio which element you selected ("make *this* bigger").
    Studio only binds `127.0.0.1` and serves from `/`, so `studio.go` gives each open editor its own port, starting at `STUDIO37_STUDIO_PORT` (3100), and reverse-proxies it behind the app's password. The UI opens it at the page's own host and protocol on that port. Docker publishes 3100–3109, so up to ten editors can be open at once.
-6. **Export.** *Export final* runs `hyperframes render` into `out/`. Anything in `out/` is a finished video or image, and the **Library** page lists every project's finished files in one place, filterable by company and type.
-   **Templates.** *Save as template* (on a project, or on a video in the Library) copies the project's `comp/` into `templates/<id>/`, with a thumbnail from its export (`template.go`). Dot folders such as HyperFrames history are left out. A template belongs to one company, or to every company. New project asks "Start from a template?" and puts a copy in the new project's `comp/`; the first prompt tells the agent to keep the design (layout, fonts, motion, captions, intro and outro) and swap in the new content. Videos queued from a templated source inherit it.
-   **Several videos from one source.** *New project* asks "one video, or several?". The agent transcribes the source, plans the videos (asking the editor to confirm unless the brief says go), and queues each with `37studio clip --title … --from … --to … --brief …` (`clip.go`). Each video becomes its own project with the source's company, campaign, format, length and quality. It shares the recording by hard link and gets a copy of the transcript, so nothing is copied or transcribed twice. `clipLoop` builds and exports the queued videos one at a time, after any Autopilot video. The source project lists them on its *Videos* tab.
-7. **Publish.** *Publish* posts a final video to any mix of the company's connected accounts, now or on a schedule, with a caption per platform (written by Claude on request, or by the agent when you ask in chat; saved in `work/social.json`). `postLoop` uploads due posts one at a time. See [platforms.md](platforms.md).
-8. **Autopilot (optional).** A content plan per company makes, renders, captions and schedules videos on its own. See [Autopilot](#autopilot).
+6. **Export.** *Export final* runs `hyperframes render` into `out/`. Anything in `out/` is a finished video or image, and the **Library** page lists every project's finished files in one place, filterable by brand and type.
+   **Templates.** *Save as template* (on a project, or on a video in the Library) copies the project's `comp/` into `templates/<id>/`, with a thumbnail from its export (`template.go`). Dot folders such as HyperFrames history are left out. A template belongs to one brand, or to every brand. New project asks "Start from a template?" and puts a copy in the new project's `comp/`; the first prompt tells the agent to keep the design (layout, fonts, motion, captions, intro and outro) and swap in the new content. Videos queued from a templated source inherit it.
+   **Several videos from one source.** *New project* asks "one video, or several?". The agent transcribes the source, plans the videos (asking the editor to confirm unless the brief says go), and queues each with `37studio clip --title … --from … --to … --brief …` (`clip.go`). Each video becomes its own project with the source's brand, campaign, format, length and quality. It shares the recording by hard link and gets a copy of the transcript, so nothing is copied or transcribed twice. `clipLoop` builds and exports the queued videos one at a time, after any Autopilot video. The source project lists them on its *Videos* tab.
+7. **Publish.** *Publish* posts a final video to any mix of the brand's connected accounts, now or on a schedule, with a caption per platform (written by Claude on request, or by the agent when you ask in chat; saved in `work/social.json`). `postLoop` uploads due posts one at a time. See [platforms.md](platforms.md).
+8. **Autopilot (optional).** A content plan per brand makes, renders, captions and schedules videos on its own. See [Autopilot](#autopilot).
 
 ## The editor agent
 
@@ -53,7 +53,8 @@ The agent's instructions (the harness) are in `internal/agent/agent.go`: `harnes
 
 Each turn is one headless Claude Code run: `--output-format stream-json`, streamed into the project chat; `--max-budget-usd` from Settings caps its spend; the user's own Claude Code hooks are disabled so they can't steer it; the prompt goes over stdin. Sessions are resumed, so the agent keeps its context across turns (they live in the `claude-home` volume).
 
-- **Quality tiers** pick the model and effort: Quick is Haiku 5.5 (low), Draft is Sonnet 5.5 (medium), Standard is Opus 5.5 (high), Premium is Opus 5.5 (xhigh). The OpenCode tiers run Kimi K3, Qwen 3.8 Max, GLM 5.3 and DeepSeek V4 (`internal/agent/opencode.go`), for visual work and cheaper edits; they need an OpenCode login (`docker compose exec studio opencode auth login`). The tier can change per message.
+- **Quality tiers** pick the model and effort: Quick is Haiku 5.5 (low), Draft is Sonnet 5.5 (medium), Standard is Opus 5.5 (high), Premium is Opus 5.5 (xhigh). OpenCode's models are listed live (`OpenCodeQualities` in `internal/agent/opencode.go`): `opencode models --verbose`, per provider the 8 newest active models that can call tools, cached until a key changes. Their ids are `oc:<provider>/<model>`; the old `kimi`, `qwen`, `glm` and `deepseek` tiers saved on projects still resolve. Keys in Settings (`OPENCODE_API_KEY`, `OPENAI_API_KEY`, `XAI_API_KEY`, `OPENROUTER_API_KEY`) reach OpenCode through the agent's environment; `opencode auth login` works too. The model can change per message.
+- **Generated media** goes through `37studio gen` (`internal/agent/generate.go`, `internal/gen`). A video model setting with a slash is a fal.ai endpoint (`internal/gen/fal.go`: queue, poll, download; a first frame switches to its image-to-video endpoint); without one it is Gemini. Before each generation the CLI adds up the project's media spend, and past `gen_ask_above_usd` (Settings → Spending) it exits with code 3 and a message telling the agent to ask the editor and re-run with `--approved`.
 - **Permissions.** `STUDIO37_AGENT_PERMISSIONS=safe` (the default) gives the agent an allowlist: file edits, ffmpeg/ffprobe, `npx hyperframes`, `37studio` and a few shell basics, with no general-purpose runner (bare `npx`, python3, node). It is not a security boundary: the agent's environment holds the AI keys `37studio gen` needs, and ffmpeg and WebFetch reach the network. `bypass` lets it run any command; the launcher and the cloud compose file set it, because the container is the sandbox. Claude Code refuses bypass mode as root, so the image runs as the unprivileged `node` user. Agents don't get the platform apps' secrets (variables ending in `_SECRET`).
 - **Generated media.** The harness lists `37studio gen image|video|voice|sfx|music` under "Paid AI media" and tells the agent to use them only when the footage and brand library can't do the job; on Autopilot it decides alone. The agent never picks a provider or model: `genAny` sends images and video to Gemini (`image_model`, `video_model` in Settings) and voice, sound effects and music to ElevenLabs (`voice_model`), so a new provider needs no prompt change (see CONTRIBUTING.md). Without the key the command fails with "GEMINI_API_KEY is not set" and the agent carries on without it. Each generation's cost is recorded against the project in `$STUDIO37_PROJECT`.
 - **Captions and replies** use one tool-less Claude turn each (Sonnet, low effort), not the agent.
@@ -81,7 +82,7 @@ The agent transcribes speech with `37studio transcribe <file> --language <code> 
 
 ## Autopilot
 
-Each company can have content plans: what the videos are about, video type, length, format, language, quality, which days and time to post, which accounts, and whether to wait for approval. Three hours before each slot the scheduler starts a project; the agent picks a topic the company hasn't covered yet, builds and checks the video in one turn without asking questions, and writes the captions. The app renders it and queues the posts. With approval on (the default) the video waits on its project page and on Overview for one click; otherwise it posts at the slot.
+Each brand can have content plans: what the videos are about, video type, length, format, language, quality, which days and time to post, which accounts, and whether to wait for approval. Three hours before each slot the scheduler starts a project; the agent picks a topic the brand hasn't covered yet, builds and checks the video in one turn without asking questions, and writes the captions. The app renders it and queues the posts. With approval on (the default) the video waits on its project page and on Overview for one click; otherwise it posts at the slot.
 
 It runs one video at a time and only while 37Studio is running. A slot that passed while the computer was off is skipped, not posted late. Times are in the browser's time zone, saved with the plan.
 
@@ -94,7 +95,7 @@ cost = Claude agent cost      (total_cost_usd reported by the CLI for every turn
      + ElevenLabs generations (per 1,000 characters, second or minute, unit prices in Settings)
 ```
 
-Rendering and storage run on your own computer, so they cost nothing. Costs are recorded in USD, what the providers bill, and shown in the currency set in Settings (USD by default; set any other code and an exchange rate). Every project, campaign and company shows what it has cost; the **Costs** page breaks spend down by provider, company and month.
+Rendering and storage run on your own computer, so they cost nothing. Costs are recorded in USD, what the providers bill, and shown in the currency set in Settings (USD by default; set any other code and an exchange rate). Every project, campaign and brand shows what it has cost; the **Costs** page breaks spend down by provider, brand and month.
 
 - **Quality tiers** are the main lever on cost (see [The editor agent](#the-editor-agent)).
 - **Budget cap.** Each agent turn has a hard budget on Claude's spend (`--max-budget-usd`, $25 by default, set in Settings). Gemini and ElevenLabs generations are recorded but not capped.
@@ -104,9 +105,9 @@ Rendering and storage run on your own computer, so they cost nothing. Costs are 
 
 ```
 data/
-  37studio.db           SQLite (WAL): companies, projects, posts, accounts and their encrypted tokens, settings, encrypted keys
+  37studio.db           SQLite (WAL): brands, projects, posts, accounts and their encrypted tokens, settings, encrypted keys
   secret.key            the key that encrypts Settings → Keys and platform tokens; keep it with the database
-  tenants/<id>/         a company's brand library (assets/), design.md, knowledge.md, replies.md, source/
+  tenants/<id>/         a brand's library (assets/), design.md, knowledge.md, replies.md, source/
   projects/<id>/
     input/              raw uploads (the agent may not modify these)
     work/               agent scratch: audio, transcripts, cut ranges, social.json captions
@@ -133,7 +134,7 @@ The Go code builds one binary, `37studio`, that serves the app and runs the agen
 | `internal/agent` | Presets, quality tiers, harness prompt, Claude Code and OpenCode runs (stream-json to chat events), render, `37studio gen` |
 | `internal/gen` | Gemini (Nano Banana images, Omni video) and ElevenLabs (voice, sound effects, music) |
 | `internal/company` | Companies and their brand library, the website/folder scan that writes `design.md` and `knowledge.md`, campaigns |
-| `internal/source` | A company's project folder: upload into `source/`, skip rules for dependencies and secrets |
+| `internal/source` | A brand's project folder: upload into `source/`, skip rules for dependencies and secrets |
 | `internal/project` | Projects, uploads, YouTube/Drive imports, several videos from one source (`37studio clip`), the Library |
 | `internal/templates` | Save a project's composition as a template and seed new projects from it |
 | `internal/transcribe` | `37studio transcribe`: local faster-whisper (`asr/transcribe.py`, embedded), subtitles, detached long runs |

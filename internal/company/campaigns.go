@@ -1,4 +1,4 @@
-// Package company holds companies (tenants in the database): their profile and brand library, the website and folder scan, and campaigns.
+// Package brand holds brands (tenants in the database): their profile and brand library, the website and folder scan, and campaigns.
 package company
 
 import (
@@ -44,7 +44,7 @@ func SaveCampaign(r *http.Request) (any, error) {
 	}
 	id := httpapi.PathID(r)
 	if id == 0 && (b["tenant_id"] == nil || store.Str(b["name"]) == "") {
-		return nil, httpapi.Bad("company and campaign name are required")
+		return nil, httpapi.Bad("brand and campaign name are required")
 	}
 	if id != 0 {
 		delete(b, "tenant_id")

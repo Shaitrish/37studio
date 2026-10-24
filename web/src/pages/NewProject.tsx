@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { ArrowUpIcon, MegaphoneIcon, PencilSimpleIcon, SparkleIcon, MagicWandIcon } from "@phosphor-icons/react";
-import { api, bytes, Campaign, fail, go, languageName, languages, Meta, Project, Template, Tenant, upload, useApi } from "../api";
-import { DropZone, Modal, Progress, Seg } from "../ui";
+import { ArrowUpIcon, PencilSimpleIcon, SparkleIcon, MagicWandIcon } from "@phosphor-icons/react";
+import { api, bytes, Campaign, fail, go, languageName, languages, Meta, Project, Template, upload, useApi, useTenants } from "../api";
+import { Avatar, DropZone, Field, Modal, ModelPicker, Progress, Seg } from "../ui";
 import { presetIcon } from "./Projects";
 
 /** Answers collected one question at a time. */
@@ -13,33 +13,30 @@ interface A {
 type Opt = { value: string; label: string; sub?: string; icon?: ReactNode };
 interface Step {
   key: keyof A;
+  label?: string; // shown in front of the answer once it collapses into a chip
   ask: string | ((a: A) => string);
   options?: (a: A) => Opt[];
-  text?: { placeholder: string; skip?: string };
-  files?: boolean;
   cards?: boolean;
   skip?: (a: A) => boolean;
-  show: (a: A) => string;
+  show: (a: A) => ReactNode;
 }
 
-const platforms: Opt[] = [
-  { value: "9:16", label: "Reels · TikTok · Shorts", sub: "vertical 9:16" },
-  { value: "16:9", label: "YouTube · website", sub: "landscape 16:9" },
-  { value: "4:5", label: "Instagram / Facebook feed", sub: "portrait 4:5" },
-  { value: "1:1", label: "Square post", sub: "1:1" },
+const shapes: Opt[] = [
+  { value: "9:16", label: "Vertical 9:16", sub: "Reels, TikTok, Shorts" },
+  { value: "16:9", label: "Wide 16:9", sub: "YouTube, website" },
+  { value: "4:5", label: "Portrait 4:5", sub: "Instagram and Facebook feed" },
+  { value: "1:1", label: "Square 1:1", sub: "feed post" },
 ];
 const lengths = [15, 30, 45, 60, 90, 180];
-const secs = (n: number) => (n >= 60 ? `${n / 60} min` : `${n} seconds`);
-const counts: Opt[] = [
-  { value: "1", label: "One video" }, { value: "3", label: "3 videos" }, { value: "5", label: "5 videos" }, { value: "10", label: "10 videos" },
-  { value: "all", label: "As many as it has", sub: "e.g. one per solved question or topic" },
-];
+const secs = (n: number) => (n >= 60 ? `${n / 60} min` : `${n} sec`);
+const counts = [{ value: "1", label: "1" }, { value: "3", label: "3" }, { value: "5", label: "5" }, { value: "10", label: "10" }, { value: "all", label: "As many as it has" }];
 const many = (a: A) => !!a.count && a.count !== "1";
+const askText = (s: Step, a: A) => (typeof s.ask === "function" ? s.ask(a) : s.ask);
 
 export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: () => void; tenantId?: number; campaignId?: number }) {
   const { data: meta } = useApi<Meta>("/meta");
-  const { data: tenants } = useApi<Tenant[]>("/tenants");
-  const [a, setA] = useState<A>({ tenant: tenantId, campaign: campaignId ? String(campaignId) : undefined, quality: "standard" });
+  const tenants = useTenants();
+  const [a, setA] = useState<A>({ tenant: tenantId, campaign: campaignId ? String(campaignId) : "none", quality: "standard" });
   const [done, setDone] = useState<(keyof A)[]>([]);
   const { data: campaigns } = useApi<Campaign[]>(a.tenant ? `/campaigns?tenant=${a.tenant}` : null);
   const { data: templates } = useApi<Template[]>(a.tenant ? `/templates?tenant=${a.tenant}` : null);
@@ -49,35 +46,24 @@ export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: ()
   const [pct, setPct] = useState(0);
   const end = useRef<HTMLDivElement>(null);
 
-  const tenantName = tenants?.find((t) => t.id === a.tenant)?.name ?? "";
+  // With a single brand there's nothing to ask.
+  const only = tenants?.length === 1 ? tenants[0] : undefined;
+  useEffect(() => { if (only && !a.tenant) setA((x) => ({ ...x, tenant: only.id })); }, [only?.id]);
+  const tenant = tenants?.find((t) => t.id === a.tenant);
   const campaignName = a.campaign === "new" ? a.campaignText?.split(/[.:\n]/)[0].trim().slice(0, 60) : campaigns?.find((c) => String(c.id) === a.campaign)?.name;
   const preset = meta?.presets.find((p) => p.id === a.kind);
 
   const steps: Step[] = [
     {
-      key: "tenant", ask: "Hi! Who is this for?", skip: () => !!tenantId,
-      options: () => (tenants ?? []).map((t) => ({ value: String(t.id), label: t.name, sub: t.website?.replace(/^https?:\/\//, "") || t.teacher })),
-      show: () => tenantName,
-    },
-    {
-      key: "campaign", ask: (x) => `Is this part of a campaign for ${tenantName}?`, skip: () => !!campaignId,
-      options: () => [
-        ...(campaigns ?? []).map((c) => ({ value: String(c.id), label: c.name, sub: `${c.video_count} video${c.video_count === 1 ? "" : "s"}`, icon: <MegaphoneIcon size={14} /> })),
-        { value: "new", label: "Start a new campaign", sub: "a launch, offer or product push" },
-        { value: "none", label: "Just a one-off video" },
-      ],
-      show: (x) => (x.campaign === "none" ? "One-off video" : x.campaign === "new" ? "New campaign" : campaignName ?? ""),
-    },
-    {
-      key: "campaignText", ask: "What's the campaign? Give it a name and say what it promotes.", skip: (x) => x.campaign !== "new",
-      text: { placeholder: "Eid offer: 30% off the HSC physics course until 15 April. Audience: HSC candidates. CTA: enroll at course37.com" },
-      show: (x) => x.campaignText ?? "",
+      key: "tenant", ask: "Hi! Who is this for?", skip: () => !!tenantId || !!only,
+      options: () => (tenants ?? []).map((t) => ({ value: String(t.id), label: t.name, sub: t.website?.replace(/^https?:\/\//, "") || t.teacher, icon: <Avatar tenant={t} size="xs" /> })),
+      show: () => tenant && <><Avatar tenant={tenant} size="xs" />{tenant.name}</>,
     },
     {
       // A saved look: the new project's comp/ starts as a copy of it, and the format follows it.
-      key: "template", ask: "Start from a template?", skip: () => !templates?.length,
+      key: "template", label: "Template", ask: "Start from a template?", skip: () => !templates?.length,
       options: () => [
-        ...(templates ?? []).map((t) => ({ value: String(t.id), label: t.name, sub: [t.tenant_name ?? "All companies", t.aspect, t.notes].filter(Boolean).join(" · ") })),
+        ...(templates ?? []).map((t) => ({ value: String(t.id), label: t.name, sub: [t.tenant_name ?? "All brands", t.aspect, t.notes].filter(Boolean).join(" · ") })),
         { value: "none", label: "No, start fresh" },
       ],
       show: () => template?.name ?? "Start fresh",
@@ -88,82 +74,52 @@ export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: ()
         const I = presetIcon[p.id] ?? MagicWandIcon;
         return { value: p.id, label: p.label, sub: p.blurb, icon: <I size={15} /> };
       }),
-      show: () => preset?.label ?? "",
+      show: () => { const I = presetIcon[a.kind ?? ""] ?? MagicWandIcon; return <><I size={13} />{preset?.label}</>; },
     },
     {
-      key: "language", ask: "What language is the video in?",
-      options: () => {
-        const own = tenants?.find((t) => t.id === a.tenant)?.language ?? "en";
-        return [...languages.slice(0, 2), ...languages.slice(2).filter(([c]) => c === own)].map(([value, label]) => ({ value, label, sub: value === own ? "company's language" : undefined }));
-      },
-      show: (x) => languageName(x.language ?? ""),
+      // Shape, length, count and language in one go: each has a good default, so most people just press Continue.
+      key: "aspect", ask: (x) => (x.kind === "thumbnail" ? "What shape, and which language?" : "Where will it run, and how long?"),
+      show: (x) => [
+        shapes.find((s) => s.value === x.aspect)?.label ?? x.aspect,
+        x.kind !== "thumbnail" && secs(x.seconds ?? 0),
+        x.kind !== "thumbnail" && many(x) && (x.count === "all" ? "as many videos as it has" : `${x.count} videos`),
+        languageName(x.language ?? ""),
+      ].filter(Boolean).join(" · "),
     },
     {
-      key: "focus", ask: "Is it about a specific page or feature of their site?",
-      text: { placeholder: "Paste the page URL (https://…/features/live-class), or name the feature and the agent finds its page.", skip: "No, the brand in general" },
-      show: (x) => x.focus || "The brand in general",
+      key: "brief", label: "About", ask: (x) => (x.kind === "thumbnail" ? "What should the thumbnails say or show?" : many(x) ? "What should the videos be about?" : "What's the video about?"),
+      show: (x) => [x.brief || "Agent decides", x.focus].filter(Boolean).join(" · "),
     },
     {
-      key: "aspect", ask: "Where will it run?", options: () => platforms,
-      show: (x) => platforms.find((p) => p.value === x.aspect)?.label ?? x.aspect ?? "",
-    },
-    {
-      key: "count", ask: "One video, or several from the same footage?", skip: (x) => x.kind === "thumbnail",
-      options: () => counts, show: (x) => counts.find((c) => c.value === x.count)?.label ?? "One video",
-    },
-    {
-      key: "seconds", ask: (x) => (many(x) ? "How long should each video be?" : "How long should it be?"), skip: (x) => x.kind === "thumbnail",
-      options: () => lengths.map((n) => ({ value: String(n), label: secs(n), sub: n === preset?.seconds ? "suggested" : undefined })),
-      show: (x) => secs(x.seconds ?? 0),
-    },
-    {
-      key: "brief", ask: (x) => (x.kind === "thumbnail" ? "What should the thumbnails say or show?" : many(x) ? "What should the videos be about?" : "What's the video about?"),
-      text: {
-        placeholder: "Topic, the moment you want as the hook, the call to action, anything to avoid. No footage? Paste a landing page URL and the agent builds from it.",
-        skip: "Let the agent decide from the knowledge base",
-      },
-      show: (x) => x.brief || "Agent decides from the knowledge base",
-    },
-    {
-      key: "files", ask: "Any footage to work from?", files: true,
-      show: (x) => [x.files?.length && `${x.files.length} file${x.files.length > 1 ? "s" : ""} · ${bytes(x.files.reduce((n, f) => n + f.size, 0))}`, x.link]
-        .filter(Boolean).join(" + ") || "No footage, use brand assets",
-    },
-    {
-      // Transcribing takes about as long as the video on most PCs: let the editor skip it, or bring subtitles instead.
-      key: "transcribe", ask: "Should the agent transcribe what's said?",
-      skip: (x) => !x.link && !x.files?.some((f) => /^(video|audio)\//.test(f.type)),
-      options: (x) => [
-        { value: "yes", label: "Yes, transcribe it", sub: x.files?.some((f) => /\.(srt|vtt)$/i.test(f.name)) || x.link?.includes("youtu") ? "uses the subtitles if there are any, which is instant" : "takes about as long as the video" },
-        { value: "no", label: "No, skip it", sub: "faster; the agent works from the footage and your brief" },
-      ],
-      show: (x) => (x.transcribe === "no" ? "Don't transcribe" : "Transcribe"),
+      key: "files", label: "Footage", ask: "Any footage to work from?",
+      show: (x) => [x.files?.length && `${x.files.length} file${x.files.length > 1 ? "s" : ""} · ${bytes(x.files.reduce((n, f) => n + f.size, 0))}`, x.link, x.transcribe === "no" && "no transcript"]
+        .filter(Boolean).join(" · ") || "None, use brand assets",
     },
   ];
   const live = steps.filter((s) => !s.skip?.(a));
   const current = live.find((s) => !done.includes(s.key));
   const history = live.filter((s) => done.includes(s.key));
+  const fixed = tenant && steps[0].skip?.(a) ? tenant : undefined;
 
   useEffect(() => { end.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [done.length, current?.key]);
   useEffect(() => {
-    if (!current) setTitle((t) => t || (a.brief?.split("\n")[0].slice(0, 60).trim() || `${preset?.label} · ${campaignName ?? tenantName}`));
+    if (!current) setTitle((t) => t || (a.brief?.split("\n")[0].slice(0, 60).trim() || `${preset?.label} · ${tenant?.name ?? ""}`));
   }, [current?.key]);
 
   function answer(key: keyof A, value: A[keyof A], also: Partial<A> = {}) {
     const next = { ...a, ...also, [key]: value };
-    // Picking a format, or a template, sets sensible defaults for the questions after it.
+    // Another brand has other campaigns and templates.
+    if (key === "tenant" && value !== a.tenant) Object.assign(next, { campaign: "none", template: undefined });
+    // Picking a template or a format fills the format step's defaults, until that step has been answered.
     const tpl = key === "template" ? templates?.find((t) => String(t.id) === value) : undefined;
     if (tpl) Object.assign(next, { kind: tpl.kind || next.kind, aspect: tpl.aspect || next.aspect, seconds: tpl.seconds || next.seconds });
-    if (key === "kind") {
-      const p = meta?.presets.find((x) => x.id === value);
-      next.aspect ??= p?.aspect;
-      if (p) next.seconds = p.seconds || next.seconds;
-    }
+    const p = key === "kind" && !template && !done.includes("aspect") ? meta?.presets.find((x) => x.id === value) : undefined;
+    if (p) Object.assign(next, { aspect: p.aspect || next.aspect, seconds: p.seconds || next.seconds });
     setA(next);
     setDone((d) => [...d.filter((k) => k !== key), key]);
   }
-  // Clicking an earlier answer re-asks from there; later answers stay as defaults.
-  const rewind = (key: keyof A) => setDone((d) => d.slice(0, d.indexOf(key)));
+  // Clicking a chip re-asks just that question; a different brand starts over, keeping the old answers as defaults.
+  const rewind = (key: keyof A) => setDone((d) => (key === "tenant" ? [] : d.filter((k) => k !== key)));
 
   async function create() {
     try {
@@ -191,29 +147,31 @@ export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: ()
   }
 
   return (
-    <Modal title="New project" sub="A few quick questions, then the agent takes it from there." size="lg" onClose={busy ? () => {} : onClose}>
+    <Modal title="New video or image" sub="A few quick questions, then the agent takes it from there." size="lg" onClose={busy ? () => {} : onClose}>
       <div className="wizard">
-        {history.map((s) => (
-          <div key={s.key} className="stack" style={{ gap: 8 }}>
-            <Ask>{typeof s.ask === "function" ? s.ask(a) : s.ask}</Ask>
-            <button className="msg-user answer" onClick={() => !busy && rewind(s.key)} title="Change this answer">
-              {s.show(a)} <PencilSimpleIcon size={12} />
-            </button>
+        {(fixed || history.length > 0) && (
+          <div className="wiz-sum">
+            {fixed && <span className="wiz-chip" style={{ cursor: "default" }}><Avatar tenant={fixed} size="xs" />{fixed.name}</span>}
+            {history.map((s) => (
+              <button key={s.key} className="wiz-chip" onClick={() => !busy && rewind(s.key)} title={`Change: ${askText(s, a)}`}>
+                {s.label && <span className="k">{s.label}</span>}<span className="ellipsis">{s.show(a)}</span><PencilSimpleIcon size={11} />
+              </button>
+            ))}
           </div>
-        ))}
+        )}
 
         {current ? (
           <div className="stack" style={{ gap: 10 }}>
-            <Ask>{typeof current.ask === "function" ? current.ask(a) : current.ask}</Ask>
+            <Ask step={`${history.length + 1} of ${live.length}`}>{askText(current, a)}</Ask>
             {current.options && (current.key === "tenant" && tenants?.length === 0 ? (
-              <p className="small muted">No companies yet. <a className="link" href="#/clients" onClick={onClose}>Add one from its website</a> first.</p>
+              <p className="small muted">No brands yet. <a className="link" href="#/clients" onClick={onClose}>Add one from its website</a> first.</p>
             ) : (
               <div className={current.cards ? "choices" : "opts"}>
                 {current.options(a).map((o) => {
                   const on = String(a[current.key] ?? "") === o.value;
                   return (
                     <button key={o.value} className={`${current.cards ? "choice" : "opt"} ${on ? "on" : ""}`}
-                      onClick={() => answer(current.key, current.key === "tenant" || current.key === "seconds" ? Number(o.value) : o.value)}>
+                      onClick={() => answer(current.key, current.key === "tenant" ? Number(o.value) : o.value)}>
                       <strong>{o.icon}{o.label}</strong>
                       {o.sub && <span>{o.sub}</span>}
                     </button>
@@ -221,16 +179,32 @@ export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: ()
                 })}
               </div>
             ))}
-            {current.text && <TextAnswer key={current.key} initial={String(a[current.key] ?? "")} placeholder={current.text.placeholder} skip={current.text.skip} onAnswer={(v) => answer(current.key, v)} />}
-            {current.files && <FilesAnswer initial={a.files ?? []} initialLink={a.link ?? ""} onAnswer={(f, link) => answer("files", f, { link })} />}
+            {current.key === "aspect" && <FormatAnswer a={a} own={tenant?.language ?? "en"} suggested={preset?.seconds} onAnswer={(f) => answer("aspect", f.aspect, f)} />}
+            {current.key === "brief" && <BriefAnswer a={a} onAnswer={(brief, focus) => answer("brief", brief, { focus })} />}
+            {current.key === "files" && <FilesAnswer a={a} onAnswer={(f, link, transcribe) => answer("files", f, { link, transcribe })} />}
           </div>
         ) : (
-          <div className="card card-b stack" style={{ gap: 12 }}>
-            <Ask>Great, here's the plan. Name it and I'll start.</Ask>
-            <label className="field"><span>Project name</span><input className="input" value={title} onChange={(e) => setTitle(e.target.value)} /></label>
-            <div className="field">
-              <span>Quality <span className="hint">· {meta?.qualities.find((q) => q.id === a.quality)?.note}</span></span>
-              <Seg value={a.quality ?? "standard"} options={(meta?.qualities ?? []).map((q) => ({ value: q.id, label: q.label }))} onChange={(quality) => setA({ ...a, quality })} />
+          <div className="card card-b stack" style={{ gap: 14 }}>
+            <Ask>That's everything. Name it and I'll start.</Ask>
+            <div className="form">
+              <Field label="Name"><input className="input" value={title} onChange={(e) => setTitle(e.target.value)} /></Field>
+              <Field label="Campaign" hint="optional">
+                <select className="select" value={a.campaign ?? "none"} onChange={(e) => setA({ ...a, campaign: e.target.value })}>
+                  <option value="none">None, a one-off video</option>
+                  {campaigns?.map((c) => <option key={c.id} value={c.id}>{c.name} · {c.video_count} video{c.video_count === 1 ? "" : "s"}</option>)}
+                  <option value="new">New campaign…</option>
+                </select>
+              </Field>
+              {a.campaign === "new" && (
+                <Field label="New campaign" hint="its name, what it promotes, audience, call to action" full>
+                  <textarea className="textarea" rows={2} autoFocus value={a.campaignText ?? ""} onChange={(e) => setA({ ...a, campaignText: e.target.value })}
+                    placeholder="Eid offer: 30% off the HSC physics course until 15 April. Audience: HSC candidates. CTA: enroll at course37.com" />
+                </Field>
+              )}
+              <div className="field full">
+                <span>Quality <span className="hint">· {meta?.qualities.find((q) => q.id === a.quality)?.note}</span></span>
+                <ModelPicker value={a.quality ?? "standard"} qualities={meta?.qualities ?? []} onChange={(quality) => setA({ ...a, quality })} />
+              </div>
             </div>
             {busy ? (
               <div className="stack" style={{ gap: 6 }}><span className="small muted">{busy}</span>{busy.startsWith("Uploading") && <Progress pct={pct} />}</div>
@@ -246,29 +220,63 @@ export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: ()
   );
 }
 
-function Ask({ children }: { children: ReactNode }) {
-  return <div className="ask"><span className="ask-mark"><SparkleIcon size={13} /></span><span>{children}</span></div>;
+function Ask({ children, step }: { children: ReactNode; step?: string }) {
+  return <div className="ask"><span className="ask-mark"><SparkleIcon size={13} /></span><span>{children}</span>{step && <span className="step">{step}</span>}</div>;
 }
 
-function TextAnswer({ initial, placeholder, skip, onAnswer }: { initial: string; placeholder: string; skip?: string; onAnswer: (v: string) => void }) {
-  const [v, setV] = useState(initial);
+function FormatAnswer({ a, own, suggested, onAnswer }: { a: A; own: string; suggested?: number; onAnswer: (f: Required<Pick<A, "aspect" | "seconds" | "count" | "language">>) => void }) {
+  const [f, setF] = useState({ aspect: a.aspect ?? "9:16", seconds: a.seconds ?? suggested ?? 30, count: a.count ?? "1", language: a.language ?? own });
+  const video = a.kind !== "thumbnail";
+  const opts = [...new Set([...lengths, f.seconds])].sort((x, y) => x - y).map((n) => ({ value: String(n), label: secs(n) }));
+  const langs = languages.filter(([c], i) => i < 2 || c === own).map(([value, label]) => ({ value, label }));
+  return (
+    <div className="stack" style={{ gap: 14 }}>
+      <div className="fmt">
+        <span>Shape</span>
+        <div><Seg value={f.aspect} options={shapes} onChange={(aspect) => setF({ ...f, aspect })} /><span className="hint">{shapes.find((s) => s.value === f.aspect)?.sub}</span></div>
+        {video && <>
+          <span>Length</span>
+          <div><Seg value={String(f.seconds)} options={opts} onChange={(v) => setF({ ...f, seconds: Number(v) })} />{f.seconds === suggested && <span className="hint">suggested</span>}</div>
+          <span>Videos</span>
+          <div><Seg value={f.count} options={counts} onChange={(count) => setF({ ...f, count })} />{f.count !== "1" && <span className="hint">cut from the same footage</span>}</div>
+        </>}
+        <span>Language</span>
+        <div><Seg value={f.language} options={langs} onChange={(language) => setF({ ...f, language })} />{f.language === own && <span className="hint">the brand's</span>}</div>
+      </div>
+      <div className="row"><span className="spacer" /><button className="btn primary sm" autoFocus onClick={() => onAnswer(f)}><ArrowUpIcon size={14} /> Continue</button></div>
+    </div>
+  );
+}
+
+function BriefAnswer({ a, onAnswer }: { a: A; onAnswer: (brief: string, focus: string) => void }) {
+  const [v, setV] = useState(a.brief ?? "");
+  const [focus, setFocus] = useState(a.focus ?? "");
+  const send = (brief: string) => onAnswer(brief, focus.trim());
   return (
     <div className="stack" style={{ gap: 8 }}>
-      <textarea className="textarea" rows={3} value={v} autoFocus placeholder={placeholder} onChange={(e) => setV(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && v.trim()) { e.preventDefault(); onAnswer(v.trim()); } }} />
+      <textarea className="textarea" rows={3} value={v} autoFocus onChange={(e) => setV(e.target.value)}
+        placeholder="Topic, the moment you want as the hook, the call to action, anything to avoid. No footage? Paste a landing page URL and the agent builds from it."
+        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && v.trim()) { e.preventDefault(); send(v.trim()); } }} />
+      <input className="input" value={focus} onChange={(e) => setFocus(e.target.value)} aria-label="Page or feature to focus on"
+        placeholder="Optional: one page or feature to focus on (https://…/features/live-class, or just its name)" />
       <div className="row">
-        {skip && <button className="opt" onClick={() => onAnswer("")}><strong>{skip}</strong></button>}
+        <button className="opt" onClick={() => send("")}><strong>Let the agent decide from the knowledge base</strong></button>
         <span className="spacer" />
-        <button className="btn primary sm" disabled={!v.trim()} onClick={() => onAnswer(v.trim())}><ArrowUpIcon size={14} /> Continue</button>
+        <button className="btn primary sm" disabled={!v.trim()} onClick={() => send(v.trim())}><ArrowUpIcon size={14} /> Continue</button>
       </div>
     </div>
   );
 }
 
-function FilesAnswer({ initial, initialLink, onAnswer }: { initial: File[]; initialLink: string; onAnswer: (f: File[], link: string) => void }) {
-  const [files, setFiles] = useState(initial);
-  const [link, setLink] = useState(initialLink);
-  const ok = !!files.length || /^https?:\/\/\S+$/.test(link.trim());
+function FilesAnswer({ a, onAnswer }: { a: A; onAnswer: (f: File[], link: string, transcribe: string) => void }) {
+  const [files, setFiles] = useState(a.files ?? []);
+  const [link, setLink] = useState(a.link ?? "");
+  const [transcribe, setTranscribe] = useState(a.transcribe !== "no");
+  const url = /^https?:\/\/\S+$/.test(link.trim());
+  const ok = !!files.length || url;
+  // Transcribing takes about as long as the video on most PCs: let the editor skip it, or bring subtitles instead.
+  const media = url || files.some((f) => /^(video|audio)\//.test(f.type));
+  const subs = files.some((f) => /\.(srt|vtt)$/i.test(f.name)) || link.includes("youtu");
   return (
     <div className="stack" style={{ gap: 8 }}>
       <DropZone onFiles={(f) => setFiles((x) => [...x, ...f])} accept="video/*,audio/*,image/*,.srt,.vtt" label="Drop long videos, b-roll, music or subtitles (.srt), or click to browse" />
@@ -278,10 +286,16 @@ function FilesAnswer({ initial, initialLink, onAnswer }: { initial: File[]; init
           {files.map((f, i) => <span key={i} className="pill">{f.name} · {bytes(f.size)}</span>)}
         </div>
       )}
+      {media && (
+        <div className="row small">
+          <label className="row"><input type="checkbox" checked={transcribe} onChange={(e) => setTranscribe(e.target.checked)} /> Transcribe what's said</label>
+          <span className="faint">· {subs ? "uses the subtitles, which is instant" : "takes about as long as the video; untick to start sooner"}</span>
+        </div>
+      )}
       <div className="row">
-        <button className="opt" onClick={() => onAnswer([], "")}><strong>No footage, use brand assets</strong></button>
+        <button className="opt" onClick={() => onAnswer([], "", "")}><strong>No footage, use brand assets</strong></button>
         <span className="spacer" />
-        <button className="btn primary sm" disabled={!ok} onClick={() => onAnswer(files, link.trim())}><ArrowUpIcon size={14} /> Continue</button>
+        <button className="btn primary sm" disabled={!ok} onClick={() => onAnswer(files, link.trim(), media && !transcribe ? "no" : "")}><ArrowUpIcon size={14} /> Continue</button>
       </div>
     </div>
   );

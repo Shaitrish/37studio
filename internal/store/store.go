@@ -82,7 +82,7 @@ create table if not exists templates(
   id integer primary key,
   name text not null,
   notes text not null default '',
-  tenant_id integer references tenants(id) on delete cascade, -- null: every company
+  tenant_id integer references tenants(id) on delete cascade, -- null: every brand
   project_id integer,
   kind text not null default '',
   aspect text not null default '',
@@ -302,6 +302,7 @@ var settingDefaults = map[string]string{
 	"voice_price_per_1k":  "0.20",
 	"sfx_price_per_sec":   "0.01",
 	"music_price_per_min": "0.50",
+	"gen_ask_above_usd":   "5", // generated media per project the agent may spend before asking; 0 = always ask
 	"render_workers":      "auto",
 	"render_gpu":          "false",
 	"render_fast_capture": "false",

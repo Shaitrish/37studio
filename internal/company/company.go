@@ -17,10 +17,20 @@ import (
 )
 
 func List(r *http.Request) (any, error) {
-	return store.Rows(`select t.*,
+	rs, err := store.Rows(`select t.*,
 	  (select count(*) from projects p where p.tenant_id=t.id) as project_count,
 	  (select coalesce(sum(cost),0) from usage u where u.tenant_id=t.id) as cost_usd
 	  from tenants t order by t.name collate nocase`)
+	for _, t := range rs { // the newest logo image, for the card; the whole library only comes with Get
+		id := t["id"].(int64)
+		for _, f := range files.List(filepath.Join(files.TenantDir(id), "logo"), fmt.Sprintf("/files/tenants/%d/assets/logo", id), false) {
+			if f.Kind == "image" {
+				t["logo"] = f.URL
+				break
+			}
+		}
+	}
+	return rs, err
 }
 
 func Get(r *http.Request) (any, error) {
@@ -70,7 +80,7 @@ func Delete(r *http.Request) (any, error) {
 	var n int
 	store.DB.QueryRow("select count(*) from projects where tenant_id=?", id).Scan(&n)
 	if n > 0 {
-		return nil, httpapi.Bad("this company still has projects; delete those first")
+		return nil, httpapi.Bad("this brand still has projects; delete those first")
 	}
 	if _, err := store.DB.Exec("delete from tenants where id=?", id); err != nil {
 		return nil, err

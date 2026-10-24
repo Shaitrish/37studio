@@ -39,7 +39,7 @@ export default function ClientPage({ id, tab = "library" }: { id: number; tab?: 
     return () => clearInterval(timer);
   }, [scanning, reload]);
 
-  if (error) return <div className="page"><Empty icon={<UsersThreeIcon size={28} />} title="Company not found"><a className="btn" href="#/clients">Back to companies</a></Empty></div>;
+  if (error) return <div className="page"><Empty icon={<UsersThreeIcon size={28} />} title="Brand not found"><a className="btn" href="#/clients">Back to brands</a></Empty></div>;
   if (!t) return null;
 
   async function remove() {
@@ -50,7 +50,7 @@ export default function ClientPage({ id, tab = "library" }: { id: number; tab?: 
   return (
     <div className="page">
       <div>
-        <div className="crumbs"><a href="#/clients">Companies</a><CaretRightIcon size={14} /></div>
+        <div className="crumbs"><a href="#/clients">Brands</a><CaretRightIcon size={14} /></div>
         <div className="page-head">
           <Avatar tenant={t} size="lg" />
           <div className="spacer" style={{ minWidth: 0 }}>
@@ -59,7 +59,7 @@ export default function ClientPage({ id, tab = "library" }: { id: number; tab?: 
           </div>
           <button className="btn" disabled={scanning} onClick={() => setRescan(true)}><GlobeIcon size={14} /> {t.website || t.source ? "Re-scan" : "Scan website or folder"}</button>
           <button className="btn" onClick={() => setEditing(true)}><PencilSimpleIcon size={14} /> Edit</button>
-          <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New project</button>
+          <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New video</button>
         </div>
       </div>
 
@@ -106,8 +106,8 @@ export default function ClientPage({ id, tab = "library" }: { id: number; tab?: 
       {tab === "projects" && (
         <div className="card">
           {projects?.length ? <ProjectTable projects={projects} hideClient /> : (
-            <Empty icon={<FilmSlateIcon size={28} />} title="No projects for this company yet">
-              <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New project</button>
+            <Empty icon={<FilmSlateIcon size={28} />} title="No projects for this brand yet">
+              <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New video</button>
             </Empty>
           )}
         </div>
@@ -126,7 +126,7 @@ export default function ClientPage({ id, tab = "library" }: { id: number; tab?: 
               <Detail label="Spoken language" value={t.language} />
               <Detail label="Brand font" value={t.font} />
             </div>
-            <div className="row"><span className="spacer" /><button className="btn ghost danger sm" onClick={remove}><TrashIcon size={14} /> Delete company</button></div>
+            <div className="row"><span className="spacer" /><button className="btn ghost danger sm" onClick={remove}><TrashIcon size={14} /> Delete brand</button></div>
           </div>
         </div>
       )}
@@ -217,7 +217,7 @@ function Knowledge({ tenant, reload, onScan }: { tenant: Tenant; reload: () => v
     <div className="card">
       <div className="card-h">
         <h2>Knowledge base</h2>
-        <span className="small faint spacer">every project agent for this company reads this first</span>
+        <span className="small faint spacer">every project agent for this brand reads this first</span>
         <button className="btn sm" disabled={!dirty} onClick={save}>Save</button>
       </div>
       <div className="card-b stack" style={{ gap: 12 }}>

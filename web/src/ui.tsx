@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { CaretLeftIcon, CaretRightIcon, DownloadSimpleIcon, FileAudioIcon, FileTextIcon, FilmStripIcon, ImageIcon, PencilSimpleIcon, TrashIcon, TextTIcon, CloudArrowUpIcon, XIcon } from "@phosphor-icons/react";
-import { AssetMeta, bytes, clock, fail, FileInfo, Project, Tenant } from "./api";
+import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, DownloadSimpleIcon, FileAudioIcon, FileTextIcon, FilmStripIcon, ImageIcon, PencilSimpleIcon, TrashIcon, TextTIcon, CloudArrowUpIcon, XIcon } from "@phosphor-icons/react";
+import { AssetMeta, bytes, clock, fail, FileInfo, Project, Quality, Tenant } from "./api";
 
 export function Modal({ title, sub, onClose, children, footer, size }: {
   title: string; sub?: string; onClose: () => void; children: ReactNode; footer?: ReactNode; size?: "lg" | "xl";
@@ -205,13 +205,47 @@ export function FileTile({ f, onOpen, onDelete, selected, contain, meta, onEdit,
   );
 }
 
-export function Avatar({ tenant, size }: { tenant: Pick<Tenant, "name" | "brand_color" | "assets">; size?: "lg" }) {
-  const logo = tenant.assets?.find((a) => a.path.startsWith("logo/") && a.kind === "image");
+export function Avatar({ tenant, size }: { tenant: Pick<Tenant, "name" | "brand_color" | "assets" | "logo">; size?: "lg" | "sm" | "xs" }) {
+  const logo = tenant.assets?.find((a) => a.path.startsWith("logo/") && a.kind === "image") ?? (tenant.logo ? { url: tenant.logo } : undefined);
   const initials = tenant.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
   return (
     <div className={`avatar ${size ?? ""}`} style={{ background: tenant.brand_color || undefined }}>
       {logo ? <img src={logo.url} alt="" /> : initials}
     </div>
+  );
+}
+
+/** A brand's logo beside its name; falls back to the plain name until the list loads. */
+export function TenantTag({ tenants, id, name }: { tenants?: Tenant[]; id: number; name: string }) {
+  const t = tenants?.find((x) => x.id === id);
+  return <span className="tenant-tag">{t && <Avatar tenant={t} size="xs" />}<span className="ellipsis">{name}</span></span>;
+}
+
+/** A brand dropdown that shows each logo, which a native select can't. `all` adds a "no filter" entry. */
+export function TenantPicker({ tenants, value, onChange, all }: { tenants?: Tenant[]; value?: number; onChange: (id?: number) => void; all?: string }) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const away = (e: MouseEvent) => ref.current && !ref.current.contains(e.target as Node) && (ref.current.open = false);
+    addEventListener("mousedown", away);
+    return () => removeEventListener("mousedown", away);
+  }, []);
+  const cur = tenants?.find((t) => t.id === value);
+  const pick = (id?: number) => { ref.current!.open = false; onChange(id); };
+  return (
+    <details ref={ref} className="picker">
+      <summary className="select" aria-label="Brand">
+        {cur ? <><Avatar tenant={cur} size="xs" /><span className="ellipsis">{cur.name}</span></> : <span className="ellipsis">{all ?? "Choose a brand"}</span>}
+        <CaretDownIcon size={13} className="faint" />
+      </summary>
+      <div className="picker-menu">
+        {all && <button type="button" className={!cur ? "on" : ""} onClick={() => pick()}>{all}</button>}
+        {tenants?.map((t) => (
+          <button type="button" key={t.id} className={t.id === value ? "on" : ""} onClick={() => pick(t.id)}>
+            <Avatar tenant={t} size="xs" /><span className="ellipsis">{t.name}</span>
+          </button>
+        ))}
+      </div>
+    </details>
   );
 }
 
@@ -227,5 +261,40 @@ export function Mark({ size = 28 }: { size?: number }) {
       <path d="M8 9.5H14.5V22.5H8M10.2 16H14.5M17.6 9.5H24.5L19.4 22.5" stroke="var(--ink-fg)" strokeWidth="2.6" />
       <rect x="22" y="19.8" width="2.8" height="2.8" fill="var(--primary)" />
     </svg>
+  );
+}
+
+/** Model menu entries: Claude Code's tiers first, then each provider OpenCode can run with this copy's keys. */
+export function ModelOptions({ qualities, claudeLabel = (q: Quality) => q.label }: { qualities: Quality[]; claudeLabel?: (q: Quality) => string }) {
+  const groups = [...new Set(qualities.filter((q) => q.harness).map((q) => q.group ?? "OpenCode"))];
+  return (
+    <>
+      <optgroup label="Claude">{qualities.filter((q) => !q.harness).map((q) => <option key={q.id} value={q.id}>{claudeLabel(q)}</option>)}</optgroup>
+      {groups.map((g) => (
+        <optgroup key={g} label={g}>
+          {qualities.filter((q) => q.harness && (q.group ?? "OpenCode") === g).map((q) => <option key={q.id} value={q.id}>{q.label}</option>)}
+        </optgroup>
+      ))}
+    </>
+  );
+}
+
+/** Claude's tiers as buttons, every other model in a menu beside them, so a long list doesn't crowd the choice most people make. */
+export function ModelPicker({ value, qualities, onChange }: { value: string; qualities: Quality[]; onChange: (id: string) => void }) {
+  const tiers = qualities.filter((q) => !q.harness);
+  const others = qualities.filter((q) => q.harness);
+  const other = others.find((q) => q.id === value);
+  return (
+    <div className="row wrap">
+      <Seg value={other ? "" : value} options={tiers.map((q) => ({ value: q.id, label: q.label }))} onChange={onChange} />
+      {others.length > 0 && (
+        <select className="select" style={{ width: "auto", fontWeight: other ? 600 : undefined }} value={other ? value : ""} onChange={(e) => e.target.value && onChange(e.target.value)} aria-label="Other models">
+          <option value="">Other models…</option>
+          {[...new Set(others.map((q) => q.group ?? "OpenCode"))].map((g) => (
+            <optgroup key={g} label={g}>{others.filter((q) => (q.group ?? "OpenCode") === g).map((q) => <option key={q.id} value={q.id}>{q.label}</option>)}</optgroup>
+          ))}
+        </select>
+      )}
+    </div>
   );
 }

@@ -344,7 +344,7 @@ Conversation, oldest first:
 
 Reply as %s:`
 
-// DraftReply asks Claude for a reply grounded in the company's knowledge base; the editor reviews it before sending.
+// DraftReply asks Claude for a reply grounded in the brand's knowledge base; the editor reviews it before sending.
 func DraftReply(r *http.Request) (any, error) {
 	b, err := httpapi.Body(r)
 	if err != nil {
@@ -382,10 +382,10 @@ func draftFor(a inboxAccount, kind, id, context string) (string, error) {
 	if c := strings.TrimSpace(context); c != "" {
 		post = "\nThe comment is on this post:\n" + textutil.Head(c, 1500) + "\n"
 	}
-	// The company's own reply rules (Social tab) override the style lines, never the facts rule.
+	// The brand's own reply rules (Social tab) override the style lines, never the facts rule.
 	rules := ""
 	if r := strings.TrimSpace(files.TenantDoc(a.tenant, "replies.md")); r != "" {
-		rules = "\nThe company's own rules for replies. Follow them over the style lines above, but never break the facts rule:\n" + textutil.Head(r, 4000) + "\n"
+		rules = "\nThe brand's own rules for replies. Follow them over the style lines above, but never break the facts rule:\n" + textutil.Head(r, 4000) + "\n"
 	}
 	prompt := fmt.Sprintf(replyRules, what, a.client, a.platform, a.name, fallback, style, rules,
 		cmp.Or(textutil.Head(files.TenantDoc(a.tenant, "knowledge.md"), 30000), "(empty: say a team member will reply soon)"), post, convo.String(), a.name)
@@ -477,7 +477,7 @@ func inboxAnswerable(it inboxItem) bool {
 // contactRe finds what a planted reply would carry: links, bare domains, email addresses and phone numbers.
 var contactRe = regexp.MustCompile(`(?i)https?://\S+|[\w.+-]+@[\w-]+(\.[\w-]+)+|\b[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}\b(/\S*)?|\+?\d[\d ().-]{6,}\d`)
 
-// unsourced returns a link, address or number in an auto-reply that the company's own knowledge base and reply rules
+// unsourced returns a link, address or number in an auto-reply that the brand's own knowledge base and reply rules
 // don't contain. A customer can ask the model to post one, and the prompt's rules alone can't stop that, so such a
 // reply waits for the editor instead of going out. ponytail: exact text match, so a number written differently
 // also waits; that errs toward review.

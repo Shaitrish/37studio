@@ -54,7 +54,7 @@ func List(r *http.Request) (any, error) {
 	return ts, err
 }
 
-// Save is POST /api/projects/{id}/template {"name", "notes", "shared"}: shared templates show for every company.
+// Save is POST /api/projects/{id}/template {"name", "notes", "shared"}: shared templates show for every brand.
 func Save(r *http.Request) (any, error) {
 	b, err := httpapi.Body(r)
 	if err != nil {

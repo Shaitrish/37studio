@@ -51,7 +51,7 @@ func pList(d, item string) map[string]any {
 
 func pObj(d string) map[string]any { return map[string]any{"type": "object", "description": d} }
 
-var company = pInt("The company's id (list_companies)")
+var brand = pInt("The brand's id (list_companies)")
 
 var project = pInt("The project's id")
 
@@ -60,7 +60,7 @@ var toTenant = map[string]string{"company_id": "tenant_id"}
 var byTenant = map[string]string{"company_id": "tenant"}
 
 var companyDoc = map[string]any{
-	"name": pStr("Company name"), "website": pStr("Website URL"), "contact": pStr("Contact person"), "email": pStr("Email"),
+	"name": pStr("Brand name"), "website": pStr("Website URL"), "contact": pStr("Contact person"), "email": pStr("Email"),
 	"phone": pStr("Phone"), "bio": pStr("Short description of the business"), "language": pStr("Default video language code, like en or bn"),
 	"brand_color": pStr("Main brand colour, #rrggbb"), "accent_color": pStr("Accent colour, #rrggbb"), "font": pStr("Brand font family"),
 	"notes": pStr("Notes for the editor agent"), "knowledge": pStr("The whole knowledge.md: what the business does, offers, tone, facts"),
@@ -79,34 +79,34 @@ var Tools = []mcpTool{
 	{Name: "get_options", Desc: "Video kinds (presets) with their default format and length, quality tiers, and which AI keys are set. Read this before creating videos.",
 		Method: "GET", Path: "/api/meta"},
 
-	// companies
-	{Name: "list_companies", Desc: "All companies (brands) with their project count and AI spend in USD.", Method: "GET", Path: "/api/tenants"},
-	{Name: "get_company", Desc: "One company: profile, knowledge base, design system, reply rules, brand library files with captions, and its projects.",
-		Method: "GET", Path: "/api/tenants/{company_id}", Props: map[string]any{"company_id": company}, Required: []string{"company_id"}},
-	{Name: "create_company_from_website", Desc: "Add a company by scanning its website: the brand library, design system and knowledge base fill in over 5-10 minutes (watch scan_status with get_company).",
-		Method: "POST", Path: "/api/tenants/scan", Props: map[string]any{"url": pStr("The company's website"), "notes": pStr("Anything the scan should know")}, Required: []string{"url"}},
-	{Name: "create_company", Desc: "Add a company by hand.", Method: "POST", Path: "/api/tenants", Props: companyDoc, Required: []string{"name"}},
-	{Name: "update_company", Desc: "Change a company's profile, knowledge base (knowledge), design system (design), reply rules (replies) or inbox mode. Only the fields you pass change; text documents are replaced whole.",
-		Method: "PUT", Path: "/api/tenants/{company_id}", Props: merge(companyDoc, map[string]any{"company_id": company}), Required: []string{"company_id"}},
-	{Name: "rescan_company", Desc: "Scan the company's website again to refresh its brand library and knowledge base.",
-		Method: "POST", Path: "/api/tenants/{company_id}/scan", Props: map[string]any{"company_id": company, "url": pStr("Website, if different"), "notes": pStr("Notes for the scan")}, Required: []string{"company_id"}},
-	{Name: "delete_company", Desc: "Delete a company and its brand library. Refused while it still has projects. Ask the user first.",
-		Method: "DELETE", Path: "/api/tenants/{company_id}", Props: map[string]any{"company_id": company}, Required: []string{"company_id"}},
-	{Name: "add_company_asset", Desc: "Add a file to a company's brand library, from a URL or as base64.",
-		Props: map[string]any{"company_id": company, "folder": pEnum("Library folder", files.AssetDirs...), "filename": pStr("File name with extension"),
+	// brands
+	{Name: "list_companies", Desc: "All brands with their project count and AI spend in USD.", Method: "GET", Path: "/api/tenants"},
+	{Name: "get_company", Desc: "One brand: profile, knowledge base, design system, reply rules, brand library files with captions, and its projects.",
+		Method: "GET", Path: "/api/tenants/{company_id}", Props: map[string]any{"company_id": brand}, Required: []string{"company_id"}},
+	{Name: "create_company_from_website", Desc: "Add a brand by scanning its website: the brand library, design system and knowledge base fill in over 5-10 minutes (watch scan_status with get_company).",
+		Method: "POST", Path: "/api/tenants/scan", Props: map[string]any{"url": pStr("The brand's website"), "notes": pStr("Anything the scan should know")}, Required: []string{"url"}},
+	{Name: "create_company", Desc: "Add a brand by hand.", Method: "POST", Path: "/api/tenants", Props: companyDoc, Required: []string{"name"}},
+	{Name: "update_company", Desc: "Change a brand's profile, knowledge base (knowledge), design system (design), reply rules (replies) or inbox mode. Only the fields you pass change; text documents are replaced whole.",
+		Method: "PUT", Path: "/api/tenants/{company_id}", Props: merge(companyDoc, map[string]any{"company_id": brand}), Required: []string{"company_id"}},
+	{Name: "rescan_company", Desc: "Scan the brand's website again to refresh its brand library and knowledge base.",
+		Method: "POST", Path: "/api/tenants/{company_id}/scan", Props: map[string]any{"company_id": brand, "url": pStr("Website, if different"), "notes": pStr("Notes for the scan")}, Required: []string{"company_id"}},
+	{Name: "delete_company", Desc: "Delete a brand and its brand library. Refused while it still has projects. Ask the user first.",
+		Method: "DELETE", Path: "/api/tenants/{company_id}", Props: map[string]any{"company_id": brand}, Required: []string{"company_id"}},
+	{Name: "add_company_asset", Desc: "Add a file to a brand's library, from a URL or as base64.",
+		Props: map[string]any{"company_id": brand, "folder": pEnum("Library folder", files.AssetDirs...), "filename": pStr("File name with extension"),
 			"url": pStr("Download the file from here"), "content_base64": pStr("Or the file itself, base64-encoded (small files)")},
 		Required: []string{"company_id", "folder", "filename"}, Do: addCompanyAsset},
 	{Name: "update_company_asset", Desc: "Describe a brand library file so the editor agent picks it well (caption, use, context, section, source), or move it to another folder.",
-		Method: "PUT", Path: "/api/tenants/{company_id}/assets", Props: map[string]any{"company_id": company, "path": pStr("Library path, like people/jane.png"),
+		Method: "PUT", Path: "/api/tenants/{company_id}/assets", Props: map[string]any{"company_id": brand, "path": pStr("Library path, like people/jane.png"),
 			"caption": pStr("What is on screen: who, which product or feature"), "use": pStr("Good for: hero shot, testimonial, background…"), "context": pStr("Nearby heading or text"),
 			"section": pStr("Where on the site it appeared"), "source": pStr("Page URL"), "folder": pEnum("Move it to this folder", files.AssetDirs...)}, Required: []string{"company_id", "path"}},
-	{Name: "delete_company_asset", Desc: "Remove a file from a company's brand library.", Method: "DELETE", Path: "/api/tenants/{company_id}/assets",
-		Query: map[string]string{"path": "path"}, Props: map[string]any{"company_id": company, "path": pStr("Library path, like logo/mark.svg")}, Required: []string{"company_id", "path"}},
+	{Name: "delete_company_asset", Desc: "Remove a file from a brand's library.", Method: "DELETE", Path: "/api/tenants/{company_id}/assets",
+		Query: map[string]string{"path": "path"}, Props: map[string]any{"company_id": brand, "path": pStr("Library path, like logo/mark.svg")}, Required: []string{"company_id", "path"}},
 
 	// campaigns
-	{Name: "list_campaigns", Desc: "Campaigns, optionally for one company.", Method: "GET", Path: "/api/campaigns", Query: byTenant, Props: map[string]any{"company_id": company}},
-	{Name: "create_campaign", Desc: "Group a company's videos around one launch, offer or product. The brief reaches every video's agent.",
-		Method: "POST", Path: "/api/campaigns", Rename: toTenant, Props: map[string]any{"company_id": company, "name": pStr("Campaign name"), "brief": pStr("What the campaign is about")}, Required: []string{"company_id", "name"}},
+	{Name: "list_campaigns", Desc: "Campaigns, optionally for one brand.", Method: "GET", Path: "/api/campaigns", Query: byTenant, Props: map[string]any{"company_id": brand}},
+	{Name: "create_campaign", Desc: "Group a brand's videos around one launch, offer or product. The brief reaches every video's agent.",
+		Method: "POST", Path: "/api/campaigns", Rename: toTenant, Props: map[string]any{"company_id": brand, "name": pStr("Campaign name"), "brief": pStr("What the campaign is about")}, Required: []string{"company_id", "name"}},
 	{Name: "get_campaign", Desc: "One campaign with its videos.", Method: "GET", Path: "/api/campaigns/{campaign_id}", Props: map[string]any{"campaign_id": pInt("The campaign's id")}, Required: []string{"campaign_id"}},
 	{Name: "update_campaign", Desc: "Rename a campaign or change its brief.", Method: "PUT", Path: "/api/campaigns/{campaign_id}",
 		Props: map[string]any{"campaign_id": pInt("The campaign's id"), "name": pStr("Name"), "brief": pStr("Brief")}, Required: []string{"campaign_id"}},
@@ -114,12 +114,12 @@ var Tools = []mcpTool{
 		Props: map[string]any{"campaign_id": pInt("The campaign's id")}, Required: []string{"campaign_id"}},
 
 	// projects and videos
-	{Name: "list_projects", Desc: "Projects (videos, posts, thumbnails), newest first, optionally for one company or campaign.", Method: "GET", Path: "/api/projects",
-		Query: map[string]string{"company_id": "tenant", "campaign_id": "campaign"}, Props: map[string]any{"company_id": company, "campaign_id": pInt("Campaign id")}},
+	{Name: "list_projects", Desc: "Projects (videos, posts, thumbnails), newest first, optionally for one brand or campaign.", Method: "GET", Path: "/api/projects",
+		Query: map[string]string{"company_id": "tenant", "campaign_id": "campaign"}, Props: map[string]any{"company_id": brand, "campaign_id": pInt("Campaign id")}},
 	{Name: "get_project", Desc: "One project: brief, status (running, review, …), finished files in out/, drafts, posts, cost, and render or import progress.",
 		Method: "GET", Path: "/api/projects/{project_id}", Props: map[string]any{"project_id": project}, Required: []string{"project_id"}},
-	{Name: "create_video", Desc: "Start a new video (or post, or thumbnail) for a company. The editor agent starts at once and works in the background for several minutes: follow it with get_project_messages and get_project. Footage is optional; with footage_url (a YouTube or Google Drive link) it downloads first.",
-		Props: map[string]any{"company_id": company, "title": pStr("Project title"), "kind": pStr("Video kind id from get_options, like hook-reel or explainer"),
+	{Name: "create_video", Desc: "Start a new video (or post, or thumbnail) for a brand. The editor agent starts at once and works in the background for several minutes: follow it with get_project_messages and get_project. Footage is optional; with footage_url (a YouTube or Google Drive link) it downloads first.",
+		Props: map[string]any{"company_id": brand, "title": pStr("Project title"), "kind": pStr("Video kind id from get_options, like hook-reel or explainer"),
 			"brief": pStr("What the video should say and show"), "aspect": pEnum("Format", "9:16", "16:9", "1:1", "4:5"), "seconds": pInt("Length in seconds"),
 			"language": pStr("Language code, like en or bn"), "quality": pStr("Quality tier id from get_options"), "focus": pStr("A page URL or feature the video is about"),
 			"campaign_id": pInt("Campaign to add it to"), "template_id": pInt("Template to start from (list_templates)"), "footage_url": pStr("YouTube or Google Drive link to import"),
@@ -152,26 +152,26 @@ var Tools = []mcpTool{
 		Props:    map[string]any{"project_id": project, "filename": pStr("File name with extension"), "url": pStr("Download the file from here"), "content_base64": pStr("Or the file itself, base64-encoded (small files)")},
 		Required: []string{"project_id", "filename"}, Do: addProjectFile},
 	{Name: "save_template", Desc: "Save a finished project's look as a template for future videos.", Method: "POST", Path: "/api/projects/{project_id}/template",
-		Props: map[string]any{"project_id": project, "name": pStr("Template name"), "notes": pStr("When to use it"), "shared": pBool("Offer it to every company")}, Required: []string{"project_id"}},
-	{Name: "list_templates", Desc: "Saved templates, optionally for one company.", Method: "GET", Path: "/api/templates", Query: byTenant, Props: map[string]any{"company_id": company}},
+		Props: map[string]any{"project_id": project, "name": pStr("Template name"), "notes": pStr("When to use it"), "shared": pBool("Offer it to every brand")}, Required: []string{"project_id"}},
+	{Name: "list_templates", Desc: "Saved templates, optionally for one brand.", Method: "GET", Path: "/api/templates", Query: byTenant, Props: map[string]any{"company_id": brand}},
 	{Name: "delete_template", Desc: "Delete a template; videos made from it stay.", Method: "DELETE", Path: "/api/templates/{template_id}", Props: map[string]any{"template_id": pInt("Template id")}, Required: []string{"template_id"}},
 	{Name: "list_library", Desc: "Every finished video and image across projects.", Method: "GET", Path: "/api/library"},
 	{Name: "delete_project", Desc: "Delete a project and all its files. Ask the user first.", Method: "DELETE", Path: "/api/projects/{project_id}", Props: map[string]any{"project_id": project}, Required: []string{"project_id"}},
 
 	// publishing and autopilot
-	{Name: "list_social_accounts", Desc: "A company's connected social accounts (ids to publish to), which platforms are set up, and its inbox mode.",
-		Method: "GET", Path: "/api/tenants/{company_id}/social", Props: map[string]any{"company_id": company}, Required: []string{"company_id"}},
-	{Name: "write_captions", Desc: "Have Claude write a caption for every platform from the finished video and the company's knowledge base.",
+	{Name: "list_social_accounts", Desc: "A brand's connected social accounts (ids to publish to), which platforms are set up, and its inbox mode.",
+		Method: "GET", Path: "/api/tenants/{company_id}/social", Props: map[string]any{"company_id": brand}, Required: []string{"company_id"}},
+	{Name: "write_captions", Desc: "Have Claude write a caption for every platform from the finished video and the brand's knowledge base.",
 		Method: "POST", Path: "/api/projects/{project_id}/captions", Props: map[string]any{"project_id": project}, Required: []string{"project_id"}},
-	{Name: "publish_video", Desc: "Post a finished video to some of the company's accounts, now or at a time. Confirm the accounts, captions and time with the user first.",
+	{Name: "publish_video", Desc: "Post a finished video to some of the brand's accounts, now or at a time. Confirm the accounts, captions and time with the user first.",
 		Method: "POST", Path: "/api/projects/{project_id}/posts",
 		Props: map[string]any{"project_id": project, "file": pStr("The video, like out/final.mp4"), "accounts": pList("Social account ids (list_social_accounts)", "integer"),
 			"captions": pObj("Caption per platform: facebook, instagram, tiktok, youtube, youtube_title, linkedin, x, pinterest, pinterest_title, bluesky, mastodon"),
 			"privacy":  pObj("Optional: {youtube: public|unlisted|private, tiktok: PUBLIC_TO_EVERYONE|SELF_ONLY|INBOX|…}"), "at": pStr("RFC 3339 time to post at; empty posts now")},
 		Required: []string{"project_id", "file", "accounts", "captions"}},
-	{Name: "list_autopilots", Desc: "A company's Autopilot content plans.", Method: "GET", Path: "/api/autopilots", Query: byTenant, Props: map[string]any{"company_id": company}, Required: []string{"company_id"}},
+	{Name: "list_autopilots", Desc: "A brand's Autopilot content plans.", Method: "GET", Path: "/api/autopilots", Query: byTenant, Props: map[string]any{"company_id": brand}, Required: []string{"company_id"}},
 	{Name: "create_autopilot", Desc: "Create an Autopilot plan: videos made on a schedule and posted after one-click approval.",
-		Method: "POST", Path: "/api/autopilots", Rename: toTenant, Props: merge(autopilotDoc, map[string]any{"company_id": company}), Required: []string{"company_id", "brief"}},
+		Method: "POST", Path: "/api/autopilots", Rename: toTenant, Props: merge(autopilotDoc, map[string]any{"company_id": brand}), Required: []string{"company_id", "brief"}},
 	{Name: "update_autopilot", Desc: "Change an Autopilot plan, or turn it on or off. Only the fields you pass change.",
 		Method: "PUT", Path: "/api/autopilots/{autopilot_id}", Props: merge(autopilotDoc, map[string]any{"autopilot_id": pInt("Plan id")}), Required: []string{"autopilot_id"}},
 	{Name: "delete_autopilot", Desc: "Delete an Autopilot plan; its videos stay.", Method: "DELETE", Path: "/api/autopilots/{autopilot_id}", Props: map[string]any{"autopilot_id": pInt("Plan id")}, Required: []string{"autopilot_id"}},
@@ -182,14 +182,14 @@ var Tools = []mcpTool{
 	{Name: "approve_video", Desc: "Approve an Autopilot video so its posts go out. Only when the user says so.", Method: "POST", Path: "/api/projects/{project_id}/approve", Props: map[string]any{"project_id": project}, Required: []string{"project_id"}},
 
 	// inbox and costs
-	{Name: "list_inbox", Desc: "Recent Messenger, Instagram and WhatsApp messages and comments, optionally for one company.", Method: "GET", Path: "/api/inbox", Query: byTenant, Props: map[string]any{"company_id": company}},
+	{Name: "list_inbox", Desc: "Recent Messenger, Instagram and WhatsApp messages and comments, optionally for one brand.", Method: "GET", Path: "/api/inbox", Query: byTenant, Props: map[string]any{"company_id": brand}},
 	{Name: "get_inbox_thread", Desc: "The whole conversation or comment thread behind an inbox item.", Method: "GET", Path: "/api/inbox/thread",
 		Query: map[string]string{"account": "account", "kind": "kind", "id": "id"}, Props: map[string]any{"account": pInt("Account id"), "kind": pEnum("Item kind", "dm", "comment"), "id": pStr("Item id")}, Required: []string{"account", "kind", "id"}},
-	{Name: "draft_reply", Desc: "Have Claude draft a reply to an inbox item from the company's knowledge base.", Method: "POST", Path: "/api/inbox/draft",
+	{Name: "draft_reply", Desc: "Have Claude draft a reply to an inbox item from the brand's knowledge base.", Method: "POST", Path: "/api/inbox/draft",
 		Props: map[string]any{"account": pInt("Account id from the inbox item"), "kind": pEnum("Item kind", "dm", "comment"), "id": pStr("Item id"), "context": pStr("Extra instructions")}, Required: []string{"account", "kind", "id"}},
 	{Name: "send_reply", Desc: "Send a reply to a customer. Only with text the user has approved.", Method: "POST", Path: "/api/inbox/reply",
 		Props: map[string]any{"account": pInt("Account id"), "kind": pEnum("Item kind", "dm", "comment"), "id": pStr("Item id"), "to": pStr("Recipient id, for messages"), "text": pStr("The reply")}, Required: []string{"account", "kind", "id", "text"}},
-	{Name: "get_costs", Desc: "AI spend in USD by provider, company and month.", Method: "GET", Path: "/api/costs"},
+	{Name: "get_costs", Desc: "AI spend in USD by provider, brand and month.", Method: "GET", Path: "/api/costs"},
 
 	// setup: settings, keys and account connections
 	{Name: "get_settings", Desc: "App settings: AI models and unit prices, per-turn budget, voices, rendering, display currency and exchange rate.", Method: "GET", Path: "/api/settings"},
@@ -206,16 +206,16 @@ var Tools = []mcpTool{
 		Do: func(mux http.Handler, a map[string]any) (string, bool) {
 			return mcpDo(mux, "PUT", "/api/keys", a["keys"])
 		}},
-	{Name: "connect_link", Desc: "A sign-in link that connects a company's accounts on a platform. The user opens it in their browser, signs in on the platform and ticks the accounts; the app's own credentials for that platform must be set first (set_keys).",
-		Props:    map[string]any{"company_id": company, "platform": pEnum("meta = Facebook & Instagram, google = YouTube", "meta", "google", "tiktok", "linkedin", "x", "pinterest")},
+	{Name: "connect_link", Desc: "A sign-in link that connects a brand's accounts on a platform. The user opens it in their browser, signs in on the platform and ticks the accounts; the app's own credentials for that platform must be set first (set_keys).",
+		Props:    map[string]any{"company_id": brand, "platform": pEnum("meta = Facebook & Instagram, google = YouTube", "meta", "google", "tiktok", "linkedin", "x", "pinterest")},
 		Required: []string{"company_id", "platform"}, Do: connectLink},
-	{Name: "connect_bluesky", Desc: "Connect a Bluesky account to a company with its handle and an app password (bsky.app → Settings → Privacy and security → App passwords).",
-		Method: "POST", Path: "/api/tenants/{company_id}/bluesky", Props: map[string]any{"company_id": company, "handle": pStr("Like name.bsky.social"), "password": pStr("An app password"), "service": pStr("Only for a self-hosted PDS")}, Required: []string{"company_id", "handle", "password"}},
-	{Name: "connect_mastodon", Desc: "Connect a Mastodon account to a company with its server and an access token (Preferences → Development → New application, scopes read:accounts write:media write:statuses).",
-		Method: "POST", Path: "/api/tenants/{company_id}/mastodon", Props: map[string]any{"company_id": company, "server": pStr("Like mastodon.social"), "token": pStr("Access token")}, Required: []string{"company_id", "server", "token"}},
-	{Name: "connect_whatsapp", Desc: "Connect a WhatsApp Business API number to a company's inbox, with the values from Meta's WhatsApp → API Setup page and a system-user token.",
-		Method: "POST", Path: "/api/tenants/{company_id}/whatsapp", Props: map[string]any{"company_id": company, "phone_id": pStr("Phone number ID"), "waba_id": pStr("WhatsApp Business Account ID"), "token": pStr("Access token")}, Required: []string{"company_id", "phone_id", "waba_id", "token"}},
-	{Name: "disconnect_account", Desc: "Disconnect a social account from its company. Posts scheduled to it will fail. Ask the user first.",
+	{Name: "connect_bluesky", Desc: "Connect a Bluesky account to a brand with its handle and an app password (bsky.app → Settings → Privacy and security → App passwords).",
+		Method: "POST", Path: "/api/tenants/{company_id}/bluesky", Props: map[string]any{"company_id": brand, "handle": pStr("Like name.bsky.social"), "password": pStr("An app password"), "service": pStr("Only for a self-hosted PDS")}, Required: []string{"company_id", "handle", "password"}},
+	{Name: "connect_mastodon", Desc: "Connect a Mastodon account to a brand with its server and an access token (Preferences → Development → New application, scopes read:accounts write:media write:statuses).",
+		Method: "POST", Path: "/api/tenants/{company_id}/mastodon", Props: map[string]any{"company_id": brand, "server": pStr("Like mastodon.social"), "token": pStr("Access token")}, Required: []string{"company_id", "server", "token"}},
+	{Name: "connect_whatsapp", Desc: "Connect a WhatsApp Business API number to a brand's inbox, with the values from Meta's WhatsApp → API Setup page and a system-user token.",
+		Method: "POST", Path: "/api/tenants/{company_id}/whatsapp", Props: map[string]any{"company_id": brand, "phone_id": pStr("Phone number ID"), "waba_id": pStr("WhatsApp Business Account ID"), "token": pStr("Access token")}, Required: []string{"company_id", "phone_id", "waba_id", "token"}},
+	{Name: "disconnect_account", Desc: "Disconnect a social account from its brand. Posts scheduled to it will fail. Ask the user first.",
 		Method: "DELETE", Path: "/api/social/{account_id}", Props: map[string]any{"account_id": pInt("Account id from list_social_accounts")}, Required: []string{"account_id"}},
 }
 
@@ -233,7 +233,7 @@ func connectLink(mux http.Handler, a map[string]any) (string, bool) {
 	if !social.ProviderReady(p) {
 		return p + " isn't set up in this copy yet: save its app credentials with set_keys first (docs/platforms.md has the steps for each platform).", true
 	}
-	return fmt.Sprintf("Open this link in the browser where 37Studio is open, sign in, then tick the accounts that belong to the company:\n%s/api/oauth/%s/start?tenant=%v&return=%s",
+	return fmt.Sprintf("Open this link in the browser where 37Studio is open, sign in, then tick the accounts that belong to the brand:\n%s/api/oauth/%s/start?tenant=%v&return=%s",
 		config.PublicURL, p, a["company_id"], url.QueryEscape(config.PublicURL+"/")), false
 }
 
@@ -248,7 +248,7 @@ func merge(a, b map[string]any) map[string]any {
 	return out
 }
 
-const mcpInstructions = `37Studio makes branded videos for companies with an AI editor agent and posts them to social media. Companies hold a brand library, design system and knowledge base; projects are videos built by the agent in the background.
+const mcpInstructions = `37Studio makes branded videos for brands with an AI editor agent and posts them to social media. Brands hold a brand library, design system and knowledge base; projects are videos built by the agent in the background.
 Video work is slow: after create_video or send_message, check get_project_messages and get_project every minute or so until the status is "review", then look at the files in out/. Ask the user before deleting anything, publishing, approving Autopilot videos or sending inbox replies.`
 
 // Handler answers JSON-RPC over POST. Browsers can reach localhost too, so a request from another site's page is

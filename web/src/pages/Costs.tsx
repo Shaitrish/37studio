@@ -1,6 +1,7 @@
 import { ChartPieSliceIcon } from "@phosphor-icons/react";
-import { cash, useApi } from "../api";
-import { Empty } from "../ui";
+import { ReactNode } from "react";
+import { cash, useApi, useTenants } from "../api";
+import { Empty, TenantTag } from "../ui";
 
 interface Row { provider: string; item: string; n: number; qty: number; cost: number }
 interface Costs {
@@ -14,6 +15,7 @@ const providerName: Record<string, string> = { anthropic: "Claude", gemini: "Gem
 
 export default function Costs() {
   const { data: c } = useApi<Costs>("/costs");
+  const tenants = useTenants();
   if (!c) return null;
 
   const drivers = [
@@ -51,9 +53,9 @@ export default function Costs() {
           </div>
         </div>
         <div className="card">
-          <div className="card-h"><h2>Spend by company</h2></div>
+          <div className="card-h"><h2>Spend by brand</h2></div>
           <div className="card-b">
-            {c.by_tenant.length ? <Bars rows={c.by_tenant.map((t) => ({ label: t.name, sub: `${t.projects} project${t.projects === 1 ? "" : "s"}`, value: t.cost }))} /> :
+            {c.by_tenant.length ? <Bars rows={c.by_tenant.map((t) => ({ label: <TenantTag tenants={tenants} id={t.tenant_id} name={t.name} />, key: String(t.tenant_id), sub: `${t.projects} project${t.projects === 1 ? "" : "s"}`, value: t.cost }))} /> :
               <p className="small muted">No usage yet.</p>}
           </div>
         </div>
@@ -85,12 +87,12 @@ export default function Costs() {
   );
 }
 
-function Bars({ rows }: { rows: { label: string; sub: string; value: number }[] }) {
+function Bars({ rows }: { rows: { label: ReactNode; key?: string; sub: string; value: number }[] }) {
   const max = Math.max(...rows.map((r) => r.value), 0.0001);
   return (
     <div className="bars">
       {rows.map((r) => (
-        <div className="bar-row" key={r.label}>
+        <div className="bar-row" key={r.key ?? String(r.label)}>
           <div style={{ minWidth: 0 }}><div className="ellipsis">{r.label}</div><div className="small faint ellipsis">{r.sub}</div></div>
           <div className="bar-track"><div className="bar-fill" style={{ width: `${(r.value / max) * 100}%` }} /></div>
           <strong className="nowrap" style={{ fontVariantNumeric: "tabular-nums" }}>{cash(r.value)}</strong>

@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { ArrowSquareOutIcon, BookmarkSimpleIcon, DownloadSimpleIcon, FilmStripIcon, LayoutIcon, TrashIcon } from "@phosphor-icons/react";
-import { api, bytes, clock, date, fail, LibraryItem, Template, Tenant, toast, useApi } from "../api";
-import { Empty, Field, FileTile, Modal, Seg } from "../ui";
+import { api, bytes, clock, date, fail, LibraryItem, Template, toast, useApi, useTenants } from "../api";
+import { Empty, Field, FileTile, Modal, Seg, TenantPicker } from "../ui";
 
 /** Every finished video and image from every project: the ten videos cut from one class sit together here. */
 export default function Library() {
   const { data } = useApi<LibraryItem[]>("/library");
-  const { data: tenants } = useApi<Tenant[]>("/tenants");
+  const tenants = useTenants();
   const [kind, setKind] = useState("all");
   const [tenant, setTenant] = useState("");
   const [q, setQ] = useState("");
@@ -29,10 +29,7 @@ export default function Library() {
         <Seg value={kind} onChange={setKind} options={[{ value: "all", label: "All" }, { value: "video", label: "Videos" }, { value: "image", label: "Images" },
           { value: "templates", label: `Templates${templates?.length ? ` (${templates.length})` : ""}` }]} />
         <span className="spacer" />
-        <select className="select" style={{ width: "auto" }} value={tenant} onChange={(e) => setTenant(e.target.value)} aria-label="Company">
-          <option value="">All companies</option>
-          {tenants?.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-        </select>
+        <TenantPicker tenants={tenants} value={Number(tenant) || undefined} all="All brands" onChange={(id) => setTenant(id ? String(id) : "")} />
         <input className="input" style={{ width: 220 }} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search titles" aria-label="Search titles" />
       </div>
       {kind === "templates" ? (
@@ -41,7 +38,7 @@ export default function Library() {
       ) : data && !shown.length ? (
         <div className="card">
           <Empty icon={<FilmStripIcon size={28} />} title={data.length ? "Nothing matches" : "No finished videos yet"}>
-            {data.length ? "Try another company, type or search." : "Every video a project exports shows up here."}
+            {data.length ? "Try another brand, type or search." : "Every video a project exports shows up here."}
           </Empty>
         </div>
       ) : (
@@ -97,7 +94,7 @@ function Templates({ templates, reload }: { templates: Template[]; reload: () =>
           <div className="thumb">{t.thumb ? <img src={t.thumb} alt="" loading="lazy" /> : <LayoutIcon size={26} />}</div>
           <div className="meta">
             <div className="ellipsis" title={t.name}>{t.name}</div>
-            <div className="faint ellipsis">{t.tenant_name ?? "All companies"} · {t.aspect} · <a href={`#/projects/${t.project_id}`}>source</a></div>
+            <div className="faint ellipsis">{t.tenant_name ?? "All brands"} · {t.aspect} · <a href={`#/projects/${t.project_id}`}>source</a></div>
             {t.notes && <div className="caption" title={t.notes}>{t.notes}</div>}
           </div>
           <div className="acts"><button className="btn sm icon danger" onClick={() => remove(t)} aria-label={`Delete ${t.name}`} title="Delete"><TrashIcon size={14} /></button></div>
@@ -126,7 +123,7 @@ export function SaveTemplate({ projectId, title, onClose, onSaved }: { projectId
         <Field label="What should new videos keep?" hint="optional">
           <textarea className="textarea" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="The animated intro, the lower thirds and the caption style. Replace the footage, the question and the voiceover." />
         </Field>
-        <label className="row small"><input type="checkbox" checked={shared} onChange={(e) => setShared(e.target.checked)} /> Use it for every company, not just this one</label>
+        <label className="row small"><input type="checkbox" checked={shared} onChange={(e) => setShared(e.target.checked)} /> Use it for every brand, not just this one</label>
       </div>
     </Modal>
   );

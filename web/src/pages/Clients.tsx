@@ -11,7 +11,7 @@ export default function Clients() {
     <div className="page">
       <div className="page-head">
         <div className="spacer">
-          <h1>Companies</h1>
+          <h1>Brands</h1>
           <p>Your businesses and brands. Each has a brand library, design system, knowledge base and social accounts the agents work from.</p>
         </div>
         <button className="btn" onClick={() => setCreating(true)}><PlusIcon size={16} /> Add manually</button>
@@ -19,7 +19,7 @@ export default function Clients() {
       </div>
       {tenants && tenants.length === 0 ? (
         <div className="card">
-          <Empty icon={<UsersThreeIcon size={28} />} title="No companies yet">
+          <Empty icon={<UsersThreeIcon size={28} />} title="No brands yet">
             Paste its website or choose its project folder: the agent builds the brand library, design system and knowledge base.
             <button className="btn primary" onClick={() => setScanning(true)}><GlobeIcon size={16} /> Add from website or folder</button>
           </Empty>
@@ -59,21 +59,21 @@ export function TenantModal({ tenant, onClose, onSaved }: { tenant?: Tenant; onC
   async function save() {
     try {
       const t = await api<Tenant>(tenant ? `/tenants/${tenant.id}` : "/tenants", { method: tenant ? "PUT" : "POST", body: f });
-      toast("Company saved");
+      toast("Brand saved");
       onSaved(t);
       onClose();
     } catch (e) { fail(e); }
   }
   return (
     <Modal
-      title={tenant ? "Edit company" : "New company"}
+      title={tenant ? "Edit brand" : "New brand"}
       sub="Brand details go straight into the agent's instructions."
       size="lg"
       onClose={onClose}
-      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" onClick={save}>Save company</button></>}
+      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" onClick={save}>Save brand</button></>}
     >
       <div className="form">
-        <Field label="Company / brand name"><input className="input" value={f.name ?? ""} onChange={set("name")} autoFocus placeholder="Course37 Physics" /></Field>
+        <Field label="Brand name"><input className="input" value={f.name ?? ""} onChange={set("name")} autoFocus placeholder="Course37 Physics" /></Field>
         <Field label="Presenter / spokesperson"><input className="input" value={f.teacher ?? ""} onChange={set("teacher")} placeholder="Name shown on lower thirds" /></Field>
         <Field label="Contact person"><input className="input" value={f.contact ?? ""} onChange={set("contact")} /></Field>
         <Field label="Email"><input className="input" type="email" value={f.email ?? ""} onChange={set("email")} /></Field>
@@ -104,7 +104,7 @@ export function TenantModal({ tenant, onClose, onSaved }: { tenant?: Tenant; onC
   );
 }
 
-/** Creates a company from its website and/or project folder (or re-scans one): the agent pulls logo, photos, colors and copy. */
+/** Creates a brand from its website and/or project folder (or re-scans one): the agent pulls logo, photos, colors and copy. */
 export function ScanModal({ tenant, onClose, onStarted }: { tenant?: Tenant; onClose: () => void; onStarted?: () => void }) {
   const [url, setUrl] = useState(tenant?.website ?? "");
   const [notes, setNotes] = useState("");
@@ -112,13 +112,13 @@ export function ScanModal({ tenant, onClose, onStarted }: { tenant?: Tenant; onC
   const [busy, setBusy] = useState(false);
   const [pct, setPct] = useState<number>();
   const pick = useRef<HTMLInputElement>(null);
-  const created = useRef<number | undefined>(undefined); // a new company whose folder upload failed: retry into it, don't make another
+  const created = useRef<number | undefined>(undefined); // a new brand whose folder upload failed: retry into it, don't make another
   const ready = !!url.trim() || !!folder?.keep.length || !!tenant?.source;
   async function start() {
     setBusy(true);
     try {
       let id = tenant?.id ?? created.current;
-      // With a folder, the server waits for the upload; without one, creating the company starts the scan.
+      // With a folder, the server waits for the upload; without one, creating the brand starts the scan.
       if (!id) id = created.current = (await api<Tenant>("/tenants/scan", { body: { url, notes, folder: folder?.keep.length ? folder.name : "" } })).id;
       if (folder?.keep.length) await upload(`/tenants/${id}/source`, folder.keep, setPct, (f) => encodeURIComponent(f.webkitRelativePath));
       if (tenant || folder?.keep.length) await api(`/tenants/${id}/scan`, { body: { url, notes } });
@@ -128,8 +128,8 @@ export function ScanModal({ tenant, onClose, onStarted }: { tenant?: Tenant; onC
   const src = tenant?.source;
   return (
     <Modal
-      title={tenant ? "Re-scan company" : "Add company"}
-      sub="Reads the website and/or the company's own project folder, sorts every asset (logos, people, images, SVGs, videos, fonts) into the brand library, extracts the design system (colors, type scale, spacing, radii, shadows, components) and writes a knowledge base. Every project uses all three."
+      title={tenant ? "Re-scan brand" : "Add brand"}
+      sub="Reads the website and/or the brand's own project folder, sorts every asset (logos, people, images, SVGs, videos, fonts) into the brand library, extracts the design system (colors, type scale, spacing, radii, shadows, components) and writes a knowledge base. Every project uses all three."
       onClose={onClose}
       footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={!ready || busy} onClick={start}><GlobeIcon size={15} /> {busy ? (pct === undefined ? "Starting…" : `Uploading ${pct}%`) : "Scan"}</button></>}
     >
