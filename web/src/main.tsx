@@ -77,7 +77,7 @@ function App() {
       case "library": return <Library />;
       case "costs": return <Costs />;
       case "inbox": return <Inbox />;
-      case "settings": return <Settings />;
+      case "settings": return <Settings tab={id} />;
       case "assistant": return <Assistant />;
       default: return <Overview />;
     }
@@ -136,7 +136,7 @@ function App() {
             <a role="button" tabIndex={0} className="expand" title="Expand sidebar (Ctrl+B)" onClick={() => setCollapsed(false)} onKeyDown={(e) => e.key === "Enter" && setCollapsed(false)}>
               <SidebarSimpleIcon size={18} /> <span className="nav-label">Expand</span>
             </a>
-            {upd?.newer && <a className="who" href="#/settings" style={{ color: "var(--primary)" }}>Version {upd.latest} available</a>}
+            {upd?.newer && <a className="who" href="#/settings/about" style={{ color: "var(--primary)" }}>Version {upd.latest} available</a>}
             <a className="who" href={repoURL} target="_blank" rel="noreferrer">37Studio {upd?.current} · open source</a>
             <a className="who" href={makerURL} target="_blank" rel="noreferrer">Made by Shaitrish</a>
           </div>

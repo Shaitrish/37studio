@@ -106,7 +106,7 @@ export function SocialTab({ tenantId }: { tenantId: number }) {
         <div className="card-b row wrap" style={{ borderTop: "1px solid var(--border)" }}>
           {providers.map((p) => (
             <button key={p.id} className="btn" disabled={!data?.ready[p.id] && p.id !== "meta"} onClick={() => data?.ready[p.id] ? connect(p.id) : setMetaApp(true)}
-              title={data?.ready[p.id] ? "Sign in, then pick the accounts that belong to this company" : p.id === "meta" ? "Set up your Meta app first" : "Add its app credentials in Settings → Keys first"}>
+              title={data?.ready[p.id] ? "Sign in, then pick the accounts that belong to this company" : p.id === "meta" ? "Set up your Meta app first" : "Add its app keys in Settings → Social apps first"}>
               <p.Icon size={15} /> Connect {p.label}
             </button>
           ))}
@@ -142,7 +142,7 @@ export function SocialTab({ tenantId }: { tenantId: number }) {
       </div>
 
       {missing.length > 0 && (
-        <p className="small faint">{missing.map((p) => p.label).join(", ")}: add your own app's credentials in <a href="#/settings">Settings → Keys</a> first (README → Platform setup).</p>
+        <p className="small faint">{missing.map((p) => p.label).join(", ")}: add your own app's keys in <a href="#/settings/social">Settings → Social apps</a> first.</p>
       )}
       <p className="small faint">
         Facebook Groups and personal profiles can't be posted to by any app: Meta removed group posting in 2024 and profile posting in 2018.
