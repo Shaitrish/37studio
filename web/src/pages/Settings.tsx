@@ -260,7 +260,7 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
               <CodexCard onChange={reloadMeta} />
               {meta && !meta.env.opencode && (
                 <div className="note-box small row wrap" style={{ gap: 10 }}>
-                  <span className="spacer">OpenCode, OpenAI, xAI and OpenRouter models run through OpenCode, which is set up the first time you need it (about 180 MB, once).</span>
+                  <span className="spacer">OpenCode, OpenAI, xAI and OpenRouter models run through OpenCode, which is set up the first time you need it (a one-time download of a few hundred MB).</span>
                   <button className="btn sm" disabled={installing} onClick={setUpOpenCode}>{installing ? "Setting up…" : "Set up OpenCode now"}</button>
                 </div>
               )}

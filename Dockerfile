@@ -32,7 +32,7 @@ RUN python3 -m venv /opt/asr && /opt/asr/bin/pip install --no-cache-dir faster-w
 ENV STUDIO37_ASR_PYTHON=/opt/asr/bin/python
 # Claude Code is pinned too: it is the most privileged process here, and a pin makes builds repeatable. To bump: try
 # the new version with `docker compose up --build`, run a project and the Assistant, then change it. Codex and OpenCode
-# aren't in the image (about 600 MB most people never use): they install into /data/tools on first use, at the versions
+# aren't in the image (about 800 MB most people never use): they install into /data/tools on first use, at the versions
 # pinned in internal/agent/tools.go.
 ARG CLAUDE_CODE_VERSION=2.1.309
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} hyperframes@${HF_VERSION}
