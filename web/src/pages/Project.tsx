@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpIcon, BookmarkSimpleIcon, CheckCircleIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FileTextIcon, FilmStripIcon, GlobeIcon, ListChecksIcon, PencilLineIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MicrophoneSlashIcon, PaperclipIcon, MagnifyingGlassIcon, SlidersHorizontalIcon, SparkleIcon, SquareIcon, TerminalWindowIcon, TrashIcon, MagicWandIcon, WrenchIcon, XIcon } from "@phosphor-icons/react";
+import { ArrowUpIcon, BookmarkSimpleIcon, CheckCircleIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FileTextIcon, FilmStripIcon, GlobeIcon, ListChecksIcon, PencilLineIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MicrophoneSlashIcon, MusicNotesIcon, SpeakerHighIcon, ImageIcon, PlayIcon, PauseIcon, PaperclipIcon, MagnifyingGlassIcon, SlidersHorizontalIcon, SparkleIcon, SquareIcon, TerminalWindowIcon, TrashIcon, MagicWandIcon, WrenchIcon, XIcon } from "@phosphor-icons/react";
 import { Quality } from "../api";
 import { api, bytes, ChatEvent, clock, fail, FileInfo, go, languageName, Meta, Project, toast, upload, cash, useApi } from "../api";
 import { DropZone, Empty, FileTile, KindIcon, Progress, Seg, Status, projectStatus } from "../ui";
@@ -201,7 +201,7 @@ export default function ProjectPage({ id }: { id: number }) {
             {tab === "brief" && <BriefCard p={p} meta={meta} reload={reload} onDelete={remove} />}
             {tab === "sources" && <>
               <Sources p={p} reload={reload} />
-              <MediaSection title="In the video" hint="comp/assets: what the composition uses, including AI voice, music and sound"
+              <MediaSection title="In the video" hint="everything the video uses, including AI voice, music and sound"
                 files={(p.comp_assets ?? []).filter((f) => f.kind !== "font" && f.kind !== "other")} />
             </>}
             {tab === "generate" && <>
@@ -698,27 +698,83 @@ function useDictation(videoLang: string, onFinal: (text: string) => void) {
 const modelName = (id: string) => id.replace(/^.*\//, "").replace(/^claude-/, "").replace(/-(\d+)-(\d+)$/, " $1.$2").replace(/^\w/, (c) => c.toUpperCase());
 
 /** Inline-playable media list: audio gets a player, images and video a thumbnail. */
-function MediaSection({ title, hint, files, empty }: { title: string; hint: string; files: (FileInfo & { item?: string; cost?: number })[]; empty?: string }) {
+type MediaFile = FileInfo & { item?: string; cost?: number };
+
+/** Media sorted into what a person thinks in: voiceover, music, sound effects, pictures and clips. Paths are the agent's
+ *  own (comp/assets/audio/vo/hook.mp3), so the guess goes by folder and file name; anything unclear is "Other audio". */
+const mediaGroups: { id: string; label: string; Icon: typeof SparkleIcon; match: (f: MediaFile) => boolean }[] = [
+  { id: "vo", label: "Voiceover", Icon: MicrophoneIcon, match: (f) => f.kind === "audio" && /(^|\/)(vo|voice|voiceover|narration)(\/|[-_.])/i.test(f.path) },
+  { id: "music", label: "Music", Icon: MusicNotesIcon, match: (f) => f.kind === "audio" && /music|bgm|bed/i.test(f.path) },
+  { id: "sfx", label: "Sound effects", Icon: SpeakerHighIcon, match: (f) => f.kind === "audio" && /sfx|sound|whoosh|hit|click|swoosh/i.test(f.path) },
+  { id: "audio", label: "Other audio", Icon: SpeakerHighIcon, match: (f) => f.kind === "audio" },
+  { id: "image", label: "Images", Icon: ImageIcon, match: (f) => f.kind === "image" },
+  { id: "video", label: "Video clips", Icon: FilmStripIcon, match: (f) => f.kind === "video" },
+];
+
+/** "audio/vo/s-review.mp3" → "S review": the file name a person would say. */
+const mediaName = (path: string) => {
+  const base = path.split("/").pop()!.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim();
+  return base.charAt(0).toUpperCase() + base.slice(1);
+};
+
+function MediaSection({ title, hint, files, empty }: { title: string; hint: string; files: MediaFile[]; empty?: string }) {
+  const [playing, setPlaying] = useState<string>();
+  const player = useRef<HTMLAudioElement>(null);
+  useEffect(() => () => player.current?.pause(), []);
   if (!files.length && !empty) return null;
+  const used = new Set<MediaFile>();
+  const groups = mediaGroups.map((g) => {
+    const list = files.filter((f) => !used.has(f) && g.match(f));
+    list.forEach((f) => used.add(f));
+    return { ...g, list };
+  }).filter((g) => g.list.length);
+  // One player for the whole list, so starting one track stops the last.
+  const toggle = (url: string) => {
+    const a = player.current!;
+    if (playing === url) { a.pause(); setPlaying(undefined); return; }
+    a.src = url;
+    a.play().then(() => setPlaying(url), fail);
+  };
+  const meta = (f: MediaFile) => <span className="small faint nowrap">{f.seconds ? clock(f.seconds) : bytes(f.size)}{f.cost ? ` · ${cash(f.cost)}` : ""}</span>;
   return (
-    <div className="card-b stack" style={{ gap: 10, borderTop: "1px solid var(--border)" }}>
-      <div className="row"><h3>{title}</h3><span className="small faint">{hint}</span></div>
-      {!files.length ? <p className="small muted">{empty}</p> : (
-        <div className="media-grid">
-          {files.map((f) => (
-            <div key={f.url} className="media-item">
-              {f.kind === "audio" ? <audio src={f.url} controls preload="none" /> :
-               f.kind === "image" ? <a href={f.url} target="_blank" rel="noreferrer"><img src={f.url} alt={f.name} loading="lazy" /></a> :
-               <video src={f.url} controls preload="metadata" />}
-              <div className="small row" style={{ gap: 6 }}>
-                <span className="ellipsis spacer" title={f.path}>{f.path}</span>
-                <span className="faint nowrap">{f.seconds ? clock(f.seconds) : bytes(f.size)}{f.cost ? ` · ${cash(f.cost)}` : ""}</span>
-              </div>
-              {f.item && <div className="small faint">{f.item}</div>}
+    <div className="card-b stack" style={{ gap: 12, borderTop: "1px solid var(--border)" }}>
+      <div className="row wrap"><h3>{title}</h3><span className="small faint">{hint}</span></div>
+      <audio ref={player} onEnded={() => setPlaying(undefined)} hidden />
+      {!files.length ? <p className="small muted">{empty}</p> : groups.map((g) => (
+        <details key={g.id} className="media-group" open>
+          <summary>
+            <g.Icon size={16} /> <strong>{g.label}</strong> <span className="faint">{g.list.length}</span>
+            <CaretRightIcon size={12} className="caret" />
+          </summary>
+          {g.list[0].kind === "audio" ? (
+            <div className="media-list">
+              {g.list.map((f) => (
+                <div key={f.url} className={`media-row ${playing === f.url ? "on" : ""}`}>
+                  <button className="btn icon sm" onClick={() => toggle(f.url)} aria-label={`${playing === f.url ? "Pause" : "Play"} ${mediaName(f.path)}`}>
+                    {playing === f.url ? <PauseIcon size={14} weight="fill" /> : <PlayIcon size={14} weight="fill" />}
+                  </button>
+                  <span className="spacer ellipsis" title={f.path}>{mediaName(f.path)}{f.item && <span className="faint"> · {f.item}</span>}</span>
+                  {meta(f)}
+                  <a className="btn ghost sm icon" href={f.url} download aria-label={`Download ${mediaName(f.path)}`} title="Download"><DownloadSimpleIcon size={14} /></a>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+          ) : (
+            <div className="media-grid">
+              {g.list.map((f) => (
+                <div key={f.url} className="media-item">
+                  {f.kind === "image" ? <a href={f.url} target="_blank" rel="noreferrer"><img src={f.url} alt={mediaName(f.path)} loading="lazy" /></a> : <video src={f.url} controls preload="metadata" />}
+                  <div className="small row" style={{ gap: 6 }}>
+                    <span className="ellipsis spacer" title={f.path}>{mediaName(f.path)}</span>
+                    {meta(f)}
+                  </div>
+                  {f.item && <div className="small faint">{f.item}</div>}
+                </div>
+              ))}
+            </div>
+          )}
+        </details>
+      ))}
     </div>
   );
 }
