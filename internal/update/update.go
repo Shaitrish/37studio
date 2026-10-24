@@ -12,7 +12,7 @@ import (
 	"github.com/Shaitrish/37studio/internal/remote"
 )
 
-const Version = "0.6.0"
+const Version = "0.7.0"
 
 // Copies ask GitHub for the latest release, not a server of ours; point STUDIO37_UPDATE_URL at a fork's
 // https://api.github.com/repos/<owner>/<repo>/releases/latest to follow it.
