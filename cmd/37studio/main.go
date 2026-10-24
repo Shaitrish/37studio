@@ -110,6 +110,9 @@ func routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/templates", httpapi.JSON(templates.List))
 	mux.HandleFunc("DELETE /api/templates/{id}", httpapi.JSON(templates.Delete))
 	mux.HandleFunc("POST /api/projects/{id}/template", httpapi.JSON(templates.Save))
+	mux.HandleFunc("GET /api/codex", httpapi.JSON(agent.CodexStatus))
+	mux.HandleFunc("POST /api/codex/login", httpapi.JSON(agent.CodexLogin))
+	mux.HandleFunc("DELETE /api/codex/login", httpapi.JSON(agent.CodexLogout))
 	mux.HandleFunc("GET /api/keys", httpapi.JSON(keys.List))
 	mux.HandleFunc("PUT /api/keys", httpapi.JSON(keys.Put))
 	mux.HandleFunc("GET /api/update", httpapi.JSON(update.Check))
@@ -174,6 +177,7 @@ func getMeta(r *http.Request) (any, error) {
 			"gemini":    os.Getenv("GEMINI_API_KEY") != "",
 			"eleven":    os.Getenv("ELEVENLABS_API_KEY") != "",
 			"anthropic": os.Getenv("ANTHROPIC_API_KEY") != "" || os.Getenv("CLAUDE_CODE_OAUTH_TOKEN") != "",
+			"codex":     agent.CodexReady(),
 			"bypass":    config.Env("STUDIO37_AGENT_PERMISSIONS", "") == "bypass",
 			"password":  config.Env("STUDIO37_PASSWORD", "") != "",
 		},

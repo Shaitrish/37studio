@@ -29,8 +29,8 @@ func Quote(p map[string]any) map[string]any {
 		if u["provider"] == "fal" {
 			label = "fal.ai " + store.Str(u["item"])
 		}
-		if u["provider"] == "anthropic" || u["provider"] == "opencode" {
-			name := map[string]string{"anthropic": "Claude", "opencode": "OpenCode"}[store.Str(u["provider"])]
+		if u["provider"] == "anthropic" || u["provider"] == "opencode" || u["provider"] == "codex" {
+			name := map[string]string{"anthropic": "Claude", "opencode": "OpenCode", "codex": "Codex"}[store.Str(u["provider"])]
 			label, detail = name+" agent ("+store.Str(u["item"])+")", fmt.Sprintf("%v runs, %.1fM tokens", u["n"], qty/1e6)
 		} else if store.Str(u["item"]) == store.Setting("video_model") {
 			detail = fmt.Sprintf("%.0f s of video", qty)

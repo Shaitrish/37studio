@@ -11,7 +11,7 @@ interface Costs {
   total: number; this_month: number;
 }
 
-const providerName: Record<string, string> = { anthropic: "Claude", gemini: "Gemini", elevenlabs: "ElevenLabs", opencode: "OpenCode" };
+const providerName: Record<string, string> = { anthropic: "Claude", gemini: "Gemini", elevenlabs: "ElevenLabs", opencode: "OpenCode", codex: "Codex (ChatGPT plan)", fal: "fal.ai" };
 
 export default function Costs() {
   const { data: c } = useApi<Costs>("/costs");
@@ -21,7 +21,7 @@ export default function Costs() {
   const drivers = [
     ...c.by_provider.map((r) => ({
       label: `${providerName[r.provider] ?? r.provider} · ${r.item}`,
-      detail: r.provider === "anthropic" || r.provider === "opencode" ? `${r.n} runs · ${(r.qty / 1e6).toFixed(1)}M tokens` : `${r.n} generations`,
+      detail: ["anthropic", "opencode", "codex"].includes(r.provider) ? `${r.n} runs · ${(r.qty / 1e6).toFixed(1)}M tokens` : `${r.n} generations`,
       cost: r.cost,
     })),
   ].filter((d) => d.cost > 0).sort((a, b) => b.cost - a.cost);

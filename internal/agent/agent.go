@@ -70,7 +70,7 @@ type Quality struct {
 	Model   string `json:"model"`
 	Effort  string `json:"effort"`
 	Note    string `json:"note"`
-	Harness string `json:"harness"`         // "" = Claude Code, "opencode" = OpenCode
+	Harness string `json:"harness"`         // "" = Claude Code, "opencode" = OpenCode, "codex" = Codex
 	Group   string `json:"group,omitempty"` // the provider, for grouping OpenCode's models in pickers
 }
 
@@ -86,7 +86,7 @@ var legacyOpenCode = map[string]string{"kimi": "opencode-go/kimi-k3", "qwen": "o
 	"deepseek": "opencode-go/deepseek-v4-pro", "deepseek-flash": "opencode-go/deepseek-v4.1-flash"}
 
 func QualityByID(id string) Quality {
-	for _, q := range Qualities {
+	for _, q := range append(Qualities, codexQualities...) {
 		if q.ID == id {
 			return q
 		}
@@ -105,8 +105,15 @@ func QualityByID(id string) Quality {
 	return Qualities[2]
 }
 
-// AllQualities is every model the pickers offer: Claude Code's tiers, then what OpenCode can run with this copy's keys.
-func AllQualities() []Quality { return append(slices.Clone(Qualities), OpenCodeQualities()...) }
+// AllQualities is every model the pickers offer: Claude Code's tiers, Codex when it's signed in, then what OpenCode can
+// run with this copy's keys.
+func AllQualities() []Quality {
+	all := slices.Clone(Qualities)
+	if CodexReady() {
+		all = append(all, codexQualities...)
+	}
+	return append(all, OpenCodeQualities()...)
+}
 
 const harness = `You are the video editor agent of 37Studio. You turn long-form footage (lectures, webinars, podcasts, interviews, product demos) and brand material into short-form ads, reels, captioned clips, motion-graphics explainers, promos and thumbnails for Facebook Reels, TikTok, YouTube Shorts and YouTube. The person talking to you runs this brand's content, not a developer: keep replies short, concrete and free of code.
 
@@ -428,6 +435,9 @@ func StartRun(id int64, text, quality string, announce bool) error {
 	q := QualityByID(cmp.Or(quality, store.Str(p["quality"])))
 	if q.Harness == "opencode" {
 		return startOpenCode(id, p, q, text, announce)
+	}
+	if q.Harness == "codex" {
+		return startCodex(id, p, q, text, announce)
 	}
 	if err := keys.ClaudeReady(); err != nil {
 		return err

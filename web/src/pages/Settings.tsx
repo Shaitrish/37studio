@@ -145,7 +145,7 @@ const tabs: { id: string; label: string; Icon: Icon }[] = [
 /** Each section has its own address (#/settings/social), so other pages can link straight to it. */
 export default function Settings({ tab: tabParam }: { tab?: string }) {
   const { data, setData } = useApi<Record<string, string>>("/settings");
-  const { data: meta } = useApi<Meta>("/meta");
+  const { data: meta, reload: reloadMeta } = useApi<Meta>("/meta");
   const { data: keys, setData: setKeys } = useApi<KeyInfo[]>("/keys");
   const { data: voices, error: voiceErr } = useApi<Voice[]>(meta?.env.eleven ? "/voices" : null);
   const tab = tabs.some((t) => t.id === tabParam) ? tabParam! : "start";
@@ -241,9 +241,10 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
               <h3 className="settings-h">The editor agent</h3>
               {card(aiProviders[0])}
               <p className="small muted" style={{ margin: "4px 0 0" }}>
-                Want GPT, Grok or other models too? Connect any of these, and their newest models appear in every model menu, next to Claude.
+                Want Codex, GPT, Grok or other models too? Connect any of these, and they appear in every model menu, next to Claude.
                 {(meta?.qualities ?? []).some((q) => q.harness) && <> Right now: {(meta?.qualities ?? []).filter((q) => q.harness).length} more models.</>}
               </p>
+              <CodexCard onChange={reloadMeta} />
               {agentProviders.map((p) => p.id === "opencode" && (meta?.qualities ?? []).some((q) => q.group === "OpenCode Go")
                 ? card({ ...p, what: p.what + " Signed in from the terminal.", ready: () => true }) // `opencode auth login` instead of a key
                 : card(p))}
@@ -348,6 +349,69 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
           <span className="spacer">You have unsaved changes.</span>
           <button className="btn ghost" onClick={() => data && setS(data)}>Discard</button>
           <button className="btn primary" onClick={save}>Save changes</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface CodexState { signed_in: boolean; pending?: { url: string; code: string } | null; error?: string }
+
+/** Codex signs in with a ChatGPT plan by device code: the app shows the link and code, and waits while the person
+ *  approves it in their browser. No terminal, no API key. */
+function CodexCard({ onChange }: { onChange: () => void }) {
+  const { data: st, reload, setData } = useApi<CodexState>("/codex");
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const waiting = !!st?.pending && !st.signed_in;
+  useEffect(() => {
+    if (!waiting) return;
+    const t = setInterval(() => api<CodexState>("/codex").then((n) => {
+      setData(n);
+      if (n.signed_in) { toast("Codex is signed in"); onChange(); }
+    }, () => {}), 3000);
+    return () => clearInterval(t);
+  }, [waiting]);
+  const start = async () => {
+    setBusy(true); setOpen(true);
+    try { const p = await api<{ url: string; code: string }>("/codex/login", { body: {} }); setData({ signed_in: false, pending: p }); } catch (e) { fail(e); }
+    setBusy(false);
+  };
+  const signOut = () => confirm("Sign Codex out of 37Studio?") && api("/codex/login", { method: "DELETE" }).then(() => { reload(); onChange(); toast("Codex signed out"); }, fail);
+  return (
+    <div className="card provider">
+      <button className="provider-head" onClick={() => setOpen(!open)} aria-expanded={open || waiting}>
+        <span className="brand-tile"><Brand id="openai" size={24} /></span>
+        <span className="spacer" style={{ textAlign: "left" }}>
+          <strong>Codex</strong>
+          <span className="small muted" style={{ display: "block" }}>OpenAI's coding agent, with your ChatGPT plan (Plus, Pro or Business). No API key: sign in once and it uses your plan's Codex limits.</span>
+        </span>
+        {st?.signed_in ? <span className="pill green"><span className="dot" />Signed in</span> : waiting ? <span className="pill amber"><span className="dot" />Waiting</span> : <span className="small faint nowrap">Not set up</span>}
+        <CaretRightIcon size={14} className="caret" style={{ transform: open || waiting ? "rotate(90deg)" : undefined }} />
+      </button>
+      {(open || waiting) && (
+        <div className="card-b stack" style={{ borderTop: "1px solid var(--border)", gap: 12 }}>
+          {st?.signed_in ? (
+            <div className="row wrap">
+              <span className="small muted spacer">Codex appears in every model menu. Runs count against your ChatGPT plan, not a bill here.</span>
+              <button className="btn ghost sm danger" onClick={signOut}>Sign out</button>
+            </div>
+          ) : waiting ? (
+            <>
+              <ol className="small" style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 8 }}>
+                <li>Open <a href={st!.pending!.url} target="_blank" rel="noreferrer" style={{ color: "var(--primary)" }}>{st!.pending!.url} <ArrowSquareOutIcon size={12} /></a> and sign in to ChatGPT.</li>
+                <li>Enter this code: <span className="mono" style={{ fontSize: 20, fontWeight: 600, letterSpacing: "0.08em", marginLeft: 6 }}>{st!.pending!.code}</span>{" "}
+                  <button className="btn ghost sm" onClick={() => navigator.clipboard?.writeText(st!.pending!.code).then(() => toast("Code copied"))}>Copy</button></li>
+                <li>Come back here; this updates by itself. The code works for 15 minutes.</li>
+              </ol>
+              <p className="small faint" style={{ margin: 0 }}>If ChatGPT says device codes are turned off: ChatGPT → Settings → Security → allow device code sign-in (a workspace admin may need to allow it).</p>
+            </>
+          ) : (
+            <div className="row wrap">
+              <span className="small muted spacer">{st?.error ? <span style={{ color: "var(--danger)" }}>{st.error}</span> : "You'll get a link and a code to approve in your browser."}</span>
+              <button className="btn primary" disabled={busy} onClick={start}><Brand id="openai" size={15} /> {busy ? "Starting…" : "Sign in with ChatGPT"}</button>
+            </div>
+          )}
         </div>
       )}
     </div>

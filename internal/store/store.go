@@ -191,6 +191,7 @@ func Open() {
 		"alter table projects add column language text not null default ''",
 		"alter table usage add column file text not null default ''",
 		"alter table projects add column oc_session text not null default ''",
+		"alter table projects add column cx_session text not null default ''",
 		"alter table projects add column autopilot_id integer",
 		"alter table projects add column autopilot_slot text not null default ''",
 		"alter table projects add column autopilot_stage text not null default ''",
