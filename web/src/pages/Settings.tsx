@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
-import { CheckCircleIcon, XCircleIcon } from "@phosphor-icons/react";
-import { api, donateURL, fail, languageName, makerURL, Meta, money, repoURL, setDisplay, toast, useApi, Voice } from "../api";
+import {
+  CaretRightIcon, CheckCircleIcon, FacebookLogoIcon, GoogleLogoIcon, Icon, LinkedinLogoIcon, PinterestLogoIcon, SparkleIcon, TiktokLogoIcon,
+  WaveformIcon, XCircleIcon, XLogoIcon, YoutubeLogoIcon,
+} from "@phosphor-icons/react";
+import { api, connectGuideURL, donateURL, fail, languageName, makerURL, Meta, money, repoURL, setDisplay, toast, useApi, Voice } from "../api";
 import { Field, Seg } from "../ui";
 
 export default function Settings() {
@@ -113,7 +116,21 @@ function Section({ title, sub, children }: { title: string; sub: string; childre
 
 interface KeyInfo { name: string; label: string; hint: string; set: boolean; last4?: string; source: "" | "app" | "env" }
 
-/** Provider keys, saved on their own (not with "Save changes"): encrypted on this computer, shown only as their last 4. */
+/** Which keys belong together on the page. `guide` is the section of the connect guide that explains where to get them. */
+const keyGroups: { title: string; sub: string; Icon: Icon; keys: string[]; social?: boolean; guide?: string }[] = [
+  { title: "Claude", sub: "Runs the editor agent and writes captions and replies. One of the two is enough.", Icon: SparkleIcon, keys: ["ANTHROPIC_API_KEY", "CLAUDE_CODE_OAUTH_TOKEN"] },
+  { title: "Gemini", sub: "Images, video clips and smarter website scans. Optional.", Icon: GoogleLogoIcon, keys: ["GEMINI_API_KEY"] },
+  { title: "ElevenLabs", sub: "Voiceover, sound effects and music. Optional.", Icon: WaveformIcon, keys: ["ELEVENLABS_API_KEY"] },
+  { title: "Facebook, Instagram & WhatsApp", sub: "Your Meta app.", Icon: FacebookLogoIcon, social: true, guide: "meta", keys: ["META_APP_ID", "META_APP_SECRET", "META_CONFIG_ID", "META_VERIFY_TOKEN"] },
+  { title: "YouTube", sub: "Your Google Cloud OAuth client.", Icon: YoutubeLogoIcon, social: true, guide: "youtube-steps", keys: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"] },
+  { title: "TikTok", sub: "Your TikTok developer app.", Icon: TiktokLogoIcon, social: true, guide: "tiktok-steps", keys: ["TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET"] },
+  { title: "LinkedIn", sub: "Your LinkedIn developer app.", Icon: LinkedinLogoIcon, social: true, guide: "linkedin-steps", keys: ["LINKEDIN_CLIENT_ID", "LINKEDIN_CLIENT_SECRET"] },
+  { title: "X", sub: "Your X developer app.", Icon: XLogoIcon, social: true, guide: "x-steps", keys: ["X_CLIENT_ID", "X_CLIENT_SECRET"] },
+  { title: "Pinterest", sub: "Your Pinterest developer app.", Icon: PinterestLogoIcon, social: true, guide: "pinterest-steps", keys: ["PINTEREST_APP_ID", "PINTEREST_APP_SECRET"] },
+];
+
+/** Provider keys, saved on their own (not with "Save changes"): encrypted on this computer, shown only as their last 4.
+ *  Grouped by provider; a social platform that isn't set up stays folded, since most people use only a few. */
 function KeysSection() {
   const { data, setData } = useApi<KeyInfo[]>("/keys");
   const [editing, setEditing] = useState<Record<string, string>>({});
@@ -125,6 +142,59 @@ function KeysSection() {
       toast(value ? "Key saved" : "Key removed");
     } catch (e) { fail(e); }
   }
+  const byName = new Map(data?.map((k) => [k.name, k]));
+  const grouped = new Set(keyGroups.flatMap((g) => g.keys));
+  const others = data?.filter((k) => !grouped.has(k.name)) ?? []; // a key added in the backend before it's given a group here
+  const row = (k: KeyInfo) => (
+    <div className="item wrap-row" key={k.name} style={{ paddingLeft: 52 }}>
+      <div className="spacer" style={{ minWidth: 220 }}>
+        <strong>{k.label}</strong>
+        <div className="small faint">{k.hint}</div>
+      </div>
+      {editing[k.name] !== undefined ? (
+        <span className="row">
+          <input className="input mono" type="password" autoFocus value={editing[k.name]} placeholder="Paste the key" style={{ width: 260 }} aria-label={k.label}
+            onChange={(e) => setEditing({ ...editing, [k.name]: e.target.value })}
+            onKeyDown={(e) => { if (e.key === "Enter" && editing[k.name].trim()) save(k.name, editing[k.name]); if (e.key === "Escape") stop(k.name); }} />
+          <button className="btn primary sm" disabled={!editing[k.name].trim()} onClick={() => save(k.name, editing[k.name])}>Save</button>
+          <button className="btn ghost sm" onClick={() => stop(k.name)}>Cancel</button>
+        </span>
+      ) : (
+        <span className="row">
+          <span className="small mono muted nowrap">{k.set ? `••••${k.last4}${k.source === "env" ? " · from .env" : ""}` : "not set"}</span>
+          <button className="btn sm" onClick={() => setEditing({ ...editing, [k.name]: "" })}>{k.set ? "Replace" : "Add"}</button>
+          {k.source === "app" && <button className="btn ghost sm danger" onClick={() => confirm(`Remove the ${k.label}?`) && save(k.name, "")}>Remove</button>}
+        </span>
+      )}
+    </div>
+  );
+  const group = (g: (typeof keyGroups)[number]) => {
+    const keys = g.keys.map((n) => byName.get(n)).filter((k): k is KeyInfo => !!k);
+    const set = keys.filter((k) => k.set).length;
+    const ready = g.title === "Claude" ? set > 0 : g.title.startsWith("Facebook") ? !!byName.get("META_APP_ID")?.set && !!byName.get("META_APP_SECRET")?.set : set === keys.length;
+    const head = (
+      <>
+        <span style={{ width: 30, height: 30, borderRadius: 6, background: "var(--muted)", display: "grid", placeItems: "center", flex: "none" }}><g.Icon size={18} weight="fill" style={{ color: "var(--fg)" }} /></span>
+        <div className="spacer">
+          <strong>{g.title}</strong>
+          <div className="small faint">
+            {g.sub}
+            {g.guide && <> <a href={`${connectGuideURL}#${g.guide}`} target="_blank" rel="noreferrer" style={{ color: "var(--primary)" }} onClick={(e) => e.stopPropagation()}>How to get these</a></>}
+          </div>
+        </div>
+        {ready ? <span className="pill green"><span className="dot" />Ready</span> : set ? <span className="pill amber"><span className="dot" />Incomplete</span> : <span className="small faint nowrap">Not set up</span>}
+      </>
+    );
+    if (!g.social) {
+      return <div key={g.title}><div className="item">{head}</div>{keys.map(row)}</div>;
+    }
+    return (
+      <details key={g.title} open={set > 0} className="key-group">
+        <summary className="item" style={{ cursor: "pointer", listStyle: "none" }}>{head}<CaretRightIcon size={14} className="caret" /></summary>
+        {keys.map(row)}
+      </details>
+    );
+  };
   return (
     <div className="card">
       <div className="card-h" style={{ display: "block" }}>
@@ -132,29 +202,11 @@ function KeysSection() {
         <p className="small muted">Encrypted on this computer and sent only to the provider each belongs to. The agent needs a Claude key or token; the rest are optional.</p>
       </div>
       <div className="filelist">
-        {data?.map((k) => (
-          <div className="item wrap-row" key={k.name}>
-            <div className="spacer" style={{ minWidth: 220 }}>
-              <strong>{k.label}</strong>
-              <div className="small faint">{k.hint}</div>
-            </div>
-            {editing[k.name] !== undefined ? (
-              <span className="row">
-                <input className="input mono" type="password" autoFocus value={editing[k.name]} placeholder="Paste the key" style={{ width: 260 }} aria-label={k.label}
-                  onChange={(e) => setEditing({ ...editing, [k.name]: e.target.value })}
-                  onKeyDown={(e) => { if (e.key === "Enter" && editing[k.name].trim()) save(k.name, editing[k.name]); if (e.key === "Escape") stop(k.name); }} />
-                <button className="btn primary sm" disabled={!editing[k.name].trim()} onClick={() => save(k.name, editing[k.name])}>Save</button>
-                <button className="btn ghost sm" onClick={() => stop(k.name)}>Cancel</button>
-              </span>
-            ) : (
-              <span className="row">
-                <span className="small mono muted nowrap">{k.set ? `••••${k.last4}${k.source === "env" ? " · from .env" : ""}` : "not set"}</span>
-                <button className="btn sm" onClick={() => setEditing({ ...editing, [k.name]: "" })}>{k.set ? "Replace" : "Add"}</button>
-                {k.source === "app" && <button className="btn ghost sm danger" onClick={() => confirm(`Remove the ${k.label}?`) && save(k.name, "")}>Remove</button>}
-              </span>
-            )}
-          </div>
-        ))}
+        <div className="item eyebrow" style={{ background: "var(--muted)" }}>AI providers</div>
+        {keyGroups.filter((g) => !g.social).map(group)}
+        <div className="item eyebrow" style={{ background: "var(--muted)" }}>Social platforms: your own developer apps</div>
+        {keyGroups.filter((g) => g.social).map(group)}
+        {others.map(row)}
       </div>
     </div>
   );

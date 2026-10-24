@@ -275,6 +275,9 @@ input[type="color"].input { padding: 3px; height: 36px; cursor: pointer; }
 .filelist { display: flex; flex-direction: column; }
 .filelist .item { display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-bottom: 1px solid var(--border); }
 .filelist .item:last-child { border-bottom: 0; }
+.key-group > summary::-webkit-details-marker { display: none; }
+.key-group .caret { transition: transform 0.15s; }
+.key-group[open] .caret { transform: rotate(90deg); }
 .filelist .item svg { color: var(--faint-fg); flex: none; }
 
 /* ---- avatars & bars */
