@@ -5,6 +5,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"net/http"
 	"os"
@@ -89,6 +90,39 @@ func Unseal(b []byte) (string, error) {
 	}
 	out, err := g.Open(nil, b[:g.NonceSize()], b[g.NonceSize():], nil)
 	return string(out), err
+}
+
+const sealedPrefix = "sealed:"
+
+// SealText seals a platform token for a text column. If secret.key can't be read or written it keeps the value as
+// it is, which OpenText reads like a row saved before tokens were sealed, rather than lose the login.
+func SealText(plain string) string {
+	if plain == "" || strings.HasPrefix(plain, sealedPrefix) {
+		return plain
+	}
+	b, err := Seal(plain)
+	if err != nil {
+		return plain
+	}
+	return sealedPrefix + base64.StdEncoding.EncodeToString(b)
+}
+
+// OpenText reads what SealText wrote. One it can't open (secret.key replaced) reads as "", so the platform asks for
+// a new login.
+func OpenText(s string) string {
+	rest, ok := strings.CutPrefix(s, sealedPrefix)
+	if !ok {
+		return s
+	}
+	b, err := base64.StdEncoding.DecodeString(rest)
+	if err != nil {
+		return ""
+	}
+	v, err := Unseal(b)
+	if err != nil {
+		return ""
+	}
+	return v
 }
 
 // envOrig remembers keys from the real environment (or .env): the Keys page says so, and removing an override restores them.

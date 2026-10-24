@@ -11,6 +11,8 @@ import (
 	"testing"
 
 	"github.com/Shaitrish/37studio/internal/config"
+	"github.com/Shaitrish/37studio/internal/keys"
+	"github.com/Shaitrish/37studio/internal/remote"
 	"github.com/Shaitrish/37studio/internal/store"
 )
 
@@ -102,6 +104,8 @@ func TestMastodonAndBluesky(t *testing.T) {
 	}))
 	defer srv.Close()
 
+	remote.AllowPrivate = true // the stand-in server is on 127.0.0.1
+	defer func() { remote.AllowPrivate = false }()
 	connect := func(fn func(*http.Request) (any, error), body string) error {
 		req := httptest.NewRequest("POST", "/api/tenants/1/x", strings.NewReader(body))
 		req.SetPathValue("id", "1")
@@ -115,10 +119,10 @@ func TestMastodonAndBluesky(t *testing.T) {
 		t.Fatal(err)
 	}
 	a, _ := store.Row("select * from social_accounts where platform='mastodon'")
-	if a["name"] != "@shop@"+strings.TrimPrefix(srv.URL, "http://") || a["refresh"] != srv.URL {
+	if a["name"] != "@shop@"+strings.TrimPrefix(srv.URL, "http://") || keys.OpenText(store.Str(a["refresh"])) != srv.URL {
 		t.Fatalf("mastodon account = %v", a)
 	}
-	id, link, err := postMastodon(store.Str(a["refresh"]), store.Str(a["token"]), video, "Hello #Reels")
+	id, link, err := postMastodon(keys.OpenText(store.Str(a["refresh"])), keys.OpenText(store.Str(a["token"])), video, "Hello #Reels")
 	if err != nil || id != "s1" || link != "https://masto/@shop/s1" || polls != 1 || posted["media_ids"].([]any)[0] != "m1" {
 		t.Fatalf("mastodon post: %s %s %v polls=%d %v", id, link, err, polls, posted)
 	}
@@ -133,7 +137,7 @@ func TestMastodonAndBluesky(t *testing.T) {
 	if a["account_id"] != "did:plc:abc" || a["name"] != "@shop.bsky.social" || a["picture"] != "av.jpg" {
 		t.Fatalf("bluesky account = %v", a)
 	}
-	id, link, err = postBluesky(store.Str(a["account_id"]), store.Str(a["token"]), store.Str(a["refresh"]), video, "New reel #BCS")
+	id, link, err = postBluesky(store.Str(a["account_id"]), keys.OpenText(store.Str(a["token"])), keys.OpenText(store.Str(a["refresh"])), video, "New reel #BCS")
 	if err != nil || link != "https://bsky.app/profile/did:plc:abc/post/3kx" {
 		t.Fatalf("bluesky post: %s %s %v", id, link, err)
 	}

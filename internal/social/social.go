@@ -401,13 +401,21 @@ func SavePending(r *http.Request) (any, error) {
 		}
 		_, err := store.DB.Exec(`insert into social_accounts(tenant_id,platform,account_id,name,picture,token,refresh) values(?,?,?,?,?,?,?)
 		  on conflict(tenant_id,platform,account_id) do update set name=excluded.name, picture=excluded.picture, token=excluded.token, refresh=excluded.refresh`,
-			pc.Tenant, a.Platform, a.AccountID, a.Name, a.Picture, a.token, a.refresh)
+			pc.Tenant, a.Platform, a.AccountID, a.Name, a.Picture, keys.SealText(a.token), keys.SealText(a.refresh))
 		if err != nil {
 			return nil, err
 		}
 		n++
 	}
 	return map[string]int{"connected": n}, nil
+}
+
+// SealTokens encrypts platform tokens saved before they were sealed at rest. main runs it once at startup.
+func SealTokens() {
+	rs, _ := store.Rows("select id, token, refresh from social_accounts where (token<>'' and token not like 'sealed:%') or (refresh<>'' and refresh not like 'sealed:%')")
+	for _, r := range rs {
+		store.DB.Exec("update social_accounts set token=?, refresh=? where id=?", keys.SealText(store.Str(r["token"])), keys.SealText(store.Str(r["refresh"])), r["id"])
+	}
 }
 
 func Disconnect(r *http.Request) (any, error) {
@@ -675,6 +683,7 @@ func publish(p map[string]any) (remote, link string, err error) {
 	if err != nil {
 		return "", "", errors.New("the account was disconnected; connect it again on the client's Social tab")
 	}
+	a["token"], a["refresh"] = keys.OpenText(store.Str(a["token"])), keys.OpenText(store.Str(a["refresh"]))
 	file := files.Within(files.ProjectDir(p["project_id"].(int64)), store.Str(p["file"]))
 	if _, err := os.Stat(file); err != nil {
 		return "", "", errors.New("the video file was deleted")
@@ -712,7 +721,12 @@ func accessToken(a map[string]any) (string, error) {
 	old := store.Str(a["refresh"])
 	rotate := func(t oauthTok, err error) (string, error) { // platforms may rotate the refresh token; Pinterest boards share one
 		if err == nil {
-			store.DB.Exec("update social_accounts set token=?, refresh=? where platform=? and refresh=?", t.AccessToken, cmp.Or(t.RefreshToken, old), a["platform"], old)
+			rs, _ := store.Rows("select id, refresh from social_accounts where platform=?", a["platform"])
+			for _, r := range rs {
+				if keys.OpenText(store.Str(r["refresh"])) == old {
+					store.DB.Exec("update social_accounts set token=?, refresh=? where id=?", keys.SealText(t.AccessToken), keys.SealText(cmp.Or(t.RefreshToken, old)), r["id"])
+				}
+			}
 		}
 		return t.AccessToken, err
 	}
@@ -727,7 +741,7 @@ func accessToken(a map[string]any) (string, error) {
 	case "tiktok":
 		t, err := tiktokTokenCall(url.Values{"grant_type": {"refresh_token"}, "refresh_token": {store.Str(a["refresh"])}})
 		if err == nil {
-			store.DB.Exec("update social_accounts set token=?, refresh=? where id=?", t.AccessToken, cmp.Or(t.RefreshToken, store.Str(a["refresh"])), a["id"]) // TikTok may rotate it
+			store.DB.Exec("update social_accounts set token=?, refresh=? where id=?", keys.SealText(t.AccessToken), keys.SealText(cmp.Or(t.RefreshToken, store.Str(a["refresh"]))), a["id"]) // TikTok may rotate it
 		}
 		return t.AccessToken, err
 	case "x": // tokens last 2 hours

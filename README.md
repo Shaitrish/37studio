@@ -79,7 +79,7 @@ docker compose up --build
 # open http://localhost:8080
 ```
 
-- **Agent permissions.** From source, the agent uses an allowlist (`safe`: file edits, ffmpeg, `npx hyperframes`, python and node) unless you set `STUDIO37_AGENT_PERMISSIONS=bypass` in `.env`, which lets it run any command inside the container. The launcher and the cloud file set `bypass`, because the container is the sandbox.
+- **Agent permissions.** From source, the agent uses an allowlist (`safe`: file edits, ffmpeg, `npx hyperframes`, `37studio` and a few shell basics) unless you set `STUDIO37_AGENT_PERMISSIONS=bypass` in `.env`, which lets it run any command inside the container. The launcher and the cloud file set `bypass`, because the container is the sandbox. `safe` keeps the agent from running arbitrary code by accident, but it is not a security boundary: the agent can read the AI keys in its environment and the files in `/data`, and ffmpeg and WebFetch can reach the internet. The allowlist covers Claude Code runs; OpenCode runs follow OpenCode's own permission settings.
 - **Windows.** Use Docker Desktop with the WSL 2 backend. Footage under `./data` is a bind mount, so for multi-GB files keep the repo inside the WSL filesystem (`\\wsl$\...`) rather than on `C:\`.
 
 To work on the code with hot reload, see [CONTRIBUTING.md](CONTRIBUTING.md#running-it-from-source).
@@ -109,7 +109,7 @@ Run it on a server when a team shares it, or when Autopilot and auto-replies sho
 What is different on a server:
 
 - **Password.** The cloud file won't start without `STUDIO37_PASSWORD`. It is HTTP basic auth on every page, API call and timeline editor, over HTTPS. Use a long random one and share it only with people you trust with the agent (next point).
-- **Agent permissions.** The cloud file sets `STUDIO37_AGENT_PERMISSIONS=bypass`, like the launcher: the agent can run any command inside the container. Anyone who can sign in can therefore have it run commands there, read every company's files in `/data`, and reach the internet. The container runs as an unprivileged user (uid 1000) with no access to the Docker socket or the host's files beyond `./data`. For the allowlist instead, change that line to `safe` in the compose file; commands outside the allowlist are then refused, which can block some tasks.
+- **Agent permissions.** The cloud file sets `STUDIO37_AGENT_PERMISSIONS=bypass`, like the launcher: the agent can run any command inside the container. Anyone who can sign in can therefore have it run commands there, read every company's files in `/data`, and reach the internet. The container runs as an unprivileged user (uid 1000) with no access to the Docker socket or the host's files beyond `./data`. For the allowlist instead, change that line to `safe` in the compose file; commands outside the allowlist are then refused, which can block some tasks. It narrows what the agent runs, but whoever can sign in can still steer the agent, so treat the password as access to everything in the container either way.
 - **Sign-in redirects.** The cloud file sets `STUDIO37_PUBLIC_URL=https://<your domain>`, so register `https://<your domain>/api/oauth/<platform>/callback` with each platform. Use your own Meta app (the shared one only knows `localhost`), and the **Web** platform for TikTok.
 - **Timeline editor.** The UI opens each project's editor at the page's own address on a port from 3100 to 3109 (`https://studio.example.com:3100`, ...). Caddy serves HTTPS on those ports with the same certificate and passes each one to the same port on the app, so the editor works once the ports are open. Your browser asks for the password once more the first time, because a different port counts as a different site. Up to ten editors can be open at once. If you'd rather not open those ports, everything else still works; make changes by chatting with the agent.
 - **Updates.** The sidebar says when a new version is out. Then: `docker compose -f docker-compose.cloud.yml pull && docker compose -f docker-compose.cloud.yml up -d`.
@@ -122,6 +122,8 @@ What is different on a server:
   ```
 
   The archive holds platform tokens and keys, so store it somewhere private. Agent chat sessions live in the `claude-home` volume; they are only needed to resume old chats.
+
+The launcher and the cloud file use the `latest` image, so a restart can update the app. To stay on a release until you choose to update, replace `latest` with its version (`ghcr.io/shaitrish/37studio:0.5.0`) or its digest.
 
 To build the image from your own checkout on the server, clone the repo and replace the `image:` line in `docker-compose.cloud.yml` with `build: .`.
 
@@ -235,6 +237,7 @@ Settings are environment variables: in `.env` when running from source, under `e
 | `STUDIO37_DOMAIN` | | | Cloud file only: your domain, for Caddy's certificate and `STUDIO37_PUBLIC_URL` |
 | `STUDIO37_AGENT_PERMISSIONS` | `safe` | | `safe` (allowlist) or `bypass` (any command; the launcher and cloud file set it) |
 | `STUDIO37_AUTH_URL` | `https://studio.shaitrish.com` | | The relay for the shared Meta app's sign-in and for WhatsApp messages ([run your own](docs/platforms.md#run-your-own-relay)) |
+| `STUDIO37_ALLOW_PRIVATE_URLS` | unset | | `1` lets website scans, video imports and Bluesky/Mastodon servers use addresses on your own network (localhost, LAN, `10.x`, `192.168.x`); refused by default |
 | `STUDIO37_UPDATE_URL` | `https://studio.shaitrish.com/version.json` | | Where the update check looks for new releases |
 | `STUDIO37_DATA` | `./data` | | Everything lives here: `37studio.db`, `secret.key`, `tenants/`, `projects/`, `templates/` |
 | `STUDIO37_ADDR` | `127.0.0.1:8080` | | Listen address (the image sets `:8080`; the compose files publish it on `127.0.0.1` only or behind Caddy) |
@@ -246,7 +249,7 @@ Settings are environment variables: in `.env` when running from source, under `e
 ## How it works
 
 ```
-Browser ──► 37studio (Go, one binary) ──► SQLite + data/ (companies, projects, tokens, encrypted keys)
+Browser ──► 37studio (Go, one binary) ──► SQLite + data/ (companies, projects, encrypted tokens and keys)
              ├─ claude -p, the editor agent ──► ffmpeg · npx hyperframes · 37studio gen / transcribe / clip
              ├─ hyperframes render (Chrome + ffmpeg) ──► out/*.mp4, *.png
              ├─ post queue ──► Facebook · Instagram · YouTube · TikTok · LinkedIn · X · Pinterest · Bluesky · Mastodon
@@ -266,7 +269,7 @@ Browser ──► 37studio (Go, one binary) ──► SQLite + data/ (companies,
 
 **Is it really free?** Yes: MIT licensed, no license key, no paid tier. You pay the AI providers for what you use.
 
-**What leaves my computer?** Calls to the AI providers you set up (Anthropic, and Gemini and ElevenLabs if you add them), uploads to the platforms you connect, the update check (`version.json`), and, only for the shared Meta app's sign-in and for WhatsApp, the relay at `STUDIO37_AUTH_URL`. Any agent may read a company's brand files and source folder, so they go to Anthropic as part of its work.
+**What leaves my computer?** Calls to the AI providers you set up (Anthropic, and Gemini and ElevenLabs if you add them), uploads to the platforms you connect, the update check (`version.json`), and, only for the shared Meta app's sign-in and for WhatsApp, the relay at `STUDIO37_AUTH_URL`. Incoming WhatsApp messages wait on that relay until your copy pulls them (at most 7 days), so to keep them off our server, [run your own relay](docs/platforms.md#run-your-own-relay). Any agent may read a company's brand files and source folder, so they go to Anthropic as part of its work.
 
 **The page doesn't open, or port 8080 is in use.** Another program has port 8080. Close it and run the start file again. `docker compose logs` shows what the app is doing.
 

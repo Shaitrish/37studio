@@ -18,6 +18,7 @@ import (
 	"github.com/Shaitrish/37studio/internal/config"
 	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/httpapi"
+	"github.com/Shaitrish/37studio/internal/keys"
 	"github.com/Shaitrish/37studio/internal/remote"
 	"github.com/Shaitrish/37studio/internal/store"
 	"github.com/Shaitrish/37studio/internal/textutil"
@@ -152,6 +153,8 @@ func ConnectBluesky(r *http.Request) (any, error) {
 	}
 	if u, err := url.Parse(service); err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" {
 		return nil, httpapi.Bad("the server should look like https://bsky.social")
+	} else if err := remote.Public(u.Hostname()); err != nil {
+		return nil, httpapi.Bad(err.Error())
 	}
 	s, err := blueskySession(service, handle, pass)
 	if err != nil {
@@ -163,7 +166,7 @@ func ConnectBluesky(r *http.Request) (any, error) {
 	remote.Call(remote.Get(s.PDS+"/xrpc/app.bsky.actor.getProfile?actor="+url.QueryEscape(s.DID), "Bearer "+s.Access), &prof)
 	_, err = store.DB.Exec(`insert into social_accounts(tenant_id,platform,account_id,name,picture,token,refresh) values(?,'bluesky',?,?,?,?,?)
 	  on conflict(tenant_id,platform,account_id) do update set name=excluded.name, picture=excluded.picture, token=excluded.token, refresh=excluded.refresh`,
-		httpapi.PathID(r), s.DID, "@"+s.Handle, prof.Avatar, pass, service)
+		httpapi.PathID(r), s.DID, "@"+s.Handle, prof.Avatar, keys.SealText(pass), keys.SealText(service))
 	return nil, err
 }
 
@@ -182,6 +185,9 @@ func ConnectMastodon(r *http.Request) (any, error) {
 	if err != nil || u.Host == "" || tok == "" {
 		return nil, httpapi.Bad("enter your server (like mastodon.social) and an access token")
 	}
+	if err := remote.Public(u.Hostname()); err != nil {
+		return nil, httpapi.Bad(err.Error())
+	}
 	var me struct {
 		ID     string `json:"id"`
 		Acct   string `json:"acct"`
@@ -196,7 +202,7 @@ func ConnectMastodon(r *http.Request) (any, error) {
 	}
 	_, err = store.DB.Exec(`insert into social_accounts(tenant_id,platform,account_id,name,picture,token,refresh) values(?,'mastodon',?,?,?,?,?)
 	  on conflict(tenant_id,platform,account_id) do update set name=excluded.name, picture=excluded.picture, token=excluded.token, refresh=excluded.refresh`,
-		httpapi.PathID(r), me.ID, name, me.Avatar, tok, server)
+		httpapi.PathID(r), me.ID, name, me.Avatar, keys.SealText(tok), keys.SealText(server))
 	return nil, err
 }
 

@@ -310,11 +310,15 @@ func AddEvent(pid int64, kind string, v any) {
 
 func setStatus(pid int64, s string) { store.DB.Exec("update projects set status=? where id=?", s, pid) }
 
+// safeTools is the `safe` allowlist: the commands the prompts use, and no general-purpose runner (bare npx, python3,
+// node) that would run any code. It narrows what the agent does by accident; it is not a security boundary, since
+// ffmpeg and WebFetch can still reach the network. The container is the boundary (README → Agent permissions).
 var safeTools = []string{
 	"Read", "Edit", "Write", "Glob", "Grep", "Skill", "TodoWrite", "WebFetch", "WebSearch",
-	"Bash(ffmpeg:*)", "Bash(ffprobe:*)", "Bash(npx:*)", "Bash(37studio:*)", "Bash(cd:*)", "Bash(ls:*)",
+	"Bash(ffmpeg:*)", "Bash(ffprobe:*)", "Bash(npx hyperframes *)", "Bash(npx hyperframes@*)", "Bash(npx -y hyperframes@*)",
+	"Bash(37studio:*)", "Bash(cd:*)", "Bash(ls:*)",
 	"Bash(mkdir:*)", "Bash(cp:*)", "Bash(mv:*)", "Bash(cat:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(wc:*)",
-	"Bash(du:*)", "Bash(file:*)", "Bash(jq:*)", "Bash(python3:*)", "Bash(node:*)",
+	"Bash(du:*)", "Bash(file:*)", "Bash(jq:*)",
 }
 
 // ClaudeCmd builds a headless Claude Code run in dir. The prompt goes over stdin, not argv:

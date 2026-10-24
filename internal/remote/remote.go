@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -131,4 +133,28 @@ func Message(raw []byte) string {
 	var s string
 	json.Unmarshal(e.Error, &s)
 	return cmp.Or(e.Desc, cmp.Or(e.Message, cmp.Or(e.Detail, cmp.Or(s, textutil.Tail(string(raw), 300)))))
+}
+
+// AllowPrivate lets pasted URLs point into this machine's own network (STUDIO37_ALLOW_PRIVATE_URLS=1), for a site
+// or server on the LAN.
+var AllowPrivate = os.Getenv("STUDIO37_ALLOW_PRIVATE_URLS") == "1"
+
+// Public refuses a host that is, or resolves to, a loopback, private, link-local or unspecified address, so a pasted
+// URL can't make the server fetch from its own network: cloud metadata, other containers on the Docker network.
+// ponytail: checked when the URL comes in; DNS that changes its answer before the fetch gets past it. A dialer
+// Control hook would close that, but the fetches run in yt-dlp and HyperFrames, not here.
+func Public(host string) error {
+	if AllowPrivate {
+		return nil
+	}
+	ips, err := net.LookupIP(host)
+	if err != nil {
+		return fmt.Errorf("can't find %s; check the address", host)
+	}
+	for _, ip := range ips {
+		if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsUnspecified() {
+			return fmt.Errorf("%s is on a private network, which 37Studio doesn't fetch from; to allow it, set STUDIO37_ALLOW_PRIVATE_URLS=1", host)
+		}
+	}
+	return nil
 }

@@ -30,7 +30,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # yt-dlp for importing videos from YouTube and Google Drive links (unpinned: YouTube changes often, each release takes the newest).
 RUN python3 -m venv /opt/asr && /opt/asr/bin/pip install --no-cache-dir faster-whisper==1.2.1 "yt-dlp[default,curl-cffi]"
 ENV STUDIO37_ASR_PYTHON=/opt/asr/bin/python
-RUN npm install -g @anthropic-ai/claude-code opencode-ai hyperframes@${HF_VERSION}
+# The agent runtimes are pinned too: they are the most privileged processes here, and a pin makes builds repeatable.
+# To bump: try the new versions with `docker compose up --build`, run a project and the Assistant, then change these.
+ARG CLAUDE_CODE_VERSION=2.1.309
+ARG OPENCODE_VERSION=1.19.4
+RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} opencode-ai@${OPENCODE_VERSION} hyperframes@${HF_VERSION}
 COPY --from=api /37studio /usr/local/bin/37studio
 COPY --from=web /web/dist /app/web
 RUN mkdir -p /data /home/node/.claude /opt/browser && chown -R node:node /data /home/node/.claude /opt/browser

@@ -11,6 +11,7 @@ import (
 
 	"github.com/Shaitrish/37studio/internal/config"
 	"github.com/Shaitrish/37studio/internal/httpapi"
+	"github.com/Shaitrish/37studio/internal/keys"
 	"github.com/Shaitrish/37studio/internal/remote"
 	"github.com/Shaitrish/37studio/internal/store"
 )
@@ -40,7 +41,7 @@ func ConnectWhatsApp(r *http.Request) (any, error) {
 	}
 	_, err = store.DB.Exec(`insert into social_accounts(tenant_id,platform,account_id,name,token) values(?,'whatsapp',?,?,?)
 	  on conflict(tenant_id,platform,account_id) do update set name=excluded.name, token=excluded.token`,
-		httpapi.PathID(r), phone, strings.TrimSpace(p.Name+" "+p.Display), tok)
+		httpapi.PathID(r), phone, strings.TrimSpace(p.Name+" "+p.Display), keys.SealText(tok))
 	return nil, err
 }
 

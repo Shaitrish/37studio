@@ -74,7 +74,7 @@ func Open(r *http.Request) (any, error) {
 
 	target, _ := url.Parse(fmt.Sprintf("http://127.0.0.1:%d", res.Result.Port))
 	proxy := &httputil.ReverseProxy{Rewrite: func(pr *httputil.ProxyRequest) { pr.SetURL(target) }}
-	srv := &http.Server{Handler: httpapi.BasicAuth(proxy)}
+	srv := &http.Server{Handler: httpapi.Guard(proxy)}
 	go srv.Serve(ln)
 	studioPorts[id], studioSrvs[id] = public, srv
 	return map[string]any{"port": public, "project": "comp"}, nil

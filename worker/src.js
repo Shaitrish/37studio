@@ -2,8 +2,9 @@
 //   GET  /version.json          the latest release (public/version.json), read by every copy's update check
 //   POST /oauth/meta/token      finishes a Facebook login for copies that don't hold the Meta app secret
 //   GET  /webhooks/meta         Meta's webhook check (hub.challenge)
-//   POST /webhooks/meta         Meta's webhooks: WhatsApp messages are held in D1 for 30 days
-//   GET  /whatsapp/messages     a copy pulls its number's messages; its WhatsApp token proves the number is its own
+//   POST /webhooks/meta         Meta's webhooks: WhatsApp messages wait in D1 until their copy pulls them (7 days at most)
+//   GET  /whatsapp/messages     a copy pulls its number's messages; its WhatsApp token proves the number is its own, and
+//                               asking for messages after N confirms it has stored 1..N, which are then deleted
 //   POST /donate/report         a donor reports a bKash donation; it counts once confirmed by hand (README → Donations)
 //   GET  /donate/stats          confirmed supporters who chose to be named, for public/donate.html
 //   anything else               static files in public/ (product page, setup guide, launcher bundle)
@@ -11,7 +12,7 @@
 // To run your own relay, deploy this with your own Meta app and D1 database, and point copies at it with STUDIO37_AUTH_URL.
 
 const GRAPH = "https://graph.facebook.com/v26.0";
-const KEEP_MS = 30 * 864e5;
+const KEEP_MS = 7 * 864e5; // past WhatsApp's 24-hour reply window, so an unpulled message is of little use by then
 
 export default {
   async fetch(req, env) {
@@ -79,7 +80,10 @@ async function waMessages(req, env, url) {
   if (!/^\d+$/.test(phone) || !token || !(await canRead(token, phone))) {
     return json({ error: { message: "this WhatsApp token can't read that number" } }, 403);
   }
-  const { results } = await env.DB.prepare("select seq, body from wa where phone=? and seq>? order by seq limit 500").bind(phone, after).all();
+  const [, { results }] = await env.DB.batch([
+    env.DB.prepare("delete from wa where (phone=? and seq<=?) or at<?").bind(phone, after, Date.now() - KEEP_MS),
+    env.DB.prepare("select seq, body from wa where phone=? and seq>? order by seq limit 500").bind(phone, after),
+  ]);
   return json({ messages: results.map((r) => ({ seq: r.seq, ...JSON.parse(r.body) })) });
 }
 

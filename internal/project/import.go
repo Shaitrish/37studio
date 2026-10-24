@@ -17,6 +17,7 @@ import (
 	"github.com/Shaitrish/37studio/internal/agent"
 	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/httpapi"
+	"github.com/Shaitrish/37studio/internal/remote"
 	"github.com/Shaitrish/37studio/internal/store"
 	"github.com/Shaitrish/37studio/internal/transcribe"
 )
@@ -64,6 +65,9 @@ func ImportVideo(r *http.Request) (any, error) {
 	u, err := url.Parse(strings.TrimSpace(store.Str(b["url"])))
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
 		return nil, httpapi.Bad("paste a YouTube or Google Drive link")
+	}
+	if err := remote.Public(u.Hostname()); err != nil {
+		return nil, httpapi.Bad(err.Error())
 	}
 	importMu.Lock()
 	busy := importJobs[id] != nil && !importJobs[id].Done

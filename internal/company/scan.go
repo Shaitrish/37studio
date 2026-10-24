@@ -20,6 +20,7 @@ import (
 	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/httpapi"
 	"github.com/Shaitrish/37studio/internal/keys"
+	"github.com/Shaitrish/37studio/internal/remote"
 	"github.com/Shaitrish/37studio/internal/source"
 	"github.com/Shaitrish/37studio/internal/store"
 	"github.com/Shaitrish/37studio/internal/textutil"
@@ -149,6 +150,9 @@ func siteURL(s string) (*url.URL, error) {
 	u, err := url.Parse(s)
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Hostname() == "" {
 		return nil, httpapi.Bad("enter a website address, e.g. course37.com")
+	}
+	if err := remote.Public(u.Hostname()); err != nil {
+		return nil, httpapi.Bad(err.Error())
 	}
 	return u, nil
 }

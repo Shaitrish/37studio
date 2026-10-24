@@ -54,7 +54,7 @@ The agent's instructions (the harness) are in `internal/agent/agent.go`: `harnes
 Each turn is one headless Claude Code run: `--output-format stream-json`, streamed into the project chat; `--max-budget-usd` from Settings caps its spend; the user's own Claude Code hooks are disabled so they can't steer it; the prompt goes over stdin. Sessions are resumed, so the agent keeps its context across turns (they live in the `claude-home` volume).
 
 - **Quality tiers** pick the model and effort: Quick is Haiku 5.5 (low), Draft is Sonnet 5.5 (medium), Standard is Opus 5.5 (high), Premium is Opus 5.5 (xhigh). The OpenCode tiers run Kimi K3, Qwen 3.8 Max, GLM 5.3 and DeepSeek V4 (`internal/agent/opencode.go`), for visual work and cheaper edits; they need an OpenCode login (`docker compose exec studio opencode auth login`). The tier can change per message.
-- **Permissions.** `STUDIO37_AGENT_PERMISSIONS=safe` (the default) gives the agent an allowlist: file edits, ffmpeg/ffprobe, `npx`, `37studio`, python3, node and a few shell basics. `bypass` lets it run any command; the launcher and the cloud compose file set it, because the container is the sandbox. Claude Code refuses bypass mode as root, so the image runs as the unprivileged `node` user. Agents don't get the platform apps' secrets (variables ending in `_SECRET`).
+- **Permissions.** `STUDIO37_AGENT_PERMISSIONS=safe` (the default) gives the agent an allowlist: file edits, ffmpeg/ffprobe, `npx hyperframes`, `37studio` and a few shell basics, with no general-purpose runner (bare `npx`, python3, node). It is not a security boundary: the agent's environment holds the AI keys `37studio gen` needs, and ffmpeg and WebFetch reach the network. `bypass` lets it run any command; the launcher and the cloud compose file set it, because the container is the sandbox. Claude Code refuses bypass mode as root, so the image runs as the unprivileged `node` user. Agents don't get the platform apps' secrets (variables ending in `_SECRET`).
 - **Generated media.** The harness lists `37studio gen image|video|voice|sfx|music` under "Paid AI media" and tells the agent to use them only when the footage and brand library can't do the job; on Autopilot it decides alone. The agent never picks a provider or model: `genAny` sends images and video to Gemini (`image_model`, `video_model` in Settings) and voice, sound effects and music to ElevenLabs (`voice_model`), so a new provider needs no prompt change (see CONTRIBUTING.md). Without the key the command fails with "GEMINI_API_KEY is not set" and the agent carries on without it. Each generation's cost is recorded against the project in `$STUDIO37_PROJECT`.
 - **Captions and replies** use one tool-less Claude turn each (Sonnet, low effort), not the agent.
 
@@ -104,8 +104,8 @@ Rendering and storage run on your own computer, so they cost nothing. Costs are 
 
 ```
 data/
-  37studio.db           SQLite (WAL): companies, projects, posts, accounts and their tokens, settings, encrypted keys
-  secret.key            the key that encrypts Settings → Keys; keep it with the database
+  37studio.db           SQLite (WAL): companies, projects, posts, accounts and their encrypted tokens, settings, encrypted keys
+  secret.key            the key that encrypts Settings → Keys and platform tokens; keep it with the database
   tenants/<id>/         a company's brand library (assets/), design.md, knowledge.md, replies.md, source/
   projects/<id>/
     input/              raw uploads (the agent may not modify these)

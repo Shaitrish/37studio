@@ -12,8 +12,11 @@ import (
 	"github.com/Shaitrish/37studio/internal/config"
 )
 
-// BasicAuth guards the whole app when STUDIO37_PASSWORD is set (any username).
-func BasicAuth(h http.Handler) http.Handler {
+// Guard wraps the whole app. Other websites' pages may not make changes: a browser resends saved basic auth, and the
+// app on localhost needs none, so a cross-site form POST would otherwise act as the user. Non-browser clients (MCP,
+// curl) send neither Sec-Fetch-Site nor Origin and pass. With STUDIO37_PASSWORD set it also needs basic auth (any username).
+func Guard(h http.Handler) http.Handler {
+	h = http.NewCrossOriginProtection().Handler(h)
 	pw := config.Env("STUDIO37_PASSWORD", "")
 	if pw == "" {
 		return h

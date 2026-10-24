@@ -5,7 +5,7 @@ create table if not exists wa (
   wamid text not null unique,            -- Meta retries webhooks; the message id dedupes them
   phone text not null,                   -- the business number's phone_number_id
   body text not null,                    -- the message as Meta sent it, plus the sender's profile name
-  at integer not null                    -- received, ms; rows go after 30 days
+  at integer not null                    -- received, ms; rows go once pulled, or after 7 days
 );
 create index if not exists wa_phone on wa(phone, seq);
 

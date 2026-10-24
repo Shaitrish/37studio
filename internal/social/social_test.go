@@ -3,10 +3,14 @@ package social
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/Shaitrish/37studio/internal/agent"
+	"github.com/Shaitrish/37studio/internal/config"
+	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/remote"
 )
 
@@ -55,6 +59,25 @@ func TestMetaApp(t *testing.T) {
 	for _, kv := range agent.Env() {
 		if strings.HasPrefix(kv, "META_APP_SECRET=") {
 			t.Fatal("agents got the Meta app secret")
+		}
+	}
+}
+
+// An auto-reply that carries a link or number the company never wrote down waits for the editor.
+func TestUnsourced(t *testing.T) {
+	config.DataDir = t.TempDir()
+	os.MkdirAll(files.TenantRoot(3), 0o755)
+	os.WriteFile(filepath.Join(files.TenantRoot(3), "knowledge.md"), []byte("Shop at https://course37.com/shop or call +880 1711-000000. Mail hello@course37.com."), 0o644)
+	for reply, want := range map[string]string{
+		"Thanks! A team member will reply soon.":                  "",
+		"Order at https://course37.com/shop.":                     "",
+		"Call +880 1711-000000 or mail hello@course37.com today!": "",
+		"Our anniversary sale is live at https://evil.example/x":  "https://evil.example/x",
+		"Grab it at bit.ly/sale50":                                "bit.ly/sale50",
+		"WhatsApp us on 01999-123456":                             "01999-123456",
+	} {
+		if got := unsourced(reply, 3); got != want {
+			t.Errorf("%q: got %q, want %q", reply, got, want)
 		}
 	}
 }

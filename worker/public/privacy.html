@@ -41,7 +41,7 @@
     <span class="eyebrow">Privacy policy</span>
     <h1 style="margin-top:14px">Your data stays on your computer</h1>
     <p class="lead">37Studio is software you run yourself. We don't run it for you, we can't see inside it, and we don't collect your data. This page lists everything the app sends anywhere, so you can check.</p>
-    <p class="muted" style="margin-top:14px;font-size:14px">Effective 23 October 2026</p>
+    <p class="muted" style="margin-top:14px;font-size:14px">Effective 25 October 2026</p>
   </div>
 </section>
 
@@ -89,7 +89,7 @@
     <ol>
       <li><b>Update check.</b> Every few hours the app downloads a small file that says which version is the latest. Nothing about you or your work is sent with it.</li>
       <li><b>Facebook sign-in.</b> When you connect Facebook, Meta gives your computer a one-time code. Our server exchanges it for an access token, because that step needs a secret we can't put inside the app, and sends the token straight back to your computer. We don't keep the code or the token.</li>
-      <li><b>WhatsApp messages</b>, only if you connect WhatsApp. Meta delivers incoming WhatsApp messages only to a public web address, which a computer at home doesn't have. So Meta sends them to our server, which holds them until your copy of 37Studio collects them, using your number's own WhatsApp token. Messages are deleted automatically after 30 days. No one else can read them through our server.</li>
+      <li><b>WhatsApp messages</b>, only if you connect WhatsApp. Meta delivers incoming WhatsApp messages only to a public web address, which a computer at home doesn't have. So Meta sends them to our server, which holds them until your copy of 37Studio collects them, using your number's own WhatsApp token. Each message is deleted once your copy has collected it, and messages it never collects are deleted after 7 days. No one else can read them through our server.</li>
     </ol>
     <p>With your own Meta app, Facebook sign-in runs on your computer and skips our server. With your own relay (the code's <code>worker/</code> folder, deployed to your own Cloudflare account), WhatsApp messages skip it too. To skip the update check, set <code>STUDIO37_UPDATE_URL</code> to another address.</p>
     <p>Like any website host, Cloudflare may keep standard request logs, such as IP addresses and times, for security and reliability.</p>
@@ -107,7 +107,7 @@
     <ul>
       <li><b>Everything 37Studio stores:</b> delete the app's <code>data</code> folder, or the whole 37Studio folder.</li>
       <li><b>A connected account:</b> disconnect it on the company's Social tab. To remove 37Studio's access on Facebook's side: Facebook → Settings → <b>Business integrations</b> → remove 37Studio.</li>
-      <li><b>WhatsApp messages on our server:</b> they expire after 30 days. To have them deleted sooner, email us with the phone number.</li>
+      <li><b>WhatsApp messages on our server:</b> they are deleted once your copy collects them, or after 7 days. To have them deleted sooner, email us with the phone number.</li>
       <li><b>A donation report:</b> email us the transaction ID and we'll remove your name and message.</li>
     </ul>
     <p>Data you sent to AI providers or social platforms is governed by their policies; delete it in your accounts with them.</p>

@@ -45,6 +45,7 @@ func main() {
 	}
 	store.Open()
 	keys.Load()
+	social.SealTokens()
 	// A restart kills child agents; don't leave projects stuck in "running".
 	store.DB.Exec(`update projects set status='review' where status='running'`)
 	store.DB.Exec(`update tenants set scan_status='failed', scan_note='Interrupted by a server restart.' where scan_status='running'`)
@@ -56,7 +57,7 @@ func main() {
 
 	mux := routes()
 	log.Printf("37studio listening on %s, data in %s", config.Addr, config.DataDir)
-	log.Fatal(http.ListenAndServe(config.Addr, httpapi.BasicAuth(mux)))
+	log.Fatal(http.ListenAndServe(config.Addr, httpapi.Guard(mux)))
 }
 
 // routes is the whole HTTP surface: the JSON API, the MCP endpoint (the same API as tools), files and the UI.
