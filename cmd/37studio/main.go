@@ -44,6 +44,7 @@ func main() {
 		log.Fatal(err)
 	}
 	store.Open()
+	agent.UseToolsPath()
 	keys.Load()
 	social.SealTokens()
 	// A restart kills child agents; don't leave projects stuck in "running".
@@ -110,6 +111,7 @@ func routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/templates", httpapi.JSON(templates.List))
 	mux.HandleFunc("DELETE /api/templates/{id}", httpapi.JSON(templates.Delete))
 	mux.HandleFunc("POST /api/projects/{id}/template", httpapi.JSON(templates.Save))
+	mux.HandleFunc("POST /api/tools/{name}", httpapi.JSON(agent.InstallTool))
 	mux.HandleFunc("GET /api/codex", httpapi.JSON(agent.CodexStatus))
 	mux.HandleFunc("POST /api/codex/login", httpapi.JSON(agent.CodexLogin))
 	mux.HandleFunc("DELETE /api/codex/login", httpapi.JSON(agent.CodexLogout))
@@ -172,14 +174,16 @@ func getMeta(r *http.Request) (any, error) {
 		"version":    update.Version,
 		"data_dir":   config.DataDir,
 		"env": map[string]bool{
-			"claude":    claudeErr == nil,
-			"ffmpeg":    ffErr == nil,
-			"gemini":    os.Getenv("GEMINI_API_KEY") != "",
-			"eleven":    os.Getenv("ELEVENLABS_API_KEY") != "",
-			"anthropic": os.Getenv("ANTHROPIC_API_KEY") != "" || os.Getenv("CLAUDE_CODE_OAUTH_TOKEN") != "",
-			"codex":     agent.CodexReady(),
-			"bypass":    config.Env("STUDIO37_AGENT_PERMISSIONS", "") == "bypass",
-			"password":  config.Env("STUDIO37_PASSWORD", "") != "",
+			"claude":       claudeErr == nil,
+			"ffmpeg":       ffErr == nil,
+			"gemini":       os.Getenv("GEMINI_API_KEY") != "",
+			"eleven":       os.Getenv("ELEVENLABS_API_KEY") != "",
+			"anthropic":    os.Getenv("ANTHROPIC_API_KEY") != "" || os.Getenv("CLAUDE_CODE_OAUTH_TOKEN") != "",
+			"codex":        agent.CodexReady(),
+			"claude_login": keys.ClaudeLoggedIn(),
+			"opencode":     agent.ToolInstalled("opencode"),
+			"bypass":       config.Env("STUDIO37_AGENT_PERMISSIONS", "") == "bypass",
+			"password":     config.Env("STUDIO37_PASSWORD", "") != "",
 		},
 	}, nil
 }

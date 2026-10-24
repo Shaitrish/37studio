@@ -155,7 +155,8 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
   const dirty = !!data && Object.keys(s).some((k) => s[k] !== data[k]);
 
   const isSet = (k: string) => !!keys?.find((x) => x.name === k)?.set;
-  const claudeReady = aiProviders[0].ready(isSet);
+  const claudeLogin = !!meta?.env.claude_login; // Claude Code signed in on this machine: works with no key here
+  const claudeReady = aiProviders[0].ready(isSet) || claudeLogin;
   const socialReady = socialProviders.filter((p) => p.ready(isSet)).length;
 
   const input = (k: string, props: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
@@ -188,8 +189,19 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
     try {
       setKeys(await api<KeyInfo[]>("/keys", { method: "PUT", body: { [name]: value.trim() } }));
       toast(value ? "Saved" : "Removed");
+      // These providers' models run through OpenCode, which installs on first use rather than shipping in the app.
+      if (value && agentProviders.some((p) => p.fields.some((f) => f.key === name)) && !meta?.env.opencode) setUpOpenCode();
+      else reloadMeta();
       return true;
     } catch (e) { fail(e); return false; }
+  }
+  const [installing, setInstalling] = useState(false);
+  async function setUpOpenCode() {
+    setInstalling(true);
+    toast("Setting up OpenCode; this takes a minute");
+    try { await api("/tools/opencode", { body: {} }); toast("OpenCode is ready: its models are in the model menus"); } catch (e) { fail(e); }
+    setInstalling(false);
+    reloadMeta();
   }
   const local = (usd: number) => money(usd * (Number(s.fx_rate) || 1), s.currency || "USD"); // live preview before saving
   const card = (p: Provider, extra?: React.ReactNode, advanced?: React.ReactNode) =>
@@ -239,12 +251,19 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
           {tab === "ai" && (
             <>
               <h3 className="settings-h">The editor agent</h3>
-              {card(aiProviders[0])}
+              {card(claudeLogin ? { ...aiProviders[0], ready: () => true, required: false,
+                what: "The brain of 37Studio. Connected: Claude Code is signed in on this computer, so no key is needed here. A key or plan token below would be used instead." } : aiProviders[0])}
               <p className="small muted" style={{ margin: "4px 0 0" }}>
                 Want Codex, GPT, Grok or other models too? Connect any of these, and they appear in every model menu, next to Claude.
                 {(meta?.qualities ?? []).some((q) => q.harness) && <> Right now: {(meta?.qualities ?? []).filter((q) => q.harness).length} more models.</>}
               </p>
               <CodexCard onChange={reloadMeta} />
+              {meta && !meta.env.opencode && (
+                <div className="note-box small row wrap" style={{ gap: 10 }}>
+                  <span className="spacer">OpenCode, OpenAI, xAI and OpenRouter models run through OpenCode, which is set up the first time you need it (about 180 MB, once).</span>
+                  <button className="btn sm" disabled={installing} onClick={setUpOpenCode}>{installing ? "Setting up…" : "Set up OpenCode now"}</button>
+                </div>
+              )}
               {agentProviders.map((p) => p.id === "opencode" && (meta?.qualities ?? []).some((q) => q.group === "OpenCode Go")
                 ? card({ ...p, what: p.what + " Signed in from the terminal.", ready: () => true }) // `opencode auth login` instead of a key
                 : card(p))}
@@ -409,7 +428,7 @@ function CodexCard({ onChange }: { onChange: () => void }) {
           ) : (
             <div className="row wrap">
               <span className="small muted spacer">{st?.error ? <span style={{ color: "var(--danger)" }}>{st.error}</span> : "You'll get a link and a code to approve in your browser."}</span>
-              <button className="btn primary" disabled={busy} onClick={start}><Brand id="openai" size={15} /> {busy ? "Starting…" : "Sign in with ChatGPT"}</button>
+              <button className="btn primary" disabled={busy} onClick={start}><Brand id="openai" size={15} /> {busy ? "Setting up… (the first time takes a minute)" : "Sign in with ChatGPT"}</button>
             </div>
           )}
         </div>
@@ -523,7 +542,7 @@ function AboutSection({ meta }: { meta?: Meta }) {
   const { data: upd } = useApi<Update>("/update");
   const checks: [string, boolean | undefined][] = [
     ["Claude Code is installed", meta?.env.claude], ["ffmpeg is installed (video processing)", meta?.env.ffmpeg],
-    ["Claude is connected", meta?.env.anthropic], ["The agent runs with full permissions inside the container", meta?.env.bypass],
+    ["Claude is connected", meta?.env.anthropic || meta?.env.claude_login], ["The agent runs with full permissions inside the container", meta?.env.bypass],
     ["The app has a password (for servers)", meta?.env.password],
   ];
   return (

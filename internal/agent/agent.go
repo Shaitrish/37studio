@@ -433,6 +433,14 @@ func StartRun(id int64, text, quality string, announce bool) error {
 		return err
 	}
 	q := QualityByID(cmp.Or(quality, store.Str(p["quality"])))
+	if q.Harness != "" { // installed on first use (tools.go); a project set to one before it was installed still runs
+		if !ToolInstalled(q.Harness) {
+			AddEvent(id, "info", map[string]string{"text": "Setting up " + q.Harness + " for the first time; this takes a minute."})
+		}
+		if err := EnsureTool(q.Harness); err != nil {
+			return err
+		}
+	}
 	if q.Harness == "opencode" {
 		return startOpenCode(id, p, q, text, announce)
 	}

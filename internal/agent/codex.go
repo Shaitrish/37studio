@@ -215,8 +215,8 @@ var (
 
 // CodexLogin starts a sign-in (or returns the one in progress): {url, code} to show the person.
 func CodexLogin(r *http.Request) (any, error) {
-	if _, err := exec.LookPath("codex"); err != nil {
-		return nil, httpapi.Bad("Codex isn't installed in this copy. Update 37Studio, or from source run: npm i -g @openai/codex")
+	if err := EnsureTool("codex"); err != nil { // the first sign-in installs it (about a minute)
+		return nil, err
 	}
 	loginMu.Lock()
 	defer loginMu.Unlock()

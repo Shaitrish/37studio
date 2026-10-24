@@ -200,6 +200,8 @@ var Tools = []mcpTool{
 		}},
 	{Name: "list_voices", Desc: "ElevenLabs voices to choose for voiceovers (set one with update_settings).", Method: "GET", Path: "/api/voices"},
 	{Name: "check_update", Desc: "This copy's version and whether a newer one is out.", Method: "GET", Path: "/api/update"},
+	{Name: "set_up_agent", Desc: "Install Codex or OpenCode in this copy (they install on first use, about a minute). Usually not needed: signing in or running a project does it.",
+		Method: "POST", Path: "/api/tools/{name}", Props: map[string]any{"name": pStr("codex or opencode")}, Required: []string{"name"}},
 	{Name: "codex_status", Desc: "Whether Codex (OpenAI's coding agent, using the user's ChatGPT plan) is signed in, and the sign-in in progress if any.", Method: "GET", Path: "/api/codex"},
 	{Name: "codex_sign_in", Desc: "Start signing Codex in with the user's ChatGPT plan. Returns a link and a one-time code: give both to the user, who opens the link and enters the code; then check codex_status.", Method: "POST", Path: "/api/codex/login"},
 	{Name: "codex_sign_out", Desc: "Sign Codex out of this copy. Ask the user first.", Method: "DELETE", Path: "/api/codex/login"},

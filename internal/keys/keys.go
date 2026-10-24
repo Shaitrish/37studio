@@ -206,13 +206,17 @@ func Put(r *http.Request) (any, error) {
 const noClaude = "37Studio has no Claude key yet. Add one in Settings → Keys: an Anthropic API key, or a Claude subscription token. " +
 	"Claude Desktop's sign-in can't be shared with 37Studio; the setup guide shows how to get a token: https://studio.shaitrish.com/setup#keys"
 
+// ClaudeLoggedIn reports whether Claude Code itself is signed in here (`claude /login`, or Claude Code already set up
+// on the machine running 37Studio from source), which works without any key in Settings.
+func ClaudeLoggedIn() bool {
+	home, _ := os.UserHomeDir()
+	_, err := os.Stat(filepath.Join(home, ".claude", ".credentials.json"))
+	return err == nil
+}
+
 // ClaudeReady is checked before starting Claude, so a missing key reads as a clear message instead of Claude Code's "Please run /login".
 func ClaudeReady() error {
-	home, _ := os.UserHomeDir()
-	if os.Getenv("ANTHROPIC_API_KEY") != "" || os.Getenv("CLAUDE_CODE_OAUTH_TOKEN") != "" {
-		return nil
-	}
-	if _, err := os.Stat(filepath.Join(home, ".claude", ".credentials.json")); err == nil { // `claude /login` inside the container
+	if os.Getenv("ANTHROPIC_API_KEY") != "" || os.Getenv("CLAUDE_CODE_OAUTH_TOKEN") != "" || ClaudeLoggedIn() {
 		return nil
 	}
 	return httpapi.Bad(noClaude)

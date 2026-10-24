@@ -29,7 +29,7 @@ export default function Overview() {
   const review = all.filter((p) => projectStatus(p) === "review" && !p.autopilot_stage);
   const approvals = all.filter((p) => p.autopilot_stage === "approve");
   const checks = meta ? [
-    { ok: meta.env.anthropic, label: "Claude key or subscription token for the editor agent", fix: "Settings → AI services" },
+    { ok: meta.env.anthropic || meta.env.claude_login, label: "Claude for the editor agent: a key, a plan token, or Claude Code signed in on this computer", fix: "Settings → AI services" },
     { ok: meta.env.claude, label: "Claude Code CLI installed", fix: "bundled in the Docker image; else npm i -g @anthropic-ai/claude-code" },
     { ok: meta.env.ffmpeg, label: "ffmpeg installed", fix: "bundled in the Docker image" },
     { ok: meta.env.gemini, label: "Gemini key for image and video generation (optional)", fix: "Settings → AI services" },

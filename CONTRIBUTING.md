@@ -18,7 +18,7 @@ cp .env.example .env      # optional: keys can also go in Settings → Keys
 docker compose up --build # http://localhost:8080
 ```
 
-For day-to-day work, run the backend and the UI on your machine with hot reload. You need Go 1.26+, Node 22+, ffmpeg and the Claude Code CLI (logged in).
+For day-to-day work, run the backend and the UI on your machine with hot reload. You need Go 1.26+, Node 22+, ffmpeg and the Claude Code CLI (logged in). The other agents are optional: `npm i -g @openai/codex` for Codex and `npm i -g opencode-ai` for OpenCode, at the versions pinned in the `Dockerfile`.
 
 ```bash
 cd web && npm install && npm run build && cd ..
