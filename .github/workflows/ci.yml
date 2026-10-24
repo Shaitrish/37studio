@@ -28,5 +28,5 @@ jobs:
       - name: web build
         working-directory: web
         run: npm ci && npm run build
-      - name: Worker syntax
-        run: node --check worker/src.js
+      - name: Relay syntax
+        run: node --check relay/src.js

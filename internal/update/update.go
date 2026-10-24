@@ -12,10 +12,11 @@ import (
 	"github.com/Shaitrish/37studio/internal/remote"
 )
 
-const Version = "0.5.0"
+const Version = "0.6.0"
 
-// Every copy checks studio.shaitrish.com for new releases; point STUDIO37_UPDATE_URL elsewhere to follow a fork.
-var updateURL = config.Env("STUDIO37_UPDATE_URL", "https://studio.shaitrish.com/version.json")
+// Copies ask GitHub for the latest release, not a server of ours; point STUDIO37_UPDATE_URL at a fork's
+// https://api.github.com/repos/<owner>/<repo>/releases/latest to follow it.
+var updateURL = config.Env("STUDIO37_UPDATE_URL", "https://api.github.com/repos/Shaitrish/37studio/releases/latest")
 
 var updMu sync.Mutex
 
@@ -29,14 +30,15 @@ func Check(r *http.Request) (any, error) {
 	if updInfo == nil || time.Since(updAt) > 6*time.Hour {
 		updAt = time.Now()
 		var v struct {
-			Version string `json:"version"`
-			Notes   string `json:"notes"`
-			URL     string `json:"url"`
+			Tag   string `json:"tag_name"`
+			Notes string `json:"body"`
+			URL   string `json:"html_url"`
 		}
 		if err := remote.Call(remote.Get(updateURL, ""), &v); err != nil {
 			return map[string]any{"current": Version, "error": err.Error()}, nil // offline is fine; try again later
 		}
-		updInfo = map[string]any{"current": Version, "latest": v.Version, "notes": v.Notes, "url": v.URL, "newer": Newer(v.Version, Version)}
+		latest := strings.TrimPrefix(v.Tag, "v")
+		updInfo = map[string]any{"current": Version, "latest": latest, "notes": v.Notes, "url": v.URL, "newer": Newer(latest, Version)}
 	}
 	return updInfo, nil
 }

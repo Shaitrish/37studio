@@ -1,0 +1,11 @@
+# Your own WhatsApp relay (docs/platforms.md → WhatsApp). Deploy with `npx wrangler deploy`, then set
+# STUDIO37_RELAY_URL to its address (https://studio37-relay.<you>.workers.dev, or the route below).
+name = "studio37-relay"
+main = "src.js"
+compatibility_date = "2026-09-01"
+# routes = [{ pattern = "relay.example.com", custom_domain = true }]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "studio37-relay"
+database_id = "" # from `npx wrangler d1 create studio37-relay`

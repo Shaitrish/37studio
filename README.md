@@ -45,7 +45,7 @@ Everything runs in one Docker container, on your computer or your own server. Fo
 
 | Platform | Publishes | Inbox | You connect with |
 | --- | --- | --- | --- |
-| Facebook Pages | Reels and Page videos | Messenger, comments | Facebook Login: your own Meta app, or the shared 37Studio app as a tester |
+| Facebook Pages | Reels and Page videos | Messenger, comments | Facebook Login through your own Meta app |
 | Instagram (Business or Creator) | Reels | Messages, comments | The same sign-in as Facebook |
 | YouTube | Videos | | Your own Google OAuth client |
 | TikTok | Videos, or to the creator's drafts | | Your own TikTok app |
@@ -54,7 +54,7 @@ Everything runs in one Docker container, on your computer or your own server. Fo
 | Pinterest | Video Pins, on the boards you pick | | Your own Pinterest app |
 | Bluesky | Video posts | | Handle and an app password |
 | Mastodon | Video posts | | Server URL and an access token |
-| WhatsApp | | Messages | A WhatsApp Business API number |
+| WhatsApp | | Messages | A WhatsApp Business API number and your own webhook relay |
 
 Not possible: **Threads** (its API only takes a video from a public URL, which a local-first app doesn't have), **Facebook Groups and personal profiles** (Meta removed it), **Reddit and Snapchat** (no usable public video-posting API). Setup for each platform: [Social publishing](#social-publishing).
 
@@ -110,7 +110,7 @@ What is different on a server:
 
 - **Password.** The cloud file won't start without `STUDIO37_PASSWORD`. It is HTTP basic auth on every page, API call and timeline editor, over HTTPS. Use a long random one and share it only with people you trust with the agent (next point).
 - **Agent permissions.** The cloud file sets `STUDIO37_AGENT_PERMISSIONS=bypass`, like the launcher: the agent can run any command inside the container. Anyone who can sign in can therefore have it run commands there, read every company's files in `/data`, and reach the internet. The container runs as an unprivileged user (uid 1000) with no access to the Docker socket or the host's files beyond `./data`. For the allowlist instead, change that line to `safe` in the compose file; commands outside the allowlist are then refused, which can block some tasks. It narrows what the agent runs, but whoever can sign in can still steer the agent, so treat the password as access to everything in the container either way.
-- **Sign-in redirects.** The cloud file sets `STUDIO37_PUBLIC_URL=https://<your domain>`, so register `https://<your domain>/api/oauth/<platform>/callback` with each platform. Use your own Meta app (the shared one only knows `localhost`), and the **Web** platform for TikTok.
+- **Sign-in redirects.** The cloud file sets `STUDIO37_PUBLIC_URL=https://<your domain>`, so register `https://<your domain>/api/oauth/<platform>/callback` with each platform. Use the **Web** platform for TikTok.
 - **Timeline editor.** The UI opens each project's editor at the page's own address on a port from 3100 to 3109 (`https://studio.example.com:3100`, ...). Caddy serves HTTPS on those ports with the same certificate and passes each one to the same port on the app, so the editor works once the ports are open. Your browser asks for the password once more the first time, because a different port counts as a different site. Up to ten editors can be open at once. If you'd rather not open those ports, everything else still works; make changes by chatting with the agent.
 - **Updates.** The sidebar says when a new version is out. Then: `docker compose -f docker-compose.cloud.yml pull && docker compose -f docker-compose.cloud.yml up -d`.
 - **Backups.** Everything lives in `./data`: the database, `secret.key` (which decrypts the keys in it), company files, footage and videos. The database is SQLite in WAL mode, so copy it while the app is stopped, or snapshot the whole disk:
@@ -142,11 +142,11 @@ Autopilot, scheduled posts and auto-replies work while 37Studio runs. Keep the c
 
 Each company's **Social** tab connects its accounts: sign in once per platform, then tick which of the returned accounts belong to that company. **Publish** sends one final video to any mix of them, now or at a scheduled time. Claude writes a caption for each platform (X and Bluesky stay short, LinkedIn professional, YouTube and Pinterest get a title and description), and you can edit every one. Scheduled posts go out only while 37Studio is running; a post more than 12 hours overdue is marked missed instead of going out late.
 
-Every OAuth platform needs a developer app, and except for Facebook & Instagram that is your own (free) app. Put its credentials in **Settings → Keys** (encrypted at rest; the only way in the launcher, which has no `.env`), or in `.env` when running from source. Register the redirect URI with the platform: `STUDIO37_PUBLIC_URL` (default `http://localhost:8080`) followed by the path below.
+Every OAuth platform needs a developer app, and that is your own (free) app: 37Studio has no built-in one. Put its credentials in **Settings → Keys** (encrypted at rest; the only way in the launcher, which has no `.env`), or in `.env` when running from source. Register the redirect URI with the platform: `STUDIO37_PUBLIC_URL` (default `http://localhost:8080`) followed by the path below.
 
 | Platform | Connect button | Credentials | Redirect path |
 | --- | --- | --- | --- |
-| Facebook Pages + Instagram | Connect Facebook & Instagram | `META_APP_ID`, `META_APP_SECRET`, `META_CONFIG_ID` (your own Meta app), or the shared 37Studio app if the maintainers add you as a tester | `/api/oauth/meta/callback` |
+| Facebook Pages + Instagram | Connect Facebook & Instagram | `META_APP_ID`, `META_APP_SECRET`, `META_CONFIG_ID` | `/api/oauth/meta/callback` |
 | YouTube | Connect YouTube | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `/api/oauth/google/callback` |
 | TikTok | Connect TikTok (OAuth with PKCE) | `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET` | `/api/oauth/tiktok/callback` |
 | LinkedIn | Connect LinkedIn | `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` | `/api/oauth/linkedin/callback` |
@@ -155,9 +155,9 @@ Every OAuth platform needs a developer app, and except for Facebook & Instagram 
 | Bluesky | Connect Bluesky: handle + app password | none | |
 | Mastodon | Connect Mastodon: server URL + access token | none | |
 
-**[docs/platforms.md](docs/platforms.md) has the step-by-step setup for each one.** The short version:
+**[docs/platforms.md](docs/platforms.md) has the step-by-step setup for each one**, also on the website in plain words as [Connect your social accounts](https://studio.shaitrish.com/connect), with a [plain-text copy](https://studio.shaitrish.com/connect.txt) to paste into ChatGPT or Claude so it walks you through. The short version:
 
-- **Facebook + Instagram.** A Meta Business app with Facebook Login for Business, left in Development mode with your team as app roles: no App Review needed. Company → Social → **Use your own Meta app** walks through it. Instagram must be a Business or Creator account linked to the Page. Vertical videos of 3–90 seconds post as Reels.
+- **Facebook + Instagram.** A Meta Business app with Facebook Login for Business, left in Development mode with your team as app roles: no App Review needed. Company → Social → **Set up your Meta app** walks through it, about 15 minutes. Messenger and Instagram messages from the public need Meta's App Review of your app. Instagram must be a Business or Creator account linked to the Page. Vertical videos of 3–90 seconds post as Reels.
 - **YouTube.** A Google Cloud project with YouTube Data API v3 and a *Web application* OAuth client, consent screen set to *In production*. Uploads stay private until the project passes YouTube's API audit.
 - **TikTok.** Login Kit and Content Posting API, Desktop platform for `localhost` (Web for an HTTPS domain). Until TikTok audits the app, posts must be *Only me*, or go to the creator's drafts.
 - **LinkedIn.** Products *Sign In with LinkedIn using OpenID Connect* and *Share on LinkedIn* (scopes `openid profile w_member_social`). Posts to your own profile. Company Pages need LinkedIn's Community Management API; once LinkedIn approves it, set `LINKEDIN_PAGES=1` and reconnect. Tokens last 60 days; then connect again.
@@ -166,7 +166,7 @@ Every OAuth platform needs a developer app, and except for Facebook & Instagram 
 - **Bluesky.** bsky.app → Settings → Privacy and security → App passwords. For a self-hosted account, also give its PDS host. No developer app.
 - **Mastodon.** Your server → Preferences → Development → New application with `read:accounts write:media write:statuses`, then paste its access token. No developer app.
 
-Environment-only settings (`LINKEDIN_PAGES`, `PINTEREST_API`, `STUDIO37_PUBLIC_URL`, `STUDIO37_AUTH_URL`, `STUDIO37_PASSWORD`) go in `.env` when running from source, or under `environment:` in the launcher's `docker-compose.yml`. Then run the start file again (from source: `docker compose up -d`), which recreates the container with the new settings; a plain restart doesn't pick them up. Keys saved in Settings → Keys apply at once.
+Environment-only settings (`LINKEDIN_PAGES`, `PINTEREST_API`, `STUDIO37_PUBLIC_URL`, `STUDIO37_RELAY_URL`, `STUDIO37_PASSWORD`) go in `.env` when running from source, or under `environment:` in the launcher's `docker-compose.yml`. Then run the start file again (from source: `docker compose up -d`), which recreates the container with the new settings; a plain restart doesn't pick them up. Keys saved in Settings → Keys apply at once.
 
 ```yaml
     environment:
@@ -180,7 +180,7 @@ Environment-only settings (`LINKEDIN_PAGES`, `PINTEREST_API`, `STUDIO37_PUBLIC_U
 
 **Auto-replies** (Company → Social → Inbox replies): *Off*, *Claude drafts, you approve*, or *Claude replies on its own*, plus the company's own rules for how Claude replies (tone, sign-off, what never to promise, when to hand over to a person). Facts only come from the knowledge base; when the answer isn't there, Claude says a team member will reply. A background loop checks every 2 minutes while 37Studio runs, and catches up on what arrived while it was off if the platform still allows a reply (messages within 24 hours, comments up to 2 days old).
 
-The inbox needs extra Meta permissions on top of publishing, and WhatsApp needs a number on the WhatsApp Business API and a small webhook relay: see [docs/platforms.md](docs/platforms.md#inbox-messenger-instagram-and-comments). Until Meta grants your app Advanced Access, only messages from people with a role on the app or Page appear.
+The inbox needs extra Meta permissions on top of publishing, and WhatsApp needs a number on the WhatsApp Business API and a small webhook relay you deploy to your own Cloudflare account (free plan): see [docs/platforms.md](docs/platforms.md#inbox-messenger-instagram-and-comments) and [Run your own relay](docs/platforms.md#run-your-own-relay-whatsapp). Until Meta grants your app Advanced Access, only messages from people with a role on the app or Page appear.
 
 ## Assistant and MCP
 
@@ -236,9 +236,9 @@ Settings are environment variables: in `.env` when running from source, under `e
 | `STUDIO37_PUBLIC_URL` | `http://localhost:8080` | | Where the platforms send the browser back after sign-in; must match the redirect URIs you register |
 | `STUDIO37_DOMAIN` | | | Cloud file only: your domain, for Caddy's certificate and `STUDIO37_PUBLIC_URL` |
 | `STUDIO37_AGENT_PERMISSIONS` | `safe` | | `safe` (allowlist) or `bypass` (any command; the launcher and cloud file set it) |
-| `STUDIO37_AUTH_URL` | `https://studio.shaitrish.com` | | The relay for the shared Meta app's sign-in and for WhatsApp messages ([run your own](docs/platforms.md#run-your-own-relay)) |
+| `STUDIO37_RELAY_URL` | unset | | Your own WhatsApp webhook relay ([deploy it](docs/platforms.md#run-your-own-relay-whatsapp)); WhatsApp can't connect without it. `STUDIO37_AUTH_URL` is still read if this is unset |
 | `STUDIO37_ALLOW_PRIVATE_URLS` | unset | | `1` lets website scans, video imports and Bluesky/Mastodon servers use addresses on your own network (localhost, LAN, `10.x`, `192.168.x`); refused by default |
-| `STUDIO37_UPDATE_URL` | `https://studio.shaitrish.com/version.json` | | Where the update check looks for new releases |
+| `STUDIO37_UPDATE_URL` | `https://api.github.com/repos/Shaitrish/37studio/releases/latest` | | Where the update check looks for new releases (GitHub Releases, every 6 hours); a fork can point at its own `…/releases/latest` |
 | `STUDIO37_DATA` | `./data` | | Everything lives here: `37studio.db`, `secret.key`, `tenants/`, `projects/`, `templates/` |
 | `STUDIO37_ADDR` | `127.0.0.1:8080` | | Listen address (the image sets `:8080`; the compose files publish it on `127.0.0.1` only or behind Caddy) |
 | `STUDIO37_STUDIO_PORT` | `3100` | | First port for timeline editors, one per open project (Docker publishes 3100–3109) |
@@ -253,7 +253,7 @@ Browser ──► 37studio (Go, one binary) ──► SQLite + data/ (companies,
              ├─ claude -p, the editor agent ──► ffmpeg · npx hyperframes · 37studio gen / transcribe / clip
              ├─ hyperframes render (Chrome + ffmpeg) ──► out/*.mp4, *.png
              ├─ post queue ──► Facebook · Instagram · YouTube · TikTok · LinkedIn · X · Pinterest · Bluesky · Mastodon
-             └─ inbox loop ──► Messenger, Instagram (Graph API) · WhatsApp (through the relay)
+             └─ inbox loop ──► Messenger, Instagram (Graph API) · WhatsApp (through your own relay)
 ```
 
 **Claude Code does the editing. HyperFrames renders. Go serves. React is the UI.** All of it, with ffmpeg, Chrome, Node.js, Python and fonts, ships in one Docker image for amd64 and arm64.
@@ -269,7 +269,7 @@ Browser ──► 37studio (Go, one binary) ──► SQLite + data/ (companies,
 
 **Is it really free?** Yes: MIT licensed, no license key, no paid tier. You pay the AI providers for what you use.
 
-**What leaves my computer?** Calls to the AI providers you set up (Anthropic, and Gemini and ElevenLabs if you add them), uploads to the platforms you connect, the update check (`version.json`), and, only for the shared Meta app's sign-in and for WhatsApp, the relay at `STUDIO37_AUTH_URL`. Incoming WhatsApp messages wait on that relay until your copy pulls them (at most 7 days), so to keep them off our server, [run your own relay](docs/platforms.md#run-your-own-relay). Any agent may read a company's brand files and source folder, so they go to Anthropic as part of its work.
+**What leaves my computer?** Calls to the AI providers you set up (Anthropic, and Gemini and ElevenLabs if you add them), uploads to the platforms you connect, the update check (GitHub Releases), and, only if you set up WhatsApp, your own relay at `STUDIO37_RELAY_URL`, where incoming WhatsApp messages wait in your Cloudflare account until your copy pulls them (at most 7 days). Nothing is sent to Shaitrish or studio.shaitrish.com. Any agent may read a company's brand files and source folder, so they go to Anthropic as part of its work.
 
 **The page doesn't open, or port 8080 is in use.** Another program has port 8080. Close it and run the start file again. `docker compose logs` shows what the app is doing.
 
@@ -302,8 +302,6 @@ More questions: [open an issue](https://github.com/Shaitrish/37studio/issues).
 ## Roadmap
 
 - **Image posts.** Publishing sends videos only; Instagram needs a public URL for images, which a local-first app doesn't have.
-- **Shared apps beyond Meta.** Connecting YouTube, TikTok and the rest without your own developer app, once shared apps are registered and pass each platform's review.
-- **Meta App Review** for the shared app, so anyone can connect Facebook and Instagram without their own Meta app ([docs/meta-app-review.md](docs/meta-app-review.md)).
 - **More video models.** Kling, Seedance, Wan, Veo and others through one fal.ai key, chosen in Settings. The agent's `37studio gen video` command stays the same.
 - **A spending cap on generated media** per project, alongside the per-turn cap on Claude.
 - **WhatsApp on existing business numbers** (Embedded Signup, coexistence with the phone app), which needs Meta Tech Provider approval.
@@ -311,7 +309,7 @@ More questions: [open an issue](https://github.com/Shaitrish/37studio/issues).
 
 ## Support the project
 
-37Studio is free and stays free. If it saves you time, you can [donate](https://studio.shaitrish.com/donate) by US bank transfer or bKash (the page thanks supporters by name), star the repo, or share what you made with it. Want it set up for you? Shaitrish does paid setup over a screen share: [message us on WhatsApp](https://wa.me/8801635191148?text=Hi%2C%20I%27d%20like%20help%20setting%20up%2037Studio).
+37Studio is free and stays free. If it saves you time, you can [donate](https://studio.shaitrish.com/donate) by US bank transfer or bKash, star the repo, or share what you made with it. Want it set up for you? Shaitrish does paid setup over a screen share: [message us on WhatsApp](https://wa.me/8801635191148?text=Hi%2C%20I%27d%20like%20help%20setting%20up%2037Studio).
 
 ## Contributing
 

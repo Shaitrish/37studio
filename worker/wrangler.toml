@@ -1,17 +1,7 @@
+# The product website on studio.shaitrish.com: static files only. Copies of 37Studio (0.6.0 on) never call it.
 name = "37studio"
-main = "src.js"
 compatibility_date = "2026-09-01"
 routes = [{ pattern = "studio.shaitrish.com", custom_domain = true }]
 
 [assets]
 directory = "./public"
-binding = "ASSETS"
-
-[vars]
-META_APP_ID = "2057436148296558"
-
-# WhatsApp messages from Meta's webhook, held until each copy pulls them (schema.sql)
-[[d1_databases]]
-binding = "DB"
-database_name = "studio37"
-database_id = "0bd4d12c-5bf3-4d05-a680-c9ecc72754de"

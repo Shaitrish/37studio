@@ -1,0 +1,8 @@
+# 37Studio
+
+> Free, open-source (MIT) AI video studio and social media desk that runs on your own computer or server in Docker. Claude Code builds videos from a company's brand library, and the app renders them locally, publishes them to your social accounts through your own developer apps, and drafts inbox replies. There is no central server: keys, tokens and footage stay in your own copy.
+
+- [Connecting social accounts](https://studio.shaitrish.com/connect.txt): step-by-step setup for Facebook & Instagram, YouTube, TikTok, LinkedIn, X, Pinterest, Bluesky, Mastodon and WhatsApp, written for an AI assistant to walk someone through
+- [Setup guide](https://studio.shaitrish.com/setup): install Docker, start 37Studio, add AI keys
+- [README](https://github.com/Shaitrish/37studio/blob/main/README.md): features, configuration and environment variables
+- [Architecture](https://github.com/Shaitrish/37studio/blob/main/docs/architecture.md): how the code is organised

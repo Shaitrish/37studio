@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connect your social accounts to 37Studio</title>
+<meta name="description" content="Connect Facebook, Instagram, YouTube, TikTok, LinkedIn, X, Pinterest, Bluesky, Mastodon and WhatsApp to 37Studio through your own developer apps, step by step, with a copy for your AI assistant.">
+<meta property="og:title" content="Connect your social accounts to 37Studio">
+<meta property="og:image" content="https://studio.shaitrish.com/og.png">
+<meta name="theme-color" content="#fbfaf8">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></symbol>
+    <symbol id="i-wa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.2 19.8 5.3 16A8.3 8.3 0 1 1 8.4 19z"/><path d="M9.3 8.6c.3-.6.9-.6 1.2 0l.6 1.3c.1.3 0 .6-.2.8l-.4.4c.5 1.1 1.4 2 2.5 2.5l.4-.4c.2-.2.5-.3.8-.2l1.3.6c.6.3.6.9 0 1.2-1.6 1-5.2-1-6.2-3.6-.4-1-.4-1.9 0-2.6z"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav scrolled" id="top">
+  <div class="wrap">
+    <a class="brand" href="/"><img src="/favicon.svg" alt="">37Studio <small>by Shaitrish</small></a>
+    <nav aria-label="Pages">
+      <a href="/#how">How it works</a>
+      <a href="/#open">Open source</a>
+      <a href="/setup">Setup guide</a>
+      <a href="/connect" aria-current="page" style="background:var(--soft)">Connect accounts</a>
+      <a href="https://github.com/Shaitrish/37studio">GitHub</a>
+      <a href="/donate">Donate</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+    <div class="right"><a class="btn sm ink" href="/37studio.zip" download><svg><use href="#i-down"/></svg>Download</a></div>
+  </div>
+</header>
+
+<main>
+<section class="doc-hero">
+  <div class="dots" aria-hidden="true" style="position:absolute;inset:0;-webkit-mask-image:radial-gradient(ellipse at 85% 0%,#000,transparent 60%);mask-image:radial-gradient(ellipse at 85% 0%,#000,transparent 60%)"></div>
+  <div class="wrap">
+    <span class="eyebrow">Setup guide</span>
+    <h1 style="margin-top:14px">Connect your social accounts</h1>
+    <p class="lead">Post your videos, and answer messages and comments, from 37Studio. This page walks you through each platform in plain steps. No coding needed, except for WhatsApp.</p>
+  </div>
+</section>
+
+<div class="wrap doc">
+  <nav class="toc" aria-label="On this page">
+    <a href="#yours">Your system, your accounts</a>
+    <a href="#ai">Get help from an AI</a>
+    <a href="#what">What you can do</a>
+    <a href="#words">Words you'll see</a>
+    <a href="#meta">Facebook &amp; Instagram</a>
+    <a href="#replies">Messages and comments</a>
+    <a href="#youtube-steps">YouTube</a>
+    <a href="#tiktok-steps">TikTok</a>
+    <a href="#linkedin-steps">LinkedIn</a>
+    <a href="#x-steps">X</a>
+    <a href="#pinterest-steps">Pinterest</a>
+    <a href="#bluesky-steps">Bluesky &amp; Mastodon</a>
+    <a href="#whatsapp-steps">WhatsApp</a>
+    <a href="#not">What isn't possible</a>
+    <a href="#details">Technical details</a>
+  </nav>
+
+  <article class="prose">
+    <h2 id="yours">Your system, your accounts</h2>
+    <p>37Studio is software you run yourself. There's no 37Studio server in the middle. You create a free "developer app" on each platform, and its keys and your logins stay on your own computer, encrypted. Shaitrish, who makes 37Studio, can't see your accounts and never posts, replies or acts on them for you.</p>
+    <p>That also means your setup is yours to look after: your developer apps, your keys, backups of the <code>data</code> folder, and what you publish. If a platform blocks an app or a post, sort it out with that platform; we can't do it for you.</p>
+
+    <h2 id="ai">Get help from an AI assistant</h2>
+    <p>Stuck on a screen that looks different? Copy this guide into ChatGPT, Claude or any other AI assistant, tell it which platforms you want, and it will walk you through one step at a time.</p>
+    <p><button class="btn ink" type="button" id="copy-guide" disabled>Copy the guide for your AI assistant</button> <a href="/connect.txt" style="margin-left:10px">Open as text</a></p>
+    <div class="note"><b>Never paste an app secret, token or password into the chat.</b> The assistant only needs to tell you where to click. Secrets go straight into 37Studio: <b>Settings → Keys</b>, or the Connect windows on a company's <b>Social</b> tab.</div>
+
+    <h2 id="what">What you can do once connected</h2>
+    <table>
+      <thead><tr><th>Platform</th><th>Post videos</th><th>Answer comments</th><th>Answer messages</th><th>Time to set up</th></tr></thead>
+      <tbody>
+        <tr><td>Facebook Page</td><td>Yes</td><td>Yes</td><td>Your team right away; customers after Meta approves your app</td><td>About 20 minutes</td></tr>
+        <tr><td>Instagram (Business or Creator)</td><td>Yes, Reels</td><td>Yes</td><td>Your team right away; customers after Meta approves your app</td><td>Same app as Facebook</td></tr>
+        <tr><td>WhatsApp Business</td><td>No</td><td>No</td><td>Yes</td><td>About an hour; technical</td></tr>
+        <tr><td>YouTube</td><td>Yes (private until Google's check)</td><td>No</td><td>No</td><td>About 15 minutes</td></tr>
+        <tr><td>TikTok</td><td>Yes ("Only me" or drafts until TikTok's check)</td><td>No</td><td>No</td><td>About 15 minutes</td></tr>
+        <tr><td>LinkedIn</td><td>Yes, to your profile</td><td>No</td><td>No</td><td>About 10 minutes</td></tr>
+        <tr><td>X</td><td>Yes, on an X plan that allows posting</td><td>No</td><td>No</td><td>About 10 minutes</td></tr>
+        <tr><td>Pinterest</td><td>Yes, to the boards you pick</td><td>No</td><td>No</td><td>About 10 minutes</td></tr>
+        <tr><td>Bluesky, Mastodon</td><td>Yes</td><td>No</td><td>No</td><td>2 minutes</td></tr>
+      </tbody>
+    </table>
+    <p>Start with the ones you really use. Bluesky and Mastodon are the easiest; WhatsApp is the hardest, so leave it for last.</p>
+
+    <h2 id="words">Words you'll see</h2>
+    <ul>
+      <li><b>Developer app:</b> a free registration on the platform's developer website that lets a program, here your copy of 37Studio, post for you. You make it once, and every company you manage can use it.</li>
+      <li><b>App ID and app secret</b> (sometimes "client ID" and "client secret"): like a username and password for your developer app. The ID isn't secret; the secret is, so keep it private and paste it only into 37Studio.</li>
+      <li><b>Redirect URI</b> (or "callback URL"): the address the platform sends you back to after you sign in. It always points at your own 37Studio, like <code>http://localhost:8080/api/oauth/google/callback</code>. Copy it exactly, with no slash at the end. If you run 37Studio on a server, start it with your server's <code>https://</code> address instead of <code>http://localhost:8080</code>.</li>
+      <li><b>Development mode</b> and <b>App Review:</b> a new app works right away for you and the people you add to it. For anything that touches the public, like messages from customers, some platforms first review your app. The table above says where.</li>
+      <li><b>Settings → Keys:</b> the page in 37Studio where you paste app IDs and secrets. They're encrypted on your computer.</li>
+    </ul>
+
+    <h2 id="meta">Facebook &amp; Instagram</h2>
+    <p>One Meta app covers your Facebook Pages and the Instagram accounts linked to them. Inside 37Studio, a company's <b>Social</b> tab → <b>Set up your Meta app</b> shows these same steps.</p>
+    <h3>Before you start</h3>
+    <ul>
+      <li>You need a Facebook account that manages the Page.</li>
+      <li>Your Instagram must be a <b>Business</b> or <b>Creator</b> account, linked to that Facebook Page. In the Instagram app: <b>Settings → Account type and tools</b>, then link the Page under <b>Sharing to other apps</b> or in the Page's settings.</li>
+    </ul>
+    <h3>Steps</h3>
+    <ol>
+      <li>Go to <a href="https://developers.facebook.com/apps">developers.facebook.com/apps</a> and click <b>Create app</b>. When it asks what the app is for, tick <b>Manage everything on your Page</b> and <b>Manage messaging &amp; content on Instagram</b>. Also tick <b>Engage with customers on Messenger</b> if you want to answer messages. Connect your business portfolio when asked (it doesn't need to be verified).</li>
+      <li>In each of those use cases, click <b>Customize</b> and add these permissions: <code>pages_show_list</code>, <code>pages_read_engagement</code>, <code>pages_manage_posts</code>, <code>business_management</code>, <code>instagram_basic</code>, <code>instagram_content_publish</code>. For messages and comments, also add <code>pages_read_user_content</code>, <code>pages_manage_engagement</code>, <code>pages_manage_metadata</code>, <code>pages_messaging</code>, <code>instagram_manage_comments</code>, <code>instagram_manage_messages</code>.</li>
+      <li>In the left menu, open <b>Facebook Login for Business → Configurations → Create</b>. Choose <b>User access token</b>, select your Pages and Instagram accounts, and the same permissions. Save, and copy the <b>Configuration ID</b>.</li>
+      <li>Open <b>App settings → Basic</b> and copy the <b>App ID</b> and <b>App secret</b>. If Meta asks for a redirect URI anywhere, use <code>http://localhost:8080/api/oauth/meta/callback</code>.</li>
+      <li>In 37Studio, open a company's <b>Social</b> tab → <b>Set up your Meta app</b>, paste the App ID, App secret and Configuration ID, and click <b>Save</b>.</li>
+      <li>Click <b>Connect Facebook &amp; Instagram</b>, sign in with Facebook, allow everything it asks, then tick the Pages and Instagram accounts that belong to this company.</li>
+    </ol>
+    <div class="note"><b>Leave the app in Development mode.</b> That way it works right away for you, without Meta's review. Anyone else on your team who connects Pages needs a role on the app: <b>App roles → Add people</b>.</div>
+
+    <h2 id="replies">Answering messages and comments</h2>
+    <p>Once Facebook and Instagram are connected, everything lands in <b>Inbox</b> in the sidebar. Click a message, press <b>Draft with AI</b>, check the reply, and press <b>Send</b>. Claude writes replies only from what you've put in the company's knowledge base.</p>
+    <ol>
+      <li><b>Comments</b> work as soon as you've added the comment permissions in step 2 above and connected again.</li>
+      <li><b>Instagram messages:</b> in the Instagram app, open <b>Settings → Messages and story replies → Message controls → Connected tools</b> and turn on <b>Allow access to messages</b>.</li>
+      <li><b>Messages from customers</b> (Messenger and Instagram) appear once Meta approves your app for those permissions in <b>App Review</b>. Until then you only see messages from people who have a role on your app or Page, which is enough to test.</li>
+      <li>On the company's <b>Social</b> tab, under <b>Inbox replies</b>, choose how replies go out: <b>Off</b> (you write them), <b>Claude drafts, you approve</b> (recommended), or <b>Claude replies on its own</b>. Add your own rules, like your sign-off or what never to promise, in <b>How Claude should reply</b>.</li>
+    </ol>
+    <div class="note">Platforms only allow replies within a time window: messages within 24 hours, and 37Studio answers comments up to 2 days old. Replies go out only while 37Studio is running.</div>
+
+    <h2 id="youtube-steps">YouTube</h2>
+    <ol>
+      <li>At <a href="https://console.cloud.google.com">console.cloud.google.com</a>, create a project. Search for <b>YouTube Data API v3</b> and click <b>Enable</b>.</li>
+      <li>Open <b>OAuth consent screen</b>: choose <b>External</b>, fill in the app name and your email, and add the scopes <code>youtube.upload</code> and <code>youtube.readonly</code>. Then click <b>Publish app</b> so it's <b>In production</b>; otherwise Google signs you out every 7 days.</li>
+      <li>Open <b>Credentials → Create credentials → OAuth client ID</b>, choose <b>Web application</b>, and add the redirect URI <code>http://localhost:8080/api/oauth/google/callback</code>.</li>
+      <li>Copy the <b>Client ID</b> and <b>Client secret</b> into 37Studio → <b>Settings → Keys</b> (Google OAuth client ID and secret).</li>
+      <li>On the company's Social tab, click <b>Connect YouTube</b>. Google warns that the app isn't verified: click <b>Advanced → Go to …</b> to continue, since it's your own app. Pick the channel.</li>
+    </ol>
+    <p><b>Good to know:</b> YouTube keeps every upload private until your project passes Google's free API audit (search "YouTube API Services audit and quota extension form"). You can make videos public by hand in YouTube Studio meanwhile.</p>
+
+    <h2 id="tiktok-steps">TikTok</h2>
+    <ol>
+      <li>At <a href="https://developers.tiktok.com">developers.tiktok.com</a>, create an app. For the platform, choose <b>Desktop</b> (on a server with an https address, choose <b>Web</b>).</li>
+      <li>Add the products <b>Login Kit</b> and <b>Content Posting API</b> (turn on <b>Direct Post</b>), with the scopes <code>user.info.basic</code>, <code>video.publish</code> and <code>video.upload</code>. Add the redirect URI <code>http://localhost:8080/api/oauth/tiktok/callback</code>.</li>
+      <li>Copy the <b>Client key</b> and <b>Client secret</b> into <b>Settings → Keys</b>.</li>
+      <li>Until TikTok reviews your app, use its <b>Sandbox</b> and add each TikTok account you'll post to as a target user.</li>
+      <li>Click <b>Connect TikTok</b> on the company's Social tab and sign in with that company's TikTok account.</li>
+    </ol>
+    <p><b>Good to know:</b> until TikTok audits your app, posts can only be <b>Only me</b>. Or choose <b>Send to TikTok drafts</b> when publishing, and tap Post in the TikTok app yourself.</p>
+
+    <h2 id="linkedin-steps">LinkedIn</h2>
+    <ol>
+      <li>At <a href="https://www.linkedin.com/developers/apps">linkedin.com/developers</a>, click <b>Create app</b> (LinkedIn asks you to link a company Page to it).</li>
+      <li>Under <b>Products</b>, add <b>Sign In with LinkedIn using OpenID Connect</b> and <b>Share on LinkedIn</b>.</li>
+      <li>Under <b>Auth</b>, add the redirect URI <code>http://localhost:8080/api/oauth/linkedin/callback</code>, and copy the <b>Client ID</b> and <b>Client secret</b> into <b>Settings → Keys</b>.</li>
+      <li>Click <b>Connect LinkedIn</b> on the company's Social tab.</li>
+    </ol>
+    <p><b>Good to know:</b> this posts to your own profile. Posting to a company Page needs LinkedIn to approve your app for its Community Management API. LinkedIn logins last 60 days, then click Connect LinkedIn again.</p>
+
+    <h2 id="x-steps">X</h2>
+    <ol>
+      <li>At <a href="https://developer.x.com">developer.x.com</a>, create a project and an app in it.</li>
+      <li>In the app's <b>User authentication settings</b>, turn on <b>OAuth 2.0</b>, choose <b>Web App, Automated App or Bot</b>, set permissions to <b>Read and write</b>, and add the callback <code>http://127.0.0.1:8080/api/oauth/x/callback</code> (X doesn't accept <code>localhost</code>, so this one uses <code>127.0.0.1</code>). It also asks for a website; any page about you works.</li>
+      <li>Under <b>Keys and tokens</b>, copy the OAuth 2.0 <b>Client ID</b> and <b>Client Secret</b> into <b>Settings → Keys</b>.</li>
+      <li>Click <b>Connect X</b> on the company's Social tab.</li>
+    </ol>
+    <p><b>Good to know:</b> posting videos needs an X API plan that allows posting and media uploads. Check yours before you start.</p>
+
+    <h2 id="pinterest-steps">Pinterest</h2>
+    <ol>
+      <li>At <a href="https://developers.pinterest.com">developers.pinterest.com</a>, create an app (it needs a Pinterest business account) and add the redirect URI <code>http://localhost:8080/api/oauth/pinterest/callback</code>.</li>
+      <li>Copy the <b>App ID</b> and <b>App secret</b> into <b>Settings → Keys</b>.</li>
+      <li>Click <b>Connect Pinterest</b> and tick the boards this company posts to.</li>
+    </ol>
+    <p><b>Good to know:</b> new Pinterest apps start with "Trial" access, which only posts to Pinterest's test area. 37Studio needs a setting for that (<code>PINTEREST_API</code>); the <a href="#details">technical details</a> explain it. Once Pinterest grants Standard access, remove it.</p>
+
+    <h2 id="bluesky-steps">Bluesky &amp; Mastodon</h2>
+    <ul>
+      <li><b>Bluesky:</b> in Bluesky, open <b>Settings → Privacy and security → App passwords</b> and create one. In 37Studio click <b>Connect Bluesky</b> and enter your handle (like <code>yourshop.bsky.social</code>) and that app password.</li>
+      <li><b>Mastodon:</b> on your Mastodon server, open <b>Preferences → Development → New application</b>, tick <code>read:accounts</code>, <code>write:media</code> and <code>write:statuses</code>, save, and copy <b>Your access token</b>. In 37Studio click <b>Connect Mastodon</b> and enter your server's address and the token.</li>
+    </ul>
+
+    <h2 id="whatsapp-steps">WhatsApp</h2>
+    <p>WhatsApp is for answering customer messages in the Inbox; videos aren't posted to it. It's the most technical part, because WhatsApp only sends messages to a public web address, and your computer doesn't have one. So you put a small free "relay" on your own Cloudflare account that holds messages until 37Studio collects them.</p>
+    <ol>
+      <li>You need a phone number on the <b>WhatsApp Business API</b>. A number on the API can't be used in the WhatsApp Business phone app at the same time.</li>
+      <li>Deploy the relay from the <code>relay/</code> folder of the 37Studio code to your Cloudflare account (free plan) and set <code>STUDIO37_RELAY_URL</code> to its address. The <a href="#details">technical details</a> list the exact commands. This is a good step to do with an AI assistant, or with someone technical.</li>
+      <li>In your Meta app, add <b>Connect with customers through WhatsApp</b>, and point its webhook at your relay.</li>
+      <li>From <b>WhatsApp → API Setup</b>, copy the <b>Phone number ID</b> and <b>WhatsApp Business Account ID</b>. Make a permanent token under <b>Business settings → System users</b>.</li>
+      <li>In 37Studio, click <b>Connect WhatsApp</b> on the company's Social tab and paste the three.</li>
+    </ol>
+
+    <h2 id="not">What isn't possible</h2>
+    <ul>
+      <li><b>Threads:</b> it only takes videos from a public web address.</li>
+      <li><b>Facebook Groups and personal profiles:</b> Meta removed posting to them for all apps.</li>
+      <li><b>Reddit and Snapchat:</b> no usable way for apps to post videos.</li>
+    </ul>
+
+    <details id="details" style="margin-top:48px">
+      <summary style="cursor:pointer;font-weight:600;font-size:20px">Technical details (for developers and AI assistants)</summary>
+      <div id="guide" style="margin-top:20px"><p class="muted">Loading&hellip;</p></div>
+      <noscript><p>Read it <a href="https://github.com/Shaitrish/37studio/blob/main/docs/platforms.md">on GitHub</a> or as <a href="/connect.txt">plain text</a>.</p></noscript>
+    </details>
+
+    <div class="note" style="margin-top:40px"><b>Stuck?</b> Search or open an issue on <a href="https://github.com/Shaitrish/37studio/issues">GitHub</a>. If you'd rather have it set up for you over a screen share, message us on <a href="https://wa.me/8801635191148?text=Hi%2C%20I%27d%20like%20help%20setting%20up%2037Studio" target="_blank" rel="noopener">WhatsApp</a> or email <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a>.</div>
+  </article>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="brand" href="/"><img src="/favicon.svg" alt="">37Studio <small>by Shaitrish</small></a>
+      <p style="margin-top:12px">Made in Dhaka by <a href="https://shaitrish.com" style="text-decoration:underline;text-underline-offset:3px">Shaitrish</a>.<br>Open source under the <a href="https://github.com/Shaitrish/37studio/blob/main/LICENSE" style="text-decoration:underline;text-underline-offset:3px">MIT License</a>.</p>
+    </div>
+    <div class="links">
+      <a href="/">Home</a>
+      <a href="/privacy">Privacy</a>
+      <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a>
+      <a href="tel:+8801635191148">+880 1635 191148</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script>
+  // connect.txt is docs/platforms.md behind a short intro for AI assistants (release.sh builds it). The page shows the
+  // platform guide part; the button copies the whole file.
+  const guide = document.getElementById("guide"), copy = document.getElementById("copy-guide");
+  fetch("/connect.txt").then((r) => r.ok ? r.text() : Promise.reject(r.status)).then((txt) => {
+    const md = txt.slice(txt.indexOf("\n## ", txt.indexOf("\n---\n"))); // from the first section: the page has its own title and contents
+    guide.innerHTML = marked.parse(md);
+    for (const h of guide.querySelectorAll("h2, h3")) {
+      h.id = h.textContent.toLowerCase().replace(/[^\w\- ]/g, "").replace(/ /g, "-"); // GitHub's anchors, so the guide's own links work
+    }
+    for (const a of document.querySelectorAll('a[href="#details"]')) a.addEventListener("click", () => { document.getElementById("details").open = true; });
+    copy.disabled = false;
+    copy.addEventListener("click", () => navigator.clipboard?.writeText(txt).then(() => { copy.textContent = "Copied. Paste it into your AI chat"; }, () => {}));
+  }).catch(() => {
+    guide.innerHTML = '<p>The guide didn\'t load. Read it <a href="https://github.com/Shaitrish/37studio/blob/main/docs/platforms.md">on GitHub</a>.</p>';
+  });
+</script>
+</body>
+</html>

@@ -41,7 +41,8 @@
   .nav .wrap { display: flex; align-items: center; height: 64px; gap: 24px; }
   .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; letter-spacing: -0.02em; text-decoration: none; }
   .brand img { width: 28px; height: 28px; border-radius: 4px; }
-  .brand small { font-weight: 400; color: var(--faint); font-size: 13px; letter-spacing: 0; }
+  .brand small { font-weight: 400; color: var(--faint); font-size: 13px; letter-spacing: 0; white-space: nowrap; }
+  @media (max-width: 480px) { .nav .brand small { display: none; } }
   .nav nav { display: none; gap: 4px; margin: 0 auto; }
   .nav nav a { text-decoration: none; font-size: 14px; color: var(--fg2); padding: 6px 12px; border-radius: 999px; transition: background .2s; }
   .nav nav a:hover { background: var(--soft); }
@@ -328,7 +329,7 @@
 .doc-hero .wrap { position: relative; padding-top: 64px; padding-bottom: 56px; }
 .doc-hero h1 { font-size: clamp(36px, 5vw, 52px); }
 .doc-hero .lead { margin-top: 18px; max-width: 680px; }
-.doc { display: grid; gap: 48px; padding: 56px 0 96px; }
+.doc { display: grid; gap: 48px; padding-top: 56px; padding-bottom: 96px; }
 @media (min-width: 1024px) { .doc { grid-template-columns: 220px 1fr; } }
 .toc { position: sticky; top: 88px; align-self: start; display: none; font-size: 14px; }
 @media (min-width: 1024px) { .toc { display: grid; gap: 4px; } }
@@ -343,6 +344,12 @@
 .prose ol, .prose ul { padding-left: 22px; margin: 10px 0; display: grid; gap: 8px; }
 .prose a { color: var(--ember-ink); text-underline-offset: 3px; }
 .prose code { font-size: 13.5px; }
+.prose table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; display: block; overflow-x: auto; }
+.prose th, .prose td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; color: var(--fg2); }
+.prose th { color: var(--ink); font-weight: 600; }
+.prose pre { background: var(--ink); color: #f4f3f6; border-radius: 12px; padding: 14px 16px; overflow-x: auto; font: 13.5px/1.6 "Geist Mono", monospace; margin: 12px 0; }
+.prose pre code { font-size: inherit; color: inherit; background: none; }
+.prose hr { border: 0; border-top: 1px solid var(--line); margin: 40px 0; }
 pre.cmd { background: var(--ink); color: #f4f3f6; border-radius: 12px; padding: 14px 16px; overflow-x: auto; font: 13.5px/1.6 "Geist Mono", monospace; margin: 12px 0; }
 .note { border: 1px solid var(--line); background: var(--card); border-left: 3px solid var(--ember); border-radius: 10px; padding: 14px 16px; margin: 16px 0; font-size: 15px; color: var(--fg2); }
 .note b { color: var(--ink); }
@@ -363,13 +370,6 @@ pre.cmd { background: var(--ink); color: #f4f3f6; border-radius: 12px; padding: 
 .steps-list { display: grid; gap: 10px; padding-left: 20px; margin: 0 0 20px; color: var(--fg2); }
 .steps-list .btn { margin-left: 8px; vertical-align: middle; }
 .mono { font-family: "Geist Mono", monospace; }
-.form-grid { display: grid; gap: 14px; }
-@media (min-width: 640px) { .form-grid { grid-template-columns: 1fr 1fr; } .form-grid .check, .form-grid p { grid-column: 1 / -1; } }
-.form-grid .btn { justify-self: start; }
-.field { display: grid; gap: 6px; font-size: 14px; font-weight: 500; }
-.field input { font: 15px Geist, sans-serif; padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); min-width: 0; }
-.field input:focus { outline: 2px solid var(--ember); outline-offset: 1px; }
-.check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--fg2); }
 .small-print { font-size: 13.5px; margin-top: 16px; }
 .pay-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .pay-head h2 { margin: 0; }
@@ -382,10 +382,6 @@ pre.cmd { background: var(--ink); color: #f4f3f6; border-radius: 12px; padding: 
 .bank dd { margin: 0; overflow-wrap: anywhere; }
 .bank .btn { margin-left: 8px; vertical-align: middle; }
 @media (max-width: 520px) { .bank div { grid-template-columns: 1fr; gap: 2px; } }
-.supporters { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
-.supporters li { display: grid; gap: 2px; padding-bottom: 10px; border-bottom: 1px solid var(--line); font-size: 15px; }
-.supporters li:last-child { border-bottom: 0; padding-bottom: 0; }
-.supporters span { color: var(--muted); font-size: 14px; }
 
 /* intro video */
 .intro-video { max-width: 1040px; margin: 0 auto; }

@@ -44,12 +44,12 @@ func TestCallWithErrors(t *testing.T) {
 	}
 }
 
-// An app ID only switches logins to the user's own Meta app together with its secret, and agents never get the secret.
+// Facebook needs the user's own Meta app, ID and secret both, and agents never get the secret.
 func TestMetaApp(t *testing.T) {
 	t.Setenv("META_APP_ID", "111")
 	t.Setenv("META_APP_SECRET", "")
-	if id, c := metaApp(); id != sharedMetaApp || c != sharedMetaConfig {
-		t.Fatalf("ID without secret: got %s %s, want the shared app", id, c)
+	if ProviderReady("meta") {
+		t.Fatal("an app ID without its secret counts as set up")
 	}
 	t.Setenv("META_APP_SECRET", "s3cret")
 	t.Setenv("META_CONFIG_ID", "")

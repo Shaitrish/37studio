@@ -3,7 +3,7 @@ import {
   ArrowClockwiseIcon, ArrowSquareOutIcon, ButterflyIcon, FacebookLogoIcon, Icon, InstagramLogoIcon, LinkBreakIcon, LinkedinLogoIcon, MastodonLogoIcon,
   PinterestLogoIcon, ShareNetworkIcon, SparkleIcon, TiktokLogoIcon, TrashIcon, WhatsappLogoIcon, XLogoIcon, YoutubeLogoIcon,
 } from "@phosphor-icons/react";
-import { ago, api, Captions, date, fail, parseTime, Platform, Post, Project, SocialAccount, toast, useApi } from "../api";
+import { ago, api, Captions, connectGuideURL, date, fail, parseTime, Platform, Post, Project, SocialAccount, toast, useApi } from "../api";
 import { Empty, Field, Modal, Seg, Status } from "../ui";
 
 const platforms: Record<Platform, { label: string; Icon: Icon; limit: number }> = {
@@ -105,8 +105,8 @@ export function SocialTab({ tenantId }: { tenantId: number }) {
         )}
         <div className="card-b row wrap" style={{ borderTop: "1px solid var(--border)" }}>
           {providers.map((p) => (
-            <button key={p.id} className="btn" disabled={!data?.ready[p.id]} onClick={() => connect(p.id)}
-              title={data?.ready[p.id] ? "Sign in, then pick the accounts that belong to this company" : "Add its app credentials in Settings → Keys first"}>
+            <button key={p.id} className="btn" disabled={!data?.ready[p.id] && p.id !== "meta"} onClick={() => data?.ready[p.id] ? connect(p.id) : setMetaApp(true)}
+              title={data?.ready[p.id] ? "Sign in, then pick the accounts that belong to this company" : p.id === "meta" ? "Set up your Meta app first" : "Add its app credentials in Settings → Keys first"}>
               <p.Icon size={15} /> Connect {p.label}
             </button>
           ))}
@@ -118,8 +118,9 @@ export function SocialTab({ tenantId }: { tenantId: number }) {
             <WhatsappLogoIcon size={15} /> Connect WhatsApp
           </button>
           <span className="spacer" />
-          <button className="btn ghost sm" onClick={() => setMetaApp(true)} title="Connect your own Pages before Meta approves 37Studio's app">
-            {data?.meta_app ? `Your Meta app (${data.meta_app})` : "Use your own Meta app"}
+          <a className="btn ghost sm" href={connectGuideURL} target="_blank" rel="noreferrer" title="Step by step for every platform, with a copy for your AI assistant">Setup guide</a>
+          <button className="btn ghost sm" onClick={() => setMetaApp(true)} title="Facebook and Instagram sign in through your own Meta app">
+            {data?.meta_app ? `Your Meta app (${data.meta_app})` : "Set up your Meta app"}
           </button>
         </div>
       </div>
@@ -224,8 +225,8 @@ function ConnectPasted({ tenantId, kind, onDone }: { tenantId: number; kind: key
   );
 }
 
-/** The user's own Meta app. Until Meta approves 37Studio's app for everyone, Facebook only lets people listed on an app
- *  sign in to it; on their own app they are the admin. Saved as keys (Settings → Keys), so it applies to every company. */
+/** The user's own Meta app, which Facebook and Instagram sign in through: in Development mode the admin and anyone with
+ *  an app role can connect Pages without App Review. Saved as keys (Settings → Keys), so it applies to every company. */
 function OwnMetaApp({ current, redirect, onDone }: { current: string; redirect: string; onDone: () => void }) {
   const [f, setF] = useState({ META_APP_ID: current, META_APP_SECRET: "", META_CONFIG_ID: "" });
   const [busy, setBusy] = useState(false);
@@ -236,10 +237,10 @@ function OwnMetaApp({ current, redirect, onDone }: { current: string; redirect: 
     api("/keys", { method: "PUT", body: keys }).then(() => { toast(msg); onDone(); }, (e) => { fail(e); setBusy(false); });
   };
   return (
-    <Modal title="Use your own Meta app" size="lg" onClose={onDone}
-      sub="Until Meta approves 37Studio's app for everyone, Facebook only lets the people listed on an app sign in. On your own app you're the admin, so your Pages and Instagram work today."
+    <Modal title="Set up your Meta app" size="lg" onClose={onDone}
+      sub="Facebook and Instagram sign in through a free Meta app of your own. You're its admin, so your Pages and Instagram work without waiting for Meta's review, and the login stays on this computer."
       footer={<>
-        {current && <button className="btn ghost danger" disabled={busy} onClick={() => save({ META_APP_ID: "", META_APP_SECRET: "", META_CONFIG_ID: "" }, "Back to 37Studio's Meta app")}>Go back to 37Studio's app</button>}
+        {current && <button className="btn ghost danger" disabled={busy} onClick={() => save({ META_APP_ID: "", META_APP_SECRET: "", META_CONFIG_ID: "" }, "Meta app removed")}>Remove</button>}
         <span className="spacer" />
         <button className="btn" onClick={onDone}>Cancel</button>
         <button className="btn primary" disabled={busy || !f.META_APP_ID || (!current && !f.META_APP_SECRET)}

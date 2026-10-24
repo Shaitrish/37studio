@@ -23,7 +23,7 @@ The internals: how a job flows, the agent, HyperFrames, transcription, costs, th
 - **Chrome** (HyperFrames' own Chrome for Testing on amd64, Playwright's headless shell on arm64), **ffmpeg**, and a Python venv with **faster-whisper** and **yt-dlp**.
 - **The web UI** (`web/`), React with plain CSS, built to static files the Go server serves.
 
-Outside the container there is only `worker/`, a Cloudflare Worker: the product website, `version.json`, the shared Meta app's login exchange and the WhatsApp webhook relay (see [platforms.md](platforms.md#run-your-own-relay)).
+Nothing a copy needs runs on a server of ours. Outside the container there are two Cloudflare Workers: `worker/`, the static product website at studio.shaitrish.com, which copies never contact, and `relay/`, the optional WhatsApp webhook relay each user deploys to their own Cloudflare account (see [platforms.md](platforms.md#run-your-own-relay-whatsapp)). Facebook and Instagram sign in through the user's own Meta app, straight from their copy, and the update check asks GitHub Releases.
 
 ## How a job flows
 
@@ -145,30 +145,19 @@ The Go code builds one binary, `37studio`, that serves the app and runs the agen
 | `internal/assistant` | The Assistant chat: Claude Code connected to the MCP server |
 | `internal/update` | Version and the update check |
 | `web/src` | React UI: `pages/Project.tsx` is the editor workspace, `pages/Social.tsx` the Social tab |
-| `worker/` | Cloudflare Worker: product website, `version.json`, Meta login exchange, WhatsApp webhook relay (D1) |
+| `worker/` | Cloudflare Worker: the static product website (`public/`) |
+| `relay/` | Optional WhatsApp webhook relay (Cloudflare Worker + D1) that users deploy themselves |
 | `dist/`, `release.sh` | The launcher bundle people download, and the script that publishes a release |
 | `docker-compose.yml`, `docker-compose.cloud.yml` | Run from source on this computer; run on a server behind Caddy with HTTPS |
 
 ## Releasing
 
-Maintainers bump `Version` in `internal/update/update.go`, then run `./release.sh "What changed"`. It builds and pushes `ghcr.io/shaitrish/37studio:<version>` and `:latest` for `linux/amd64` and `linux/arm64` (arm64 under QEMU, through a `studio37` buildx builder it creates; needs about 15 GB of free disk), zips `dist/` into the download, writes `version.json`, and deploys the Worker. Set `IMAGE=` for another registry and log in with `docker login ghcr.io` first. Every copy reads `version.json` at most every 6 hours and shows "Version X available" in the sidebar; the launcher pulls the new image on its next start.
+Maintainers bump `Version` in `internal/update/update.go`, then run `./release.sh "What changed"`. It builds and pushes `ghcr.io/shaitrish/37studio:<version>` and `:latest` for `linux/amd64` and `linux/arm64` (arm64 under QEMU, through a `studio37` buildx builder it creates; needs about 15 GB of free disk), zips `dist/` into the download, deploys the website Worker, and tags the commit `vX.Y.Z` with a GitHub Release. Set `IMAGE=` for another registry and log in with `docker login ghcr.io` first. Every copy asks GitHub for the latest release (`https://api.github.com/repos/Shaitrish/37studio/releases/latest`, or a fork's through `STUDIO37_UPDATE_URL`) at most every 6 hours and shows "Version X available" in the sidebar; the launcher pulls the new image on its next start. Copies older than 0.6.0 still read `version.json` from the website until they update, so `release.sh` keeps writing it.
 
 Chrome for Testing has no Linux arm64 build, so on arm64 HyperFrames renders with Playwright's pinned arm64 headless shell (`HYPERFRAMES_BROWSER_PATH`), as HyperFrames' own `Dockerfile.render` does.
 
 ### Donations
 
-[studio.shaitrish.com/donate](https://studio.shaitrish.com/donate) (`worker/public/donate.html`) takes donations by US bank transfer (ACH to an nSave USD account) and by bKash Send Money. A personal bKash number has no API, so donors report the TrxID and amount, which the Worker stores in the D1 `donations` table as `pending` (`worker/schema.sql`; apply it with `npx wrangler d1 execute studio37 --remote --file schema.sql`). Only confirmed rows show on the page, as named supporters; the page shows no amounts. After checking a TrxID in the bKash app:
-
-```bash
-cd worker
-npx wrangler d1 execute studio37 --remote --command "select trx, amount, name, message, datetime(at/1000,'unixepoch') from donations where status='pending'"
-npx wrangler d1 execute studio37 --remote --command "update donations set status='confirmed' where trx='BJK7XY2A4Q'"   # or 'rejected'; fix amount here too if it differs
-```
-
-Bank donors email instead of reporting on the page. Once a transfer shows up in nSave, add it as confirmed (the amount is for your records, in taka at that day's rate):
-
-```bash
-npx wrangler d1 execute studio37 --remote --command "insert into donations(trx, amount, name, message, public, status, at) values('ACH-2026-10-24-1', 1200, 'Jane', '', 1, 'confirmed', unixepoch()*1000)"
-```
+[studio.shaitrish.com/donate](https://studio.shaitrish.com/donate) (`worker/public/donate.html`) is a static page with the details for giving by US bank transfer (ACH to an nSave USD account) and by bKash Send Money. Nothing is stored or reported through the site: donors who'd like to be thanked email jahangir@shaitrish.com with their name, and any supporters list is kept by hand in the HTML. The page never shows amounts or made-up numbers.
 
 GitHub's Sponsor button points at the same page (`.github/FUNDING.yml`).

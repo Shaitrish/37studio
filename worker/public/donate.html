@@ -64,7 +64,7 @@
         <div><dt>Recipient address</dt><dd>Dhaka 1207, Bangladesh</dd></div>
         <div><dt>Reference</dt><dd>37Studio</dd></div>
       </dl>
-      <p class="muted small-print">Then email <a href="mailto:jahangir@shaitrish.com?subject=37Studio%20donation">jahangir@shaitrish.com</a> with your name if you'd like to be thanked here. ACH takes 1 to 3 business days. Can't send ACH? Email us and we'll find a way that works for you.</p>
+      <p class="muted small-print">Then email <a href="mailto:jahangir@shaitrish.com?subject=37Studio%20donation">jahangir@shaitrish.com</a> with your name if you'd like to be thanked. ACH takes 1 to 3 business days. Can't send ACH? Email us and we'll find a way that works for you.</p>
     </div>
 
     <div class="card">
@@ -73,18 +73,8 @@
         <li>In the bKash app, choose <b>Send Money</b>.</li>
         <li>Send any amount to <b class="mono">01635191148</b> <button class="btn sm" type="button" data-copy="01635191148">Copy number</button></li>
         <li>Write <b>37Studio</b> as the reference.</li>
-        <li>Tell us below, with the transaction ID (TrxID) from the bKash message, so we can thank you.</li>
       </ol>
-      <form id="report" class="form-grid">
-        <label class="field">Amount (taka)<input name="amount" type="number" min="1" step="1" inputmode="numeric" required></label>
-        <label class="field">bKash TrxID<input name="trx" required pattern="[A-Za-z0-9]{8,12}" placeholder="e.g. BJK7XY2A4Q" autocomplete="off"></label>
-        <label class="field"><span>Your name <span class="muted">(optional)</span></span><input name="name" maxlength="60" autocomplete="name"></label>
-        <label class="field"><span>A message <span class="muted">(optional)</span></span><input name="message" maxlength="280"></label>
-        <label class="check"><input type="checkbox" name="public" checked> Show my name and message on this page</label>
-        <button class="btn ink" type="submit">Send</button>
-        <p class="muted" id="sent" role="status"></p>
-      </form>
-      <p class="muted small-print">We check every report against our bKash account by hand before it counts, usually within a day. Only confirmed donations appear on this page.</p>
+      <p class="muted small-print">Then email <a href="mailto:jahangir@shaitrish.com?subject=37Studio%20donation">jahangir@shaitrish.com</a> with your name if you'd like to be thanked.</p>
     </div>
   </div>
 
@@ -98,11 +88,6 @@
         <li><svg><use href="#i-check"/></svg><span>Share a video you made with it, and tag us.</span></li>
         <li><svg><use href="#i-whatsapp"/></svg><span>Want it set up for you? We do paid setup over a screen share: <a href="https://wa.me/8801635191148?text=Hi%2C%20I%27d%20like%20help%20setting%20up%2037Studio" target="_blank" rel="noopener">message us on WhatsApp</a>.</span></li>
       </ul>
-    </div>
-
-    <div class="card" id="supporters-card" hidden>
-      <h2>Supporters</h2>
-      <ul class="supporters" id="supporters"></ul>
     </div>
   </div>
 </div>
@@ -124,35 +109,8 @@
 </footer>
 
 <script>
-  // Only confirmed donations are listed; the Worker keeps them in D1 (worker/schema.sql).
-  fetch("/donate/stats").then((r) => r.json()).then((s) => {
-    const list = document.getElementById("supporters");
-    for (const d of s.supporters) {
-      const li = document.createElement("li");
-      li.append(Object.assign(document.createElement("b"), { textContent: d.name }));
-      if (d.message) li.append(Object.assign(document.createElement("span"), { textContent: d.message }));
-      list.append(li);
-    }
-    document.getElementById("supporters-card").hidden = !s.supporters.length;
-  }).catch(() => {});
-
   for (const b of document.querySelectorAll("[data-copy]")) b.addEventListener("click", () => {
     navigator.clipboard?.writeText(b.dataset.copy).then(() => { b.textContent = "Copied"; }, () => {});
-  });
-
-  document.getElementById("report").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const f = e.target, out = document.getElementById("sent");
-    const body = Object.fromEntries(new FormData(f));
-    body.public = f.public.checked;
-    out.textContent = "Sending…";
-    try {
-      const r = await fetch("/donate/report", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(j.error || "Something went wrong.");
-      f.reset();
-      out.textContent = "Thank you! We'll confirm it against bKash, usually within a day.";
-    } catch (err) { out.textContent = err.message; }
   });
 </script>
 </body>

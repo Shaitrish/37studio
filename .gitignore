@@ -8,6 +8,7 @@ tmp/
 worker/.wrangler/
 worker/node_modules/
 worker/public/37studio.zip
+worker/public/connect.txt
 # the intro video and its GIF stay out of git; release.sh deploys the maintainer's copy
 worker/public/intro.mp4
 worker/public/intro.gif

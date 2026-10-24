@@ -41,4 +41,6 @@ func Env(k, def string) string {
 
 var PublicURL = strings.TrimRight(Env("STUDIO37_PUBLIC_URL", "http://localhost:8080"), "/") // where OAuth providers send the browser back
 
-var AuthURL = strings.TrimRight(Env("STUDIO37_AUTH_URL", "https://studio.shaitrish.com"), "/")
+// RelayURL is the user's own WhatsApp webhook relay (relay/); empty means WhatsApp isn't set up. STUDIO37_AUTH_URL is
+// its name from before 0.6.0, when copies shared one relay.
+var RelayURL = strings.TrimRight(Env("STUDIO37_RELAY_URL", Env("STUDIO37_AUTH_URL", "")), "/")

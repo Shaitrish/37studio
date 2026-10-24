@@ -13,19 +13,19 @@ How to set up each platform 37Studio posts to, plus the inbox (Messenger, Instag
 - [Mastodon](#mastodon)
 - [Inbox: Messenger, Instagram and comments](#inbox-messenger-instagram-and-comments)
 - [WhatsApp](#whatsapp)
-- [Run your own relay](#run-your-own-relay)
+- [Run your own relay (WhatsApp)](#run-your-own-relay-whatsapp)
 - [What can't be posted to](#what-cant-be-posted-to)
 
 ## How connecting works
 
 Each company's **Social** tab has a **Connect** button per platform. For the OAuth platforms (Facebook & Instagram, YouTube, TikTok, LinkedIn, X, Pinterest) you sign in once on the platform's own page with an account that manages the company's Pages, channels or boards, then tick which of the returned accounts belong to that company. A company can have any number of accounts on each platform. Bluesky and Mastodon take a handle and app password, or a server and access token, instead.
 
-Every OAuth platform needs a developer app: the platform only lets an app it knows ask for permission to post. 37Studio has no central server, so for every platform except Facebook & Instagram you register your own app (free) and give 37Studio its credentials:
+Every OAuth platform needs a developer app: the platform only lets an app it knows ask for permission to post. 37Studio has no central server, so for every platform you register your own app (free) and give 37Studio its credentials:
 
 - **Launcher app:** Settings → Keys. The launcher bundle has no `.env`.
 - **From source:** Settings → Keys, or the variables in `.env`.
 
-Credentials entered in Settings → Keys are encrypted at rest (AES-GCM, with a key file in the data folder). A few settings exist only as environment variables (`LINKEDIN_PAGES`, `PINTEREST_API`, `STUDIO37_PUBLIC_URL`, `STUDIO37_AUTH_URL`, `STUDIO37_PASSWORD`): put them under `environment:` in the launcher's `docker-compose.yml`, or in `.env` when running from source, then run the start file again (from source: `docker compose up -d`) so the container is recreated with them. Credentials saved in Settings → Keys apply at once.
+Credentials entered in Settings → Keys are encrypted at rest (AES-GCM, with a key file in the data folder). A few settings exist only as environment variables (`LINKEDIN_PAGES`, `PINTEREST_API`, `STUDIO37_PUBLIC_URL`, `STUDIO37_RELAY_URL`, `STUDIO37_PASSWORD`): put them under `environment:` in the launcher's `docker-compose.yml`, or in `.env` when running from source, then run the start file again (from source: `docker compose up -d`) so the container is recreated with them. Credentials saved in Settings → Keys apply at once.
 
 ### Redirect URIs
 
@@ -50,21 +50,16 @@ The **Posts** tab shows each upload's status, a link to the live post, and the p
 
 ## Facebook Pages + Instagram
 
-**Connect Facebook & Instagram** signs in with Facebook Login for Business and lists the Pages you manage, plus the Instagram Business or Creator account linked to each.
+**Connect Facebook & Instagram** signs in with Facebook Login for Business through your own Meta app and lists the Pages you manage, plus the Instagram Business or Creator account linked to each. 37Studio has no built-in Meta app: until you enter yours, the Connect button asks you to set one up. It takes about 15 minutes, and Company → Social → **Set up your Meta app** walks through the same steps inside the app:
 
-### Your own Meta app (recommended)
-
-Company → Social → **Use your own Meta app** walks through this inside the app. Or:
-
-1. At [developers.facebook.com](https://developers.facebook.com/apps) create a **Business** app and add **Facebook Login for Business**. Add the redirect URI above.
-2. Create a Login configuration with a *User access token* and these permissions: `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `business_management`, `instagram_basic`, `instagram_content_publish` (plus the [inbox permissions](#inbox-messenger-instagram-and-comments) if you want the Inbox). Put its ID in `META_CONFIG_ID` (Instagram's video upload requires Facebook Login for Business), and the app ID and secret in `META_APP_ID` and `META_APP_SECRET`, in Settings → Keys or `.env`. The ID only takes effect together with its secret, and agents never get the secret.
-3. Leave the app in **Development** mode and give your team a role on it (Admin, Developer or Tester): no App Review is needed for people with a role. Each company gives your business portfolio access to its Page (or makes you a Page admin). Its Instagram must be a Business or Creator account linked to that Page.
+1. At [developers.facebook.com/apps](https://developers.facebook.com/apps), click **Create app**. Pick the use cases **Manage everything on your Page** and **Manage messaging & content on Instagram**, plus **Engage with customers on Messenger** for the Inbox. Connect your business portfolio; it doesn't need to be verified.
+2. In each use case, click **Customize** and add `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `business_management`, `instagram_basic` and `instagram_content_publish` (plus the [inbox permissions](#inbox-messenger-instagram-and-comments) if you want the Inbox).
+3. **Facebook Login for Business → Configurations → Create**: *User access token*, your Pages and Instagram accounts, the same permissions. Copy its ID; Instagram's video upload needs it.
+4. **App settings → Basic**: copy the App ID and App secret. If Meta asks for a redirect URI, use the one above.
+5. Enter the App ID, App secret and Login configuration ID in **Set up your Meta app** or Settings → Keys, or as `META_APP_ID`, `META_APP_SECRET` and `META_CONFIG_ID` in `.env`. The ID only takes effect together with its secret, and agents never get the secret.
+6. Leave the app in **Development** mode and give your team a role on it under **App roles** (Admin, Developer or Tester): no App Review is needed for people with a role. Each company gives your business portfolio access to its Page (or makes you a Page admin). Its Instagram must be a Business or Creator account linked to that Page.
 
 Vertical videos of 3–90 seconds post as Reels; anything else posts as a regular Page video. Meta allows 30 API-published Reels per Page per 24 hours.
-
-### The shared 37Studio Meta app
-
-Without your own app, logins use Shaitrish's 37Studio app (its ID and login configuration are built in, `internal/social/social.go`). Copies don't carry its secret; the relay at `STUDIO37_AUTH_URL` finishes the login. Until Meta approves that app in App Review, only people the maintainers add as testers can sign in with it. It is registered for `http://localhost:8080` only, so on a server use your own Meta app. The App Review submission pack is [meta-app-review.md](meta-app-review.md).
 
 ## YouTube
 
@@ -145,7 +140,7 @@ Meta setup, on top of the Facebook + Instagram steps:
 1. In the Meta app, add the **Engage with customers on Messenger** use case (`pages_messaging`). In *Manage everything on your Page* add `pages_manage_engagement`, `pages_manage_metadata` and `pages_read_user_content`. In the Instagram use case, under *API setup with Facebook login*, add the messaging permission (`instagram_manage_messages`) and `instagram_manage_comments`.
 2. Create a Login configuration with those six plus the six publishing permissions, put its ID in `META_CONFIG_ID`, and reconnect each company on its Social tab.
 3. In the Instagram app: Settings → Messages and story replies → Message controls → Connected tools → **Allow access to messages**.
-4. Until Meta grants Advanced Access through App Review and Business Verification, the inbox only shows messages from people with a role on the app or the Page. Test with a team account; real customers appear after approval.
+4. Until Meta grants your app Advanced Access through App Review and Business Verification, the inbox only shows messages from people with a role on the app or the Page. Test with a team account; real customers appear after approval. Comments work without it.
 
 Messenger and Instagram allow free-form replies within 24 hours of the customer's last message; comment replies have no time limit.
 
@@ -153,31 +148,35 @@ Messenger and Instagram allow free-form replies within 24 hours of the customer'
 
 Inbox only: customers' WhatsApp messages appear in the Inbox; videos are not posted to WhatsApp.
 
-Company → Social → **Connect WhatsApp**. Meta delivers WhatsApp messages only by webhook, and a copy on someone's computer has no public address, so a small Cloudflare Worker (`worker/`) receives them (`/webhooks/meta`, signed with the app secret) and holds them in D1 until a copy pulls them. Each copy pulls its own numbers' messages (`/whatsapp/messages`, authorised by its WhatsApp token) into `wa_messages`, the lasting history; the relay deletes them on the next pull, and deletes unpulled ones after 7 days. So connect a number to one copy only. On the shared relay at studio.shaitrish.com, message text passes through Shaitrish's Cloudflare account until then; to keep it off, [run your own relay](#run-your-own-relay). Replies go straight to the Graph API. Setup:
+Company → Social → **Connect WhatsApp**. Meta delivers WhatsApp messages only by webhook to a public address, and a copy on someone's computer has none, so WhatsApp needs [your own relay](#run-your-own-relay-whatsapp): a small Cloudflare Worker (`relay/`) on your own Cloudflare account. Until `STUDIO37_RELAY_URL` points at it, Connect WhatsApp says so. The relay receives messages (`/webhooks/meta`, signed with your app secret) and holds them in D1 until your copy pulls them (`/whatsapp/messages`, authorized by its WhatsApp token) into `wa_messages`, the lasting history. The relay deletes messages once they are pulled, and after 7 days if they never are. So connect a number to one copy only. Replies go straight to the Graph API. Setup:
 
-1. In the Meta app, add the **Connect with customers through WhatsApp** use case, and point its WhatsApp webhook at your relay's `/webhooks/meta` with the `messages` field and the relay's `META_VERIFY_TOKEN`.
-2. WhatsApp → API Setup gives a test number, its **Phone number ID** and **WhatsApp Business Account ID**. Add a real number there when ready; a number on the API can't be used in the WhatsApp Business phone app at the same time.
-3. Business settings → Users → System users: add one, assign the WhatsApp account, and **Generate token** for your app with `whatsapp_business_messaging` and `whatsapp_business_management`. It doesn't expire.
-4. Paste the three into Connect WhatsApp. 37Studio subscribes the app to that account's messages.
+1. [Deploy your relay](#run-your-own-relay-whatsapp) and set `STUDIO37_RELAY_URL`.
+2. In your Meta app, add the **Connect with customers through WhatsApp** use case, and point its WhatsApp webhook at `<your relay>/webhooks/meta` with the `messages` field and the relay's `META_VERIFY_TOKEN`.
+3. WhatsApp → API Setup gives a test number, its **Phone number ID** and **WhatsApp Business Account ID**. Add a real number there when ready; a number on the API can't be used in the WhatsApp Business phone app at the same time.
+4. Business settings → Users → System users: add one, assign the WhatsApp account, and **Generate token** for your app with `whatsapp_business_messaging` and `whatsapp_business_management`. It doesn't expire.
+5. Paste the three into Connect WhatsApp. 37Studio subscribes the app to that account's messages.
 
 Numbers owned by other businesses, and keeping a number on the WhatsApp Business phone app alongside the API (coexistence), need Meta's Embedded Signup. That needs the app to be a Meta **Tech Provider**: Business Verification, then App Review with two screen recordings (sending a message, creating a template), then Access Verification.
 
-## Run your own relay
+## Run your own relay (WhatsApp)
 
-`worker/` is one Cloudflare Worker with three jobs: it finishes Facebook logins for the shared Meta app, relays WhatsApp webhooks, and serves the product website in `worker/public/`. The public one at studio.shaitrish.com only serves the shared 37Studio Meta app. With your own Meta app you need your own relay only for WhatsApp; Cloudflare's free plan is enough.
+WhatsApp is the only part of 37Studio that needs something on the internet. `relay/` is one small Cloudflare Worker that receives your Meta app's WhatsApp webhooks and holds the messages until your copy pulls them. It runs on your own Cloudflare account, and the free plan is enough. Nothing else needs it: Facebook, Instagram and the rest work without it.
 
 ```bash
-cd worker
+cd relay
 npx wrangler login
-npx wrangler d1 create studio37          # put the database_id it prints into wrangler.toml
-# edit wrangler.toml: your own `name`, META_APP_ID, and a route on your domain (or delete `routes` to use *.workers.dev)
-npx wrangler secret put META_APP_SECRET  # your Meta app's secret
-npx wrangler secret put META_VERIFY_TOKEN # any random string; enter the same one in Meta's webhook settings
-npx wrangler d1 execute studio37 --remote --file schema.sql
+npx wrangler d1 create studio37-relay          # put the database_id it prints into wrangler.toml
+# edit wrangler.toml: your own `name`, and a route on your domain (or delete `routes` to use *.workers.dev)
+npx wrangler secret put META_APP_SECRET        # your Meta app's secret
+npx wrangler secret put META_VERIFY_TOKEN      # any random string; enter the same one in Meta's webhook settings
+npx wrangler d1 execute studio37-relay --remote --file schema.sql
 npx wrangler deploy
 ```
 
-Then set `STUDIO37_AUTH_URL=https://<your worker>` for each copy: in `.env` when running from source, or under `environment:` in the launcher bundle's `docker-compose.yml`.
+Then:
+
+1. Set `STUDIO37_RELAY_URL=https://<your relay>` for each copy: under `environment:` in the launcher bundle's `docker-compose.yml`, or in `.env` when running from source, and run the start file again. (`STUDIO37_AUTH_URL` is still read if `STUDIO37_RELAY_URL` is empty.)
+2. In your Meta app, point the WhatsApp webhook at `https://<your relay>/webhooks/meta` with the `messages` field and your `META_VERIFY_TOKEN`.
 
 ## What can't be posted to
 

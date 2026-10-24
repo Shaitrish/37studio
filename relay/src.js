@@ -1,15 +1,11 @@
-// 37Studio's public endpoints on studio.shaitrish.com, as one Cloudflare Worker:
-//   GET  /version.json          the latest release (public/version.json), read by every copy's update check
-//   POST /oauth/meta/token      finishes a Facebook login for copies that don't hold the Meta app secret
+// 37Studio's WhatsApp relay: a Cloudflare Worker you deploy to your own account (docs/platforms.md → WhatsApp).
+// Meta delivers WhatsApp messages only by webhook to a public address, which a copy on your computer doesn't have,
+// so they wait here until the copy pulls them:
 //   GET  /webhooks/meta         Meta's webhook check (hub.challenge)
-//   POST /webhooks/meta         Meta's webhooks: WhatsApp messages wait in D1 until their copy pulls them (7 days at most)
-//   GET  /whatsapp/messages     a copy pulls its number's messages; its WhatsApp token proves the number is its own, and
+//   POST /webhooks/meta         Meta's webhooks: messages wait in D1 until pulled (7 days at most)
+//   GET  /whatsapp/messages     the copy pulls its number's messages; its WhatsApp token proves the number is its own, and
 //                               asking for messages after N confirms it has stored 1..N, which are then deleted
-//   POST /donate/report         a donor reports a bKash donation; it counts once confirmed by hand (README → Donations)
-//   GET  /donate/stats          confirmed supporters who chose to be named, for public/donate.html
-//   anything else               static files in public/ (product page, setup guide, launcher bundle)
-// Secrets (set with `npx wrangler secret put NAME`): META_APP_SECRET, META_VERIFY_TOKEN. Var in wrangler.toml: META_APP_ID.
-// To run your own relay, deploy this with your own Meta app and D1 database, and point copies at it with STUDIO37_AUTH_URL.
+// Secrets (set with `npx wrangler secret put NAME`): META_APP_SECRET, META_VERIFY_TOKEN.
 
 const GRAPH = "https://graph.facebook.com/v26.0";
 const KEEP_MS = 7 * 864e5; // past WhatsApp's 24-hour reply window, so an unpulled message is of little use by then
@@ -17,29 +13,12 @@ const KEEP_MS = 7 * 864e5; // past WhatsApp's 24-hour reply window, so an unpull
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
-    if (url.pathname === "/oauth/meta/token" && req.method === "POST") return metaToken(req, env);
     if (url.pathname === "/webhooks/meta") return webhook(req, env, url);
     if (url.pathname === "/whatsapp/messages" && req.method === "GET") return waMessages(req, env, url);
-    if (url.pathname === "/donate/report" && req.method === "POST") return donateReport(req, env);
-    if (url.pathname === "/donate/stats") return donateStats(env);
-    return env.ASSETS.fetch(req);
+    return new Response("not found", { status: 404 });
   },
 };
 
-async function metaToken(req, env) {
-  const { code, redirect_uri } = await req.json().catch(() => ({}));
-  // Only local installs log in through here; anything else is someone else's redirect.
-  if (!code || !/^http:\/\/(localhost|127\.0\.0\.1):\d+\/api\/oauth\/meta\/callback$/.test(redirect_uri || "")) {
-    return json({ error: { message: "bad request" } }, 400);
-  }
-  const app = { client_id: env.META_APP_ID, client_secret: env.META_APP_SECRET };
-  const short = await graph("/oauth/access_token", { ...app, redirect_uri, code });
-  if (!short.access_token) return json(short, 400);
-  const long = await graph("/oauth/access_token", { ...app, grant_type: "fb_exchange_token", fb_exchange_token: short.access_token });
-  return json(long.access_token ? { access_token: long.access_token } : long, long.access_token ? 200 : 400);
-}
-
-// WhatsApp only reaches an app through webhooks, and copies on people's PCs have no public address, so messages wait here.
 async function webhook(req, env, url) {
   if (req.method === "GET") {
     const q = url.searchParams;
@@ -85,23 +64,6 @@ async function waMessages(req, env, url) {
     env.DB.prepare("select seq, body from wa where phone=? and seq>? order by seq limit 500").bind(phone, after),
   ]);
   return json({ messages: results.map((r) => ({ seq: r.seq, ...JSON.parse(r.body) })) });
-}
-
-// Donations go by bKash Send Money, which has no API for a personal number, so the donor reports the TrxID and it waits
-// as "pending" until someone checks it in the bKash app. ponytail: no captcha; spam only ever sits in pending.
-async function donateReport(req, env) {
-  const b = await req.json().catch(() => ({}));
-  const trx = String(b.trx || "").trim().toUpperCase(), amount = Math.round(Number(b.amount));
-  if (!/^[A-Z0-9]{8,12}$/.test(trx)) return json({ error: "That doesn't look like a bKash TrxID (8 to 12 letters and numbers)." }, 400);
-  if (!(amount >= 1 && amount <= 1e7)) return json({ error: "Enter the amount you sent, in taka." }, 400);
-  await env.DB.prepare("insert or ignore into donations(trx, amount, name, message, public, at) values(?,?,?,?,?,?)")
-    .bind(trx, amount, String(b.name || "").trim().slice(0, 60), String(b.message || "").trim().slice(0, 280), b.public ? 1 : 0, Date.now()).run();
-  return json({ ok: true });
-}
-
-async function donateStats(env) {
-  const { results } = await env.DB.prepare("select name, message from donations where status='confirmed' and public=1 and name<>'' order by at desc limit 100").all();
-  return json({ supporters: results });
 }
 
 // ponytail: per-isolate memory, so a fresh isolate asks Meta again; fine at one pull a minute per number.

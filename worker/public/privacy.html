@@ -50,7 +50,7 @@
     <a href="#summary">In short</a>
     <a href="#local">What stays on your computer</a>
     <a href="#sends">What the app sends, and to whom</a>
-    <a href="#ours">What passes through our server</a>
+    <a href="#ours">What reaches us</a>
     <a href="#meta">Facebook, Instagram and WhatsApp data</a>
     <a href="#site">This website</a>
     <a href="#donations">Donations</a>
@@ -64,7 +64,7 @@
       <li>37Studio runs in Docker on your own computer. Your companies, footage, videos, messages, knowledge bases and keys are stored there, in the app's <code>data</code> folder.</li>
       <li>We, Shaitrish, have no account system, no analytics and no tracking in the app. We can't see your projects, customers or conversations.</li>
       <li>The app talks to the AI providers and social platforms <b>you</b> connect, using <b>your</b> accounts, to do the work you ask for.</li>
-      <li>A few small things can pass through our server, studio.shaitrish.com: the update check, the Facebook sign-in step, and incoming WhatsApp messages if you connect WhatsApp. Each is described below.</li>
+      <li>Nothing passes through a server of ours. The app never contacts studio.shaitrish.com: it checks for updates on GitHub, signs in to Facebook through your own Meta app, and, if you connect WhatsApp, receives messages through a relay you run on your own Cloudflare account.</li>
       <li>We don't sell or share data with anyone.</li>
     </ul>
 
@@ -80,35 +80,30 @@
       <li><b>Google Gemini</b> and <b>ElevenLabs</b>, only if you add their keys: the prompts and text for images, video clips, voiceovers, sound effects and music.</li>
       <li><b>Meta</b> (Facebook, Instagram, WhatsApp): the videos and captions you publish and the replies you send; 37Studio also reads your Pages' messages and comments to show them in the Inbox.</li>
       <li><b>Websites you ask it to scan</b>, such as your company's own site, to build the brand library and knowledge base.</li>
-      <li><b>GitHub Container Registry</b>, when the app downloads itself or an update.</li>
+      <li><b>GitHub</b>: every few hours the app asks GitHub Releases which version is the latest, and it downloads itself and updates from GitHub Container Registry. Nothing about you or your work is sent. To check somewhere else, set <code>STUDIO37_UPDATE_URL</code>.</li>
+      <li><b>Your own WhatsApp relay</b>, only if you set one up. Meta delivers incoming WhatsApp messages only to a public web address, which a computer at home doesn't have, so you deploy a small relay (the code's <code>relay/</code> folder) to your own Cloudflare account. It holds messages until your copy collects them, deletes each one once collected, and deletes any it never collects after 7 days. It is yours: we have no access to it.</li>
       <li><b>Public content networks</b> (Google Fonts, jsDelivr): the app's interface loads its typeface, and the video player its script, from them. These are ordinary file requests with nothing from your projects.</li>
     </ul>
 
-    <h2 id="ours">What passes through our server</h2>
-    <p>studio.shaitrish.com runs on Cloudflare. The app contacts it for three things only, and the code that does it is public in the <code>worker/</code> folder on <a href="https://github.com/Shaitrish/37studio">GitHub</a>:</p>
-    <ol>
-      <li><b>Update check.</b> Every few hours the app downloads a small file that says which version is the latest. Nothing about you or your work is sent with it.</li>
-      <li><b>Facebook sign-in.</b> When you connect Facebook, Meta gives your computer a one-time code. Our server exchanges it for an access token, because that step needs a secret we can't put inside the app, and sends the token straight back to your computer. We don't keep the code or the token.</li>
-      <li><b>WhatsApp messages</b>, only if you connect WhatsApp. Meta delivers incoming WhatsApp messages only to a public web address, which a computer at home doesn't have. So Meta sends them to our server, which holds them until your copy of 37Studio collects them, using your number's own WhatsApp token. Each message is deleted once your copy has collected it, and messages it never collects are deleted after 7 days. No one else can read them through our server.</li>
-    </ol>
-    <p>With your own Meta app, Facebook sign-in runs on your computer and skips our server. With your own relay (the code's <code>worker/</code> folder, deployed to your own Cloudflare account), WhatsApp messages skip it too. To skip the update check, set <code>STUDIO37_UPDATE_URL</code> to another address.</p>
-    <p>Like any website host, Cloudflare may keep standard request logs, such as IP addresses and times, for security and reliability.</p>
+    <h2 id="ours">What reaches us</h2>
+    <p>Nothing. 37Studio doesn't depend on any server run by Shaitrish, and it sends us nothing: no usage data, no sign-ins, no messages, no crash reports. The code is public on <a href="https://github.com/Shaitrish/37studio">GitHub</a>, so you can check.</p>
+    <p>Facebook and Instagram sign in through a Meta app you create yourself, directly between your computer and Meta, and its secret stays in your copy. We only see something if you choose to send it, for example by emailing us or opening an issue on GitHub.</p>
 
     <h2 id="meta">Facebook, Instagram and WhatsApp data</h2>
     <p>37Studio uses data from Meta's platforms only to do what you ask: list the Pages and accounts you manage, publish the posts you approve, and show and answer your Pages' messages and comments. That data is stored only on your computer. We don't use it for advertising, we don't sell it, and we don't share it with anyone.</p>
 
     <h2 id="site">This website</h2>
-    <p>studio.shaitrish.com has no analytics, no ads and no cookies. It loads fonts from Google Fonts, so Google sees a request for them. If you remember a choice on the setup page, such as Windows or Mac, it's saved in your own browser.</p>
+    <p>studio.shaitrish.com is a static website: the product page, the setup guide, the donate page and the download. It receives nothing from the app, and it has no analytics, no ads and no cookies. It loads fonts from Google Fonts, so Google sees a request for them. If you remember a choice on the setup page, such as Windows or Mac, it's saved in your own browser.</p>
 
     <h2 id="donations">Donations</h2>
-    <p>If you tell us about a bKash donation on the <a href="/donate">donate page</a>, we store the transaction ID and amount you enter, and your name and message if you give them, so we can check it against our bKash account and thank you. Your name and message appear on that page only if you tick the box. Your bKash number and the payment itself stay between you and bKash.</p>
+    <p>The <a href="/donate">donate page</a> collects nothing. A bank transfer or bKash payment stays between you, your bank or bKash, and us as the receiver. If you email us your name to be thanked, we keep that email, and your name appears on the page only if you ask for it.</p>
 
     <h2 id="delete">Deleting your data</h2>
     <ul>
       <li><b>Everything 37Studio stores:</b> delete the app's <code>data</code> folder, or the whole 37Studio folder.</li>
-      <li><b>A connected account:</b> disconnect it on the company's Social tab. To remove 37Studio's access on Facebook's side: Facebook → Settings → <b>Business integrations</b> → remove 37Studio.</li>
-      <li><b>WhatsApp messages on our server:</b> they are deleted once your copy collects them, or after 7 days. To have them deleted sooner, email us with the phone number.</li>
-      <li><b>A donation report:</b> email us the transaction ID and we'll remove your name and message.</li>
+      <li><b>A connected account:</b> disconnect it on the company's Social tab. To remove its access on Facebook's side: Facebook → Settings → <b>Business integrations</b> → remove your Meta app.</li>
+      <li><b>WhatsApp messages on your relay:</b> they are deleted once your copy collects them, or after 7 days. Your relay is on your own Cloudflare account, so you can delete it at any time.</li>
+      <li><b>Your name as a supporter:</b> email us and we'll remove it.</li>
     </ul>
     <p>Data you sent to AI providers or social platforms is governed by their policies; delete it in your accounts with them.</p>
 

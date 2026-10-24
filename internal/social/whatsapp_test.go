@@ -28,9 +28,9 @@ func TestWhatsAppSync(t *testing.T) {
 		  {"seq":9,"id":"w3","from":"8801711","name":"Rahim","timestamp":"1761200200","type":"text","text":{"body":"ডেলিভারি?"}}]}`))
 	}))
 	defer relay.Close()
-	old := config.AuthURL
-	config.AuthURL = relay.URL
-	defer func() { config.AuthURL = old }()
+	old := config.RelayURL
+	config.RelayURL = relay.URL
+	defer func() { config.RelayURL = old }()
 
 	store.DB.Exec("insert into tenants(id,name) values(1,'Shop')")
 	store.DB.Exec("insert into social_accounts(id,tenant_id,platform,account_id,name,token) values(1,1,'whatsapp','555','Shop +880','tok')")

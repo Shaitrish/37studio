@@ -16,9 +16,10 @@ internal/            the Go backend, one package per area (map: docs/architectur
   company project social autopilot costs
   mcp assistant update
 web/                 React + Vite + TypeScript UI (pages/, ui.tsx, api.ts, styles.css)
-worker/              Cloudflare Worker: product website (public/), update file, Meta sign-in relay, WhatsApp relay, donations (D1)
+worker/              Cloudflare Worker: the static product website (public/)
+relay/               optional WhatsApp webhook relay users deploy themselves (Cloudflare Worker + D1)
 dist/                the launcher bundle people download (docker-compose.yml, start.bat/.command/.sh)
-docs/                platforms.md (per-platform setup), architecture.md, meta-app-review.md
+docs/                platforms.md (per-platform setup), architecture.md
 ```
 
 ## Commands
@@ -29,7 +30,7 @@ gofmt -l .                                       # must print nothing
 cd web && npm run build                          # UI: type-checks (tsc) and builds
 ./dev.sh                                         # backend (air, hot rebuild) + UI (Vite) on :5173
 docker compose up --build                        # the whole app on :8080, as users run it
-node --check worker/src.js                       # Worker syntax
+node --check relay/src.js                        # WhatsApp relay syntax
 ```
 
 ## How the backend is built
@@ -61,4 +62,4 @@ node --check worker/src.js                       # Worker syntax
 
 ## Releasing (maintainers)
 
-Bump `Version` in `internal/update/update.go`, then run `./release.sh "What changed"`. It pushes the multi-arch image to ghcr.io, zips `dist/`, writes `worker/public/version.json`, deploys the Worker and tags the commit `vX.Y.Z`. Never commit `data/`, `.env` or any backup of them.
+Bump `Version` in `internal/update/update.go`, then run `./release.sh "What changed"`. It pushes the multi-arch image to ghcr.io, zips `dist/` into the website's download, deploys the website Worker and tags the commit `vX.Y.Z` with a GitHub Release, which every copy's update check reads. Never commit `data/`, `.env` or any backup of them.

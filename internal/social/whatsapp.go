@@ -2,6 +2,7 @@ package social
 
 import (
 	"cmp"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -25,6 +26,9 @@ func ConnectWhatsApp(r *http.Request) (any, error) {
 		return nil, err
 	}
 	phone, waba, tok := strings.TrimSpace(store.Str(b["phone_id"])), strings.TrimSpace(store.Str(b["waba_id"])), strings.TrimSpace(store.Str(b["token"]))
+	if config.RelayURL == "" {
+		return nil, httpapi.Bad("WhatsApp delivers messages only to a public web address, so it needs your own relay: deploy relay/ and set STUDIO37_RELAY_URL (docs/platforms.md → WhatsApp)")
+	}
 	if !digitsOnly.MatchString(phone) || !digitsOnly.MatchString(waba) || tok == "" {
 		return nil, httpapi.Bad("fill in all three from Meta's WhatsApp → API Setup page")
 	}
@@ -62,12 +66,15 @@ func waTime(t time.Time) string { return t.UTC().Format("2006-01-02T15:04:05+000
 
 // waSync pulls messages that arrived since the last pull.
 func waSync(a inboxAccount) error {
+	if config.RelayURL == "" { // numbers connected through the shared relay before 0.6.0
+		return errors.New("no WhatsApp relay: deploy your own (relay/) and set STUDIO37_RELAY_URL, as docs/platforms.md → WhatsApp shows")
+	}
 	var after int64
 	store.DB.QueryRow("select coalesce(max(seq),0) from wa_messages where account_id=?", a.id).Scan(&after)
 	var res struct {
 		Messages []waMsg `json:"messages"`
 	}
-	if err := remote.Call(remote.Get(config.AuthURL+"/whatsapp/messages?"+url.Values{"phone": {a.accountID}, "after": {fmt.Sprint(after)}}.Encode(), "Bearer "+a.tok), &res); err != nil {
+	if err := remote.Call(remote.Get(config.RelayURL+"/whatsapp/messages?"+url.Values{"phone": {a.accountID}, "after": {fmt.Sprint(after)}}.Encode(), "Bearer "+a.tok), &res); err != nil {
 		return err
 	}
 	for _, m := range res.Messages {

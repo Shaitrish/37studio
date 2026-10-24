@@ -164,14 +164,21 @@ sudo usermod -aG docker $USER</pre>
     </ol>
 
     <h2 id="social">6. Connect social accounts</h2>
+    <div class="note">Every platform, step by step in plain words, is on <a href="/connect">Connect your social accounts</a>, with a copy you can paste into ChatGPT or Claude so it walks you through.</div>
     <p>Each company's <b>Social</b> tab has a <b>Connect</b> button for every platform: Facebook &amp; Instagram, YouTube, TikTok, LinkedIn, X, Pinterest, Bluesky and Mastodon. You sign in once on the platform's own page, then tick the accounts that belong to this company.</p>
     <h3>Facebook and Instagram</h3>
+    <p>Facebook and Instagram connect through a free Meta app of your own, made once in about 15 minutes. On the company's <b>Social</b> tab, click <b>Set up your Meta app</b> (or <b>Connect Facebook &amp; Instagram</b>, which opens the same steps until it's set up):</p>
     <ol>
-      <li>On the company's <b>Social</b> tab, click <b>Connect Facebook &amp; Instagram</b> and sign in with a Facebook account that manages the company's Pages.</li>
-      <li>Tick the Pages and Instagram accounts that belong to this company. Instagram must be a Business or Creator account linked to the Page.</li>
+      <li>At <a href="https://developers.facebook.com/apps">developers.facebook.com/apps</a>, click <b>Create app</b>. Pick the use cases <b>Manage everything on your Page</b> and <b>Manage messaging &amp; content on Instagram</b>, plus <b>Engage with customers on Messenger</b> for the Inbox. Connect your business portfolio; it doesn't need to be verified.</li>
+      <li>In each use case, click <b>Customize</b> and add <code>pages_show_list</code>, <code>pages_read_engagement</code>, <code>pages_manage_posts</code>, <code>business_management</code>, <code>instagram_basic</code> and <code>instagram_content_publish</code>. For the Inbox, also add <code>pages_read_user_content</code>, <code>pages_manage_engagement</code>, <code>pages_manage_metadata</code>, <code>pages_messaging</code>, <code>instagram_manage_comments</code> and <code>instagram_manage_messages</code>.</li>
+      <li><b>Facebook Login for Business → Configurations → Create</b>: User access token, your Pages and Instagram accounts, the same permissions. Copy its ID; Instagram video uploads need it.</li>
+      <li><b>App settings → Basic</b>: copy the App ID and App secret. If Meta asks for a redirect URI, use <code>http://localhost:8080/api/oauth/meta/callback</code>.</li>
+      <li>Leave the app in <b>Development</b> mode. Anyone else who connects Pages needs a role under <b>App roles</b>.</li>
+      <li>Paste the App ID, App secret and Login configuration ID into 37Studio and save. They're encrypted on your computer.</li>
+      <li>Click <b>Connect Facebook &amp; Instagram</b>, sign in with a Facebook account that manages the company's Pages, and tick the Pages and Instagram accounts that belong to this company. Instagram must be a Business or Creator account linked to the Page.</li>
       <li>For the Inbox to read Instagram messages: in the Instagram app, <b>Settings → Messages and story replies → Connected tools → Allow access to messages</b>.</li>
     </ol>
-    <div class="note"><b>Until Meta approves 37Studio's shared app for everyone,</b> use your own Meta app: on the Social tab, click <b>Use your own Meta app</b> and follow the five steps there, about 15 minutes. You're the admin of your own app, so your Pages and Instagram work straight away for posting and comments. Messenger and Instagram messages from customers appear once Meta approves your app for those permissions.</div>
+    <div class="note">You're the admin of your own app, so your Pages and Instagram work straight away for posting and comments. Messenger and Instagram messages from customers appear once Meta approves your app for those permissions in App Review; until then you see messages from people with a role on the app or the Page.</div>
     <h3>YouTube, TikTok, LinkedIn, X and Pinterest</h3>
     <p>Each of these needs a free developer app of your own, made once on the platform's developer site:</p>
     <ol>
@@ -186,7 +193,7 @@ sudo usermod -aG docker $USER</pre>
       <li><b>Mastodon:</b> on your server, open <b>Preferences → Development → New application</b> with the scopes <code>read:accounts</code>, <code>write:media</code> and <code>write:statuses</code>. Then click <b>Connect Mastodon</b> and enter the server's address and the application's access token.</li>
     </ul>
     <p><b>Not possible:</b> Threads only accepts videos from a public web address, which an app on your computer doesn't have; Meta removed posting to Facebook Groups and personal profiles; Reddit and Snapchat have no usable API for posting videos.</p>
-    <p><b>WhatsApp</b> is in beta and needs a number on the WhatsApp Business API. Meta delivers WhatsApp messages only to a public web address, so with your own Meta app you also deploy the small relay in the code's <code>worker/</code> folder to Cloudflare's free plan; the <a href="https://github.com/Shaitrish/37studio/blob/main/docs/platforms.md#whatsapp">platform guide</a> shows how.</p>
+    <p><b>WhatsApp</b> is in beta and needs a number on the WhatsApp Business API. Meta delivers WhatsApp messages only to a public web address, so you also deploy the small relay in the code's <code>relay/</code> folder to your own Cloudflare account (the free plan is enough) and set <code>STUDIO37_RELAY_URL</code> to its address. Until then, Connect WhatsApp says it needs your own relay. The <a href="https://github.com/Shaitrish/37studio/blob/main/docs/platforms.md#run-your-own-relay-whatsapp">platform guide</a> shows how.</p>
 
     <h2 id="replies">7. Choose how replies go out</h2>
     <p>On the same Social tab, under <b>Inbox replies</b>:</p>
@@ -229,7 +236,7 @@ sudo usermod -aG docker $USER</pre>
     <h3>A platform says the return address doesn't match</h3>
     <p>The address in the platform's developer app must be exactly <code>http://localhost:8080/api/oauth/<i>name</i>/callback</code> (for X, <code>http://127.0.0.1:8080/api/oauth/x/callback</code>), with no slash at the end. On a server it starts with your own <code>https://</code> domain instead.</p>
     <h3>Facebook sign-in fails</h3>
-    <p>Sign in with a Facebook profile that is an admin of your own Meta app (step 6), or has a role on the app you use. The profile must also manage the Page.</p>
+    <p>Sign in with a Facebook profile that is an admin of your own Meta app or has a role on it under <b>App roles</b> (step 6). The profile must also manage the Page.</p>
 
     <div class="note" style="margin-top:40px"><b>Stuck?</b> Search or open an issue on <a href="https://github.com/Shaitrish/37studio/issues">GitHub</a>. If you'd rather have it set up for you over a screen share, message us on <a href="https://wa.me/8801635191148?text=Hi%2C%20I%27d%20like%20help%20setting%20up%2037Studio" target="_blank" rel="noopener">WhatsApp</a> or email <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a>.</div>
   </article>

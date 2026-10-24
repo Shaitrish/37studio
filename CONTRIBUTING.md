@@ -47,7 +47,8 @@ If you changed `docker-compose.cloud.yml`, check it with `STUDIO37_DOMAIN=exampl
 - `cmd/37studio/`: the Go entry point: subcommands, background loops and every HTTP route.
 - `internal/`: the Go backend, one package per area (`agent`, `social`, `project`, `company`, `mcp`, `store`, …). [docs/architecture.md](docs/architecture.md#code-map) maps them. Tests sit next to the code as `*_test.go`.
 - `web/`: the React UI (Vite, TypeScript).
-- `worker/`: the Cloudflare Worker for studio.shaitrish.com: the website, the update file, the Meta sign-in relay, the WhatsApp relay and donations.
+- `worker/`: the Cloudflare Worker for studio.shaitrish.com, the static product website. Copies never contact it.
+- `relay/`: the optional WhatsApp webhook relay that users deploy to their own Cloudflare account ([docs/platforms.md](docs/platforms.md#run-your-own-relay-whatsapp)).
 - `dist/`: the launcher bundle people download. `docs/`: setup and architecture. `brand/`: logos.
 
 

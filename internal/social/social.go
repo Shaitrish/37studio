@@ -42,25 +42,18 @@ const tiktokAPI = "https://open.tiktokapis.com"
 const metaScopes = "pages_show_list,pages_read_engagement,pages_manage_posts,business_management,instagram_basic,instagram_content_publish," +
 	"pages_messaging,pages_manage_metadata,pages_read_user_content,pages_manage_engagement,instagram_manage_messages,instagram_manage_comments" // the last six: Inbox
 
-// Copies share Shaitrish's 37Studio Meta app by default. Its secret never ships: they finish the login through the auth
-// Worker on studio.shaitrish.com (worker/), which holds it. Anyone can instead enter their own app's ID and secret
-// (Settings → Keys, or Social → Use your own Meta app). It is then the admin's own app in Development mode, so their
-// Pages work without waiting for Meta to review ours, and logins never touch the Worker.
-const sharedMetaApp, sharedMetaConfig = "2057436148296558", "1117077147715456"
-
+// Facebook and Instagram use the user's own Meta app (Settings → Keys, or Social → Set up your Meta app), kept in
+// Development mode, so their Pages work without App Review and the login never leaves this copy.
 func ownMetaApp() bool { return os.Getenv("META_APP_ID") != "" && os.Getenv("META_APP_SECRET") != "" }
 
-// metaApp is the app ID and Login for Business configuration logins use; an own app without a configuration asks for scopes.
+// metaApp is the app ID and Login for Business configuration logins use; an app without a configuration asks for scopes.
 func metaApp() (id, config string) {
-	if ownMetaApp() {
-		return os.Getenv("META_APP_ID"), os.Getenv("META_CONFIG_ID")
-	}
-	return sharedMetaApp, sharedMetaConfig
+	return os.Getenv("META_APP_ID"), os.Getenv("META_CONFIG_ID")
 }
 
 func ProviderReady(p string) bool {
 	if p == "meta" {
-		return ownMetaApp() || config.AuthURL != ""
+		return ownMetaApp()
 	}
 	keys := map[string][2]string{"google": {"GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"}, "tiktok": {"TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET"},
 		"linkedin": {"LINKEDIN_CLIENT_ID", "LINKEDIN_CLIENT_SECRET"}, "x": {"X_CLIENT_ID", "X_CLIENT_SECRET"}, "pinterest": {"PINTEREST_APP_ID", "PINTEREST_APP_SECRET"}}[p]
@@ -207,15 +200,11 @@ func OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("%s#/clients/%d/social/%s", st.ret, st.tenant, key), http.StatusFound)
 }
 
-// metaUserToken trades the login code for a long-lived user token: directly when this copy has the app secret,
-// else through the auth Worker. Page tokens fetched with a long-lived user token never expire, so nobody reconnects.
+// metaUserToken trades the login code for a long-lived user token. Page tokens fetched with a long-lived user token
+// never expire, so nobody reconnects.
 func metaUserToken(code string) (string, error) {
 	var tok struct {
 		AccessToken string `json:"access_token"`
-	}
-	if !ownMetaApp() {
-		err := remote.Call(remote.JSON("POST", config.AuthURL+"/oauth/meta/token", map[string]string{"code": code, "redirect_uri": redirectURI("meta")}, ""), &tok)
-		return tok.AccessToken, err
 	}
 	id, _ := metaApp()
 	app := url.Values{"client_id": {id}, "client_secret": {os.Getenv("META_APP_SECRET")}}
@@ -360,9 +349,9 @@ func ListAccounts(r *http.Request) (any, error) {
 	}
 	var mode string
 	store.DB.QueryRow("select inbox_mode from tenants where id=?", httpapi.PathID(r)).Scan(&mode)
-	metaID, _ := metaApp()
-	if metaID == sharedMetaApp { // Shaitrish's own install holds the shared app's secret too
-		metaID = ""
+	metaID := ""
+	if ownMetaApp() {
+		metaID, _ = metaApp()
 	}
 	return map[string]any{"accounts": accts, "ready": ready, "inbox_mode": mode, "replies": files.TenantDoc(httpapi.PathID(r), "replies.md"), "meta_app": metaID,
 		"redirect": config.PublicURL + "/api/oauth/{provider}/callback"}, err
