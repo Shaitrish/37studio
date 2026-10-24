@@ -65,6 +65,8 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
 }
 
 export const repoURL = "https://github.com/Shaitrish/37studio";
+export const donateURL = "https://studio.shaitrish.com/donate";
+export const makerURL = "https://shaitrish.com";
 
 /** Multipart upload via XHR: fetch() can't report upload progress, and lectures are gigabytes. */
 export function upload(path: string, files: File[], onProgress?: (pct: number) => void, field?: (f: File) => string): Promise<void> {

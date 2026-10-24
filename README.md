@@ -317,6 +317,8 @@ More questions: [open an issue](https://github.com/Shaitrish/37studio/issues).
 
 Bug reports, ideas and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers running it from source with hot reload, the checks to run, the code style, and how to add a social platform. The internals are in [docs/architecture.md](docs/architecture.md).
 
+Found a security problem? Report it privately, as [SECURITY.md](SECURITY.md) describes, not in a public issue.
+
 ## License
 
 [MIT](LICENSE) © Shaitrish. The open-source tools 37Studio bundles (HyperFrames, ffmpeg, faster-whisper and others) keep their own licenses. Claude Code is Anthropic's software, used under Anthropic's terms.

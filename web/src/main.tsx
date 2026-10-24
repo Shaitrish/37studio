@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  ChartPieSliceIcon, ChatCircleDotsIcon, ChatsCircleIcon, FilmSlateIcon, FilmStripIcon, GearSixIcon, IconContext, MegaphoneIcon, MonitorIcon, MoonIcon, SidebarSimpleIcon,
+  ChartPieSliceIcon, ChatCircleDotsIcon, ChatsCircleIcon, FilmSlateIcon, FilmStripIcon, GearSixIcon, HeartIcon, IconContext, MegaphoneIcon, MonitorIcon, MoonIcon, SidebarSimpleIcon,
   SquaresFourIcon, SunIcon, UsersThreeIcon,
 } from "@phosphor-icons/react";
 import "@hyperframes/player";
 import "./styles.css";
-import { api, repoURL, setDisplay, setToast, useApi } from "./api";
+import { api, donateURL, makerURL, repoURL, setDisplay, setToast, useApi } from "./api";
 import { Mark } from "./ui";
 import Overview from "./pages/Overview";
 import Projects from "./pages/Projects";
@@ -130,11 +130,15 @@ function App() {
             <a role="button" tabIndex={0} title={`Theme: ${theme}. Switch to ${nextTheme}`} onClick={() => setTheme(nextTheme)} onKeyDown={(e) => e.key === "Enter" && setTheme(nextTheme)}>
               <ThemeIcon size={18} /> <span className="nav-label">{theme[0].toUpperCase() + theme.slice(1)} theme</span>
             </a>
+            <a href={donateURL} target="_blank" rel="noreferrer" title={collapsed ? "Donate" : "37Studio is free; donations keep it going"}>
+              <HeartIcon size={18} /> <span className="nav-label">Donate</span>
+            </a>
             <a role="button" tabIndex={0} className="expand" title="Expand sidebar (Ctrl+B)" onClick={() => setCollapsed(false)} onKeyDown={(e) => e.key === "Enter" && setCollapsed(false)}>
               <SidebarSimpleIcon size={18} /> <span className="nav-label">Expand</span>
             </a>
             {upd?.newer && <a className="who" href="#/settings" style={{ color: "var(--primary)" }}>Version {upd.latest} available</a>}
             <a className="who" href={repoURL} target="_blank" rel="noreferrer">37Studio {upd?.current} · open source</a>
+            <a className="who" href={makerURL} target="_blank" rel="noreferrer">Made by Shaitrish</a>
           </div>
         </aside>
         <main className="main">{page}</main>

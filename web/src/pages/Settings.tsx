@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { CheckCircleIcon, XCircleIcon } from "@phosphor-icons/react";
-import { api, fail, languageName, Meta, money, repoURL, setDisplay, toast, useApi, Voice } from "../api";
+import { api, donateURL, fail, languageName, makerURL, Meta, money, repoURL, setDisplay, toast, useApi, Voice } from "../api";
 import { Field, Seg } from "../ui";
 
 export default function Settings() {
@@ -173,7 +173,7 @@ function UpdatesSection() {
           {upd?.newer ? <> · <strong>version {upd.latest} is available.</strong> Close 37Studio and open it again from the launcher to update.{upd.notes && <> {upd.notes}</>}</> :
             upd?.error ? " · couldn't check for updates right now" : upd?.latest ? " · up to date" : ""}
         </p>
-        <p className="small muted">37Studio is free and open source under the MIT License. Report a bug, suggest a feature or send a pull request on <a href={repoURL} target="_blank" rel="noreferrer">GitHub</a>.</p>
+        <p className="small muted">37Studio is free and open source under the MIT License. Report a bug, suggest a feature or send a pull request on <a href={repoURL} target="_blank" rel="noreferrer">GitHub</a>. It's made by <a href={makerURL} target="_blank" rel="noreferrer">Shaitrish</a> and funded by <a href={donateURL} target="_blank" rel="noreferrer">donations</a>.</p>
       </div>
     </div>
   );
