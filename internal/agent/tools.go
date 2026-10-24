@@ -15,8 +15,8 @@ import (
 )
 
 // Optional agent CLIs install on first use instead of shipping in the image: each is about 400 MB installed (OpenCode's
-// npm package pulls all four of its Linux builds), and most people only use Claude. They go to data/tools at pinned versions, so they install once, survive
-// updates, and stay as reproducible as the image. To bump one, change its version here.
+// npm package pulls all four of its Linux builds), and most people only use Claude. They go to data/tools at pinned
+// versions, so they install once, survive updates, and stay as reproducible as the image. To bump one, change it here.
 var tools = map[string]struct{ pkg, version string }{
 	"codex":    {"@openai/codex", "0.164.0"},
 	"opencode": {"opencode-ai", "1.19.4"},
