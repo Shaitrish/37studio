@@ -22,6 +22,10 @@ func Guard(h http.Handler) http.Handler {
 		return h
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/webhooks/meta" { // Meta can't send the password; the handler checks Meta's signature instead
+			h.ServeHTTP(w, r)
+			return
+		}
 		if _, p, ok := r.BasicAuth(); !ok || subtle.ConstantTimeCompare([]byte(p), []byte(pw)) != 1 {
 			w.Header().Set("WWW-Authenticate", `Basic realm="37studio"`)
 			http.Error(w, "unauthorized", http.StatusUnauthorized)

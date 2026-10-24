@@ -64,7 +64,7 @@
       <li>37Studio runs in Docker on your own computer. Your companies, footage, videos, messages, knowledge bases and keys are stored there, in the app's <code>data</code> folder.</li>
       <li>We, Shaitrish, have no account system, no analytics and no tracking in the app. We can't see your projects, customers or conversations.</li>
       <li>The app talks to the AI providers and social platforms <b>you</b> connect, using <b>your</b> accounts, to do the work you ask for.</li>
-      <li>Nothing passes through a server of ours. The app never contacts studio.shaitrish.com: it checks for updates on GitHub, signs in to Facebook through your own Meta app, and, if you connect WhatsApp, receives messages through a relay you run on your own Cloudflare account.</li>
+      <li>Nothing passes through a server of ours. The app never contacts studio.shaitrish.com: it checks for updates on GitHub, signs in to Facebook through your own Meta app, and, if you connect WhatsApp, receives messages through your own Cloudflare Tunnel or a relay you run on your own Cloudflare account.</li>
       <li>We don't sell or share data with anyone.</li>
     </ul>
 
@@ -81,7 +81,7 @@
       <li><b>Meta</b> (Facebook, Instagram, WhatsApp): the videos and captions you publish and the replies you send; 37Studio also reads your Pages' messages and comments to show them in the Inbox.</li>
       <li><b>Websites you ask it to scan</b>, such as your company's own site, to build the brand library and knowledge base.</li>
       <li><b>GitHub</b>: every few hours the app asks GitHub Releases which version is the latest, and it downloads itself and updates from GitHub Container Registry. Nothing about you or your work is sent. To check somewhere else, set <code>STUDIO37_UPDATE_URL</code>.</li>
-      <li><b>Your own WhatsApp relay</b>, only if you set one up. Meta delivers incoming WhatsApp messages only to a public web address, which a computer at home doesn't have, so you deploy a small relay (the code's <code>relay/</code> folder) to your own Cloudflare account. It holds messages until your copy collects them, deletes each one once collected, and deletes any it never collects after 7 days. It is yours: we have no access to it.</li>
+      <li><b>Your own Cloudflare Tunnel or WhatsApp relay</b>, only if you connect WhatsApp. Meta delivers incoming WhatsApp messages only to a public web address, which a computer at home doesn't have. A tunnel passes them straight to your copy. Or you deploy a small relay (the code's <code>relay/</code> folder) to your own Cloudflare account. It holds messages until your copy collects them, deletes each one once collected, and deletes any it never collects after 7 days. It is yours: we have no access to it.</li>
       <li><b>Public content networks</b> (Google Fonts, jsDelivr): the app's interface loads its typeface, and the video player its script, from them. These are ordinary file requests with nothing from your projects.</li>
     </ul>
 

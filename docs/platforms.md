@@ -148,19 +148,36 @@ Messenger and Instagram allow free-form replies within 24 hours of the customer'
 
 Inbox only: customers' WhatsApp messages appear in the Inbox; videos are not posted to WhatsApp.
 
-Company → Social → **Connect WhatsApp**. Meta delivers WhatsApp messages only by webhook to a public address, and a copy on someone's computer has none, so WhatsApp needs [your own relay](#run-your-own-relay-whatsapp): a small Cloudflare Worker (`relay/`) on your own Cloudflare account. Until `STUDIO37_RELAY_URL` points at it, Connect WhatsApp says so. The relay receives messages (`/webhooks/meta`, signed with your app secret) and holds them in D1 until your copy pulls them (`/whatsapp/messages`, authorized by its WhatsApp token) into `wa_messages`, the lasting history. The relay deletes messages once they are pulled, and after 7 days if they never are. So connect a number to one copy only. Replies go straight to the Graph API. Setup:
+Company → Social → **Connect WhatsApp**. Meta delivers WhatsApp messages only by webhook, to a public HTTPS address, and a copy on someone's computer has none. There are two ways to give it one:
 
-1. [Deploy your relay](#run-your-own-relay-whatsapp) and set `STUDIO37_RELAY_URL`.
-2. In your Meta app, add the **Connect with customers through WhatsApp** use case, and point its WhatsApp webhook at `<your relay>/webhooks/meta` with the `messages` field and the relay's `META_VERIFY_TOKEN`.
-3. WhatsApp → API Setup gives a test number, its **Phone number ID** and **WhatsApp Business Account ID**. Add a real number there when ready; a number on the API can't be used in the WhatsApp Business phone app at the same time.
-4. Business settings → Users → System users: add one, assign the WhatsApp account, and **Generate token** for your app with `whatsapp_business_messaging` and `whatsapp_business_management`. It doesn't expire.
-5. Paste the three into Connect WhatsApp. 37Studio subscribes the app to that account's messages.
+- **A tunnel straight to your copy (recommended).** A Cloudflare Tunnel publishes only the path `/webhooks/meta` of your 37Studio on a hostname of yours. Meta posts each message to it and 37Studio stores it in `wa_messages` at once; nothing waits anywhere else. 37Studio accepts a post only if it is signed with your Meta app's secret, and that path skips `STUDIO37_PASSWORD` because Meta can't send it.
+- **[Your own relay](#run-your-own-relay-whatsapp)**, if you can't run a tunnel: a small Cloudflare Worker that holds messages until your copy pulls them.
+
+Replies go straight to the Graph API either way. Connect a number to one copy only.
+
+### WhatsApp through a Cloudflare Tunnel
+
+You need a domain on Cloudflare (the free plan is enough).
+
+1. In Settings → Keys, set **WhatsApp webhook verify token** (`META_VERIFY_TOKEN`) to any long random text, and make sure your Meta app's ID and secret are there.
+2. Cloudflare dashboard → **Zero Trust → Networks → Tunnels → Create a tunnel** → *Cloudflared*. Name it, and run the connector command it shows on the computer that runs 37Studio (it installs `cloudflared` as a service and keeps it running).
+3. Add a published route (public hostname) to the tunnel: a subdomain such as `wa.yourdomain.com`, **path `^/webhooks/meta$`**, and the service `HTTP` → `localhost:8080`. The path rule matters: it keeps the rest of 37Studio off the internet.
+4. In your Meta app, add the **Connect with customers through WhatsApp** use case and set its webhook to `https://wa.yourdomain.com/webhooks/meta` with the same verify token, subscribed to the `messages` field.
+5. Continue with the number and token steps below.
+
+Don't use a Quick Tunnel (`cloudflared tunnel --url …`) for this. It publishes the whole app, not just the webhook path, and its random address changes every time it starts, so Meta's webhook would break.
+
+### Number and token
+
+1. WhatsApp → API Setup gives a test number, its **Phone number ID** and **WhatsApp Business Account ID**. Add a real number there when ready; a number on the API can't be used in the WhatsApp Business phone app at the same time.
+2. Business settings → Users → System users: add one, assign the WhatsApp account, and **Generate token** for your app with `whatsapp_business_messaging` and `whatsapp_business_management`. It doesn't expire.
+3. Paste the three into Connect WhatsApp. 37Studio subscribes the app to that account's messages.
 
 Numbers owned by other businesses, and keeping a number on the WhatsApp Business phone app alongside the API (coexistence), need Meta's Embedded Signup. That needs the app to be a Meta **Tech Provider**: Business Verification, then App Review with two screen recordings (sending a message, creating a template), then Access Verification.
 
 ## Run your own relay (WhatsApp)
 
-WhatsApp is the only part of 37Studio that needs something on the internet. `relay/` is one small Cloudflare Worker that receives your Meta app's WhatsApp webhooks and holds the messages until your copy pulls them. It runs on your own Cloudflare account, and the free plan is enough. Nothing else needs it: Facebook, Instagram and the rest work without it.
+The alternative to [a tunnel](#whatsapp-through-a-cloudflare-tunnel), for when you can't run one. `relay/` is one small Cloudflare Worker that receives your Meta app's WhatsApp webhooks and holds the messages until your copy pulls them. It runs on your own Cloudflare account, and the free plan is enough. Nothing else needs it: Facebook, Instagram and the rest work without it.
 
 ```bash
 cd relay

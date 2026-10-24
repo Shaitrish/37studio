@@ -1,8 +1,12 @@
 package social
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -58,5 +62,46 @@ func TestInboxAnswerable(t *testing.T) {
 	if !inboxAnswerable(inboxItem{Kind: "dm", Time: hour}) || inboxAnswerable(inboxItem{Kind: "dm", Time: day}) ||
 		!inboxAnswerable(inboxItem{Kind: "comment", Time: day}) || inboxAnswerable(inboxItem{Kind: "dm", Time: "garbage"}) {
 		t.Error("wrong answer window")
+	}
+}
+
+// Through a tunnel, Meta posts WhatsApp messages straight to the copy: only Meta's subscription check and posts signed
+// with the app secret get in.
+func TestWhatsAppWebhook(t *testing.T) {
+	config.DataDir = t.TempDir()
+	store.Open()
+	t.Setenv("META_APP_SECRET", "s3cret")
+	t.Setenv("META_VERIFY_TOKEN", "verify-me")
+	store.DB.Exec("insert into tenants(id,name) values(1,'Shop')")
+	store.DB.Exec("insert into social_accounts(id,tenant_id,platform,account_id,name,token) values(1,1,'whatsapp','555','Shop +880','tok')")
+	call := func(method, target, sig, body string) *httptest.ResponseRecorder {
+		r := httptest.NewRequest(method, target, strings.NewReader(body))
+		if sig != "" {
+			r.Header.Set("X-Hub-Signature-256", sig)
+		}
+		w := httptest.NewRecorder()
+		WhatsAppWebhook(w, r)
+		return w
+	}
+	if w := call("GET", "/webhooks/meta?hub.mode=subscribe&hub.verify_token=verify-me&hub.challenge=42", "", ""); w.Code != 200 || w.Body.String() != "42" {
+		t.Fatalf("subscription check: %d %q", w.Code, w.Body)
+	}
+	if w := call("GET", "/webhooks/meta?hub.mode=subscribe&hub.verify_token=wrong&hub.challenge=42", "", ""); w.Code != 403 {
+		t.Fatalf("wrong verify token: %d", w.Code)
+	}
+	body := `{"object":"whatsapp_business_account","entry":[{"changes":[{"value":{"metadata":{"phone_number_id":"555"},
+	  "contacts":[{"wa_id":"8801711","profile":{"name":"Rahim"}}],
+	  "messages":[{"id":"w1","from":"8801711","timestamp":"1761200000","type":"text","text":{"body":"দাম কত?"}}]}}]}]}`
+	mac := hmac.New(sha256.New, []byte("s3cret"))
+	mac.Write([]byte(body))
+	if w := call("POST", "/webhooks/meta", "sha256="+hex.EncodeToString(make([]byte, 32)), body); w.Code != 401 {
+		t.Fatalf("forged signature: %d", w.Code)
+	}
+	if w := call("POST", "/webhooks/meta", "sha256="+hex.EncodeToString(mac.Sum(nil)), body); w.Code != 200 {
+		t.Fatalf("signed post: %d", w.Code)
+	}
+	m, err := store.Row("select * from wa_messages where id='w1'")
+	if err != nil || m["name"] != "Rahim" || m["text"] != "দাম কত?" || m["account_id"] != int64(1) || m["seq"] != nil {
+		t.Fatalf("stored message: %v %v", m, err)
 	}
 }

@@ -84,7 +84,7 @@
       <tbody>
         <tr><td>Facebook Page</td><td>Yes</td><td>Yes</td><td>Your team right away; customers after Meta approves your app</td><td>About 20 minutes</td></tr>
         <tr><td>Instagram (Business or Creator)</td><td>Yes, Reels</td><td>Yes</td><td>Your team right away; customers after Meta approves your app</td><td>Same app as Facebook</td></tr>
-        <tr><td>WhatsApp Business</td><td>No</td><td>No</td><td>Yes</td><td>About an hour; technical</td></tr>
+        <tr><td>WhatsApp Business</td><td>No</td><td>No</td><td>Yes</td><td>About an hour; needs a domain on Cloudflare</td></tr>
         <tr><td>YouTube</td><td>Yes (private until Google's check)</td><td>No</td><td>No</td><td>About 15 minutes</td></tr>
         <tr><td>TikTok</td><td>Yes ("Only me" or drafts until TikTok's check)</td><td>No</td><td>No</td><td>About 15 minutes</td></tr>
         <tr><td>LinkedIn</td><td>Yes, to your profile</td><td>No</td><td>No</td><td>About 10 minutes</td></tr>
@@ -185,14 +185,17 @@
     </ul>
 
     <h2 id="whatsapp-steps">WhatsApp</h2>
-    <p>WhatsApp is for answering customer messages in the Inbox; videos aren't posted to it. It's the most technical part, because WhatsApp only sends messages to a public web address, and your computer doesn't have one. So you put a small free "relay" on your own Cloudflare account that holds messages until 37Studio collects them.</p>
+    <p>WhatsApp is for answering customer messages in the Inbox; videos aren't posted to it. It's the most technical part: WhatsApp only sends messages to a public web address, and your computer doesn't have one. A free <b>Cloudflare Tunnel</b> gives it one, safely: it opens just the one door WhatsApp needs, and messages come straight to your computer. You need a website domain on Cloudflare (the free plan is enough). This is a good part to do with an AI assistant, or with someone technical.</p>
     <ol>
       <li>You need a phone number on the <b>WhatsApp Business API</b>. A number on the API can't be used in the WhatsApp Business phone app at the same time.</li>
-      <li>Deploy the relay from the <code>relay/</code> folder of the 37Studio code to your Cloudflare account (free plan) and set <code>STUDIO37_RELAY_URL</code> to its address. The <a href="#details">technical details</a> list the exact commands. This is a good step to do with an AI assistant, or with someone technical.</li>
-      <li>In your Meta app, add <b>Connect with customers through WhatsApp</b>, and point its webhook at your relay.</li>
+      <li>In 37Studio, open <b>Settings → Keys</b> and set <b>WhatsApp webhook verify token</b> to any long random text, like a password you make up. Your Meta app's ID and secret must be there too.</li>
+      <li>In the Cloudflare dashboard, open <b>Zero Trust → Networks → Tunnels → Create a tunnel</b>, choose <b>Cloudflared</b>, and run the command it shows on the computer that runs 37Studio.</li>
+      <li>Add a route to the tunnel: a name like <code>wa.yourdomain.com</code>, the path <code>^/webhooks/meta$</code>, and the service <code>HTTP</code> → <code>localhost:8080</code>. <b>Don't skip the path:</b> it keeps the rest of 37Studio private.</li>
+      <li>In your Meta app, add <b>Connect with customers through WhatsApp</b>. Set its webhook to <code>https://wa.yourdomain.com/webhooks/meta</code> with the same verify token, and subscribe to <b>messages</b>.</li>
       <li>From <b>WhatsApp → API Setup</b>, copy the <b>Phone number ID</b> and <b>WhatsApp Business Account ID</b>. Make a permanent token under <b>Business settings → System users</b>.</li>
       <li>In 37Studio, click <b>Connect WhatsApp</b> on the company's Social tab and paste the three.</li>
     </ol>
+    <div class="note"><b>Don't use a "quick tunnel"</b> (<code>cloudflared tunnel --url</code>) for this. It puts your whole 37Studio on the internet, and its address changes every time it starts. Can't use a tunnel at all? The <a href="#details">technical details</a> describe a small relay you can deploy to your own Cloudflare account instead.</div>
 
     <h2 id="not">What isn't possible</h2>
     <ul>

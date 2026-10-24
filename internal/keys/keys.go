@@ -26,6 +26,7 @@ var Names = []struct{ Name, Label, Hint string }{
 	{"META_APP_ID", "Meta app ID", "Your own Meta app, for Facebook and Instagram. Used only together with its secret."},
 	{"META_APP_SECRET", "Meta app secret", "developers.facebook.com → your app → App settings → Basic."},
 	{"META_CONFIG_ID", "Meta login configuration ID", "Facebook Login for Business → Configurations. Needed for Instagram video uploads."},
+	{"META_VERIFY_TOKEN", "WhatsApp webhook verify token", "Only for WhatsApp through a Cloudflare Tunnel: any long random text, entered again in your Meta app's WhatsApp webhook settings."},
 	// Each platform's own developer app, for Company → Social (README → Platform setup).
 	{"GOOGLE_CLIENT_ID", "Google OAuth client ID", "YouTube: console.cloud.google.com → Credentials → OAuth client ID (Web application)."},
 	{"GOOGLE_CLIENT_SECRET", "Google OAuth client secret", "The same OAuth client's secret."},

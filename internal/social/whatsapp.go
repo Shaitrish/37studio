@@ -2,10 +2,16 @@ package social
 
 import (
 	"cmp"
-	"errors"
+	"crypto/hmac"
+	"crypto/sha256"
+	"crypto/subtle"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -26,8 +32,8 @@ func ConnectWhatsApp(r *http.Request) (any, error) {
 		return nil, err
 	}
 	phone, waba, tok := strings.TrimSpace(store.Str(b["phone_id"])), strings.TrimSpace(store.Str(b["waba_id"])), strings.TrimSpace(store.Str(b["token"]))
-	if config.RelayURL == "" {
-		return nil, httpapi.Bad("WhatsApp delivers messages only to a public web address, so it needs your own relay: deploy relay/ and set STUDIO37_RELAY_URL (docs/platforms.md → WhatsApp)")
+	if config.RelayURL == "" && (os.Getenv("META_VERIFY_TOKEN") == "" || !ownMetaApp()) {
+		return nil, httpapi.Bad("WhatsApp delivers messages only to a public web address. Expose this copy's /webhooks/meta with a Cloudflare Tunnel (then add your Meta app and a webhook verify token in Settings → Keys), or deploy your own relay and set STUDIO37_RELAY_URL. The connect guide shows both: https://studio.shaitrish.com/connect#whatsapp-steps")
 	}
 	if !digitsOnly.MatchString(phone) || !digitsOnly.MatchString(waba) || tok == "" {
 		return nil, httpapi.Bad("fill in all three from Meta's WhatsApp → API Setup page")
@@ -66,8 +72,8 @@ func waTime(t time.Time) string { return t.UTC().Format("2006-01-02T15:04:05+000
 
 // waSync pulls messages that arrived since the last pull.
 func waSync(a inboxAccount) error {
-	if config.RelayURL == "" { // numbers connected through the shared relay before 0.6.0
-		return errors.New("no WhatsApp relay: deploy your own (relay/) and set STUDIO37_RELAY_URL, as docs/platforms.md → WhatsApp shows")
+	if config.RelayURL == "" {
+		return nil // messages arrive at WhatsAppWebhook instead
 	}
 	var after int64
 	store.DB.QueryRow("select coalesce(max(seq),0) from wa_messages where account_id=?", a.id).Scan(&after)
@@ -78,16 +84,91 @@ func waSync(a inboxAccount) error {
 		return err
 	}
 	for _, m := range res.Messages {
-		text := m.Text.Body
-		if text == "" {
-			text = "[" + m.Type + "]" // photos, voice notes and the like: open WhatsApp to see them
-		}
-		var sec int64
-		fmt.Sscan(m.Timestamp, &sec)
-		store.DB.Exec("insert or ignore into wa_messages(id,account_id,customer,name,text,at,seq) values(?,?,?,?,?,?,?)",
-			m.ID, a.id, m.From, m.Name, text, waTime(time.Unix(sec, 0)), m.Seq)
+		waStore(a.id, m)
 	}
 	return nil
+}
+
+func waStore(account int64, m waMsg) {
+	text := m.Text.Body
+	if text == "" {
+		text = "[" + m.Type + "]" // photos, voice notes and the like: open WhatsApp to see them
+	}
+	var sec int64
+	fmt.Sscan(m.Timestamp, &sec)
+	var seq any
+	if m.Seq > 0 { // only relay pulls have a cursor
+		seq = m.Seq
+	}
+	store.DB.Exec("insert or ignore into wa_messages(id,account_id,customer,name,text,at,seq) values(?,?,?,?,?,?,?)",
+		m.ID, account, m.From, m.Name, text, waTime(time.Unix(sec, 0)), seq)
+}
+
+// WhatsAppWebhook takes Meta's WhatsApp webhooks straight into this copy, for one the internet can reach: a server,
+// or a Cloudflare Tunnel that exposes only this path. Meta can't send the app's password, so a POST counts only if it
+// is signed with the Meta app's secret; GET is Meta's subscription check with META_VERIFY_TOKEN.
+func WhatsAppWebhook(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		q, tok := r.URL.Query(), os.Getenv("META_VERIFY_TOKEN")
+		if tok == "" || q.Get("hub.mode") != "subscribe" || subtle.ConstantTimeCompare([]byte(q.Get("hub.verify_token")), []byte(tok)) != 1 {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
+		w.Write([]byte(q.Get("hub.challenge")))
+		return
+	}
+	raw, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))
+	if err != nil || !signedByMeta(raw, r.Header.Get("X-Hub-Signature-256")) {
+		http.Error(w, "bad signature", http.StatusUnauthorized)
+		return
+	}
+	var body struct {
+		Entry []struct {
+			Changes []struct {
+				Value struct {
+					Metadata struct {
+						Phone string `json:"phone_number_id"`
+					} `json:"metadata"`
+					Contacts []struct {
+						WaID    string `json:"wa_id"`
+						Profile struct {
+							Name string `json:"name"`
+						} `json:"profile"`
+					} `json:"contacts"`
+					Messages []waMsg `json:"messages"`
+				} `json:"value"`
+			} `json:"changes"`
+		} `json:"entry"`
+	}
+	json.Unmarshal(raw, &body)
+	for _, e := range body.Entry {
+		for _, c := range e.Changes {
+			v := c.Value
+			rs, _ := store.Rows("select id from social_accounts where platform='whatsapp' and account_id=?", v.Metadata.Phone)
+			for _, m := range v.Messages {
+				for _, ct := range v.Contacts {
+					if ct.WaID == m.From {
+						m.Name = ct.Profile.Name
+					}
+				}
+				for _, a := range rs {
+					waStore(a["id"].(int64), m)
+				}
+			}
+		}
+	}
+	w.Write([]byte("ok")) // anything else makes Meta retry
+}
+
+func signedByMeta(raw []byte, header string) bool {
+	sig, err := hex.DecodeString(strings.TrimPrefix(header, "sha256="))
+	secret := os.Getenv("META_APP_SECRET")
+	if err != nil || secret == "" || !strings.HasPrefix(header, "sha256=") {
+		return false
+	}
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write(raw)
+	return hmac.Equal(sig, mac.Sum(nil))
 }
 
 func waChats(a inboxAccount) ([]inboxItem, error) {

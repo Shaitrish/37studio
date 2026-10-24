@@ -193,7 +193,7 @@ sudo usermod -aG docker $USER</pre>
       <li><b>Mastodon:</b> on your server, open <b>Preferences → Development → New application</b> with the scopes <code>read:accounts</code>, <code>write:media</code> and <code>write:statuses</code>. Then click <b>Connect Mastodon</b> and enter the server's address and the application's access token.</li>
     </ul>
     <p><b>Not possible:</b> Threads only accepts videos from a public web address, which an app on your computer doesn't have; Meta removed posting to Facebook Groups and personal profiles; Reddit and Snapchat have no usable API for posting videos.</p>
-    <p><b>WhatsApp</b> is in beta and needs a number on the WhatsApp Business API. Meta delivers WhatsApp messages only to a public web address, so you also deploy the small relay in the code's <code>relay/</code> folder to your own Cloudflare account (the free plan is enough) and set <code>STUDIO37_RELAY_URL</code> to its address. Until then, Connect WhatsApp says it needs your own relay. The <a href="https://github.com/Shaitrish/37studio/blob/main/docs/platforms.md#run-your-own-relay-whatsapp">platform guide</a> shows how.</p>
+    <p><b>WhatsApp</b> is in beta and needs a number on the WhatsApp Business API. Meta delivers WhatsApp messages only to a public web address, so you give 37Studio one with a free Cloudflare Tunnel that opens only the webhook path. The <a href="/connect#whatsapp-steps">connect guide</a> walks through it.</p>
 
     <h2 id="replies">7. Choose how replies go out</h2>
     <p>On the same Social tab, under <b>Inbox replies</b>:</p>

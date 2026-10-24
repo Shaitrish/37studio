@@ -54,7 +54,7 @@ Everything runs in one Docker container, on your computer or your own server. Fo
 | Pinterest | Video Pins, on the boards you pick | | Your own Pinterest app |
 | Bluesky | Video posts | | Handle and an app password |
 | Mastodon | Video posts | | Server URL and an access token |
-| WhatsApp | | Messages | A WhatsApp Business API number and your own webhook relay |
+| WhatsApp | | Messages | A WhatsApp Business API number and a Cloudflare Tunnel to your copy (or your own relay) |
 
 Not possible: **Threads** (its API only takes a video from a public URL, which a local-first app doesn't have), **Facebook Groups and personal profiles** (Meta removed it), **Reddit and Snapchat** (no usable public video-posting API). Setup for each platform: [Social publishing](#social-publishing).
 
@@ -180,7 +180,7 @@ Environment-only settings (`LINKEDIN_PAGES`, `PINTEREST_API`, `STUDIO37_PUBLIC_U
 
 **Auto-replies** (Company → Social → Inbox replies): *Off*, *Claude drafts, you approve*, or *Claude replies on its own*, plus the company's own rules for how Claude replies (tone, sign-off, what never to promise, when to hand over to a person). Facts only come from the knowledge base; when the answer isn't there, Claude says a team member will reply. A background loop checks every 2 minutes while 37Studio runs, and catches up on what arrived while it was off if the platform still allows a reply (messages within 24 hours, comments up to 2 days old).
 
-The inbox needs extra Meta permissions on top of publishing, and WhatsApp needs a number on the WhatsApp Business API and a small webhook relay you deploy to your own Cloudflare account (free plan): see [docs/platforms.md](docs/platforms.md#inbox-messenger-instagram-and-comments) and [Run your own relay](docs/platforms.md#run-your-own-relay-whatsapp). Until Meta grants your app Advanced Access, only messages from people with a role on the app or Page appear.
+The inbox needs extra Meta permissions on top of publishing, and WhatsApp needs a number on the WhatsApp Business API and a public address for Meta's webhook: a Cloudflare Tunnel that publishes only `/webhooks/meta` of your copy, or a small relay on your own Cloudflare account. See [docs/platforms.md](docs/platforms.md#whatsapp). Until Meta grants your app Advanced Access, only messages from people with a role on the app or Page appear.
 
 ## Assistant and MCP
 
@@ -236,7 +236,7 @@ Settings are environment variables: in `.env` when running from source, under `e
 | `STUDIO37_PUBLIC_URL` | `http://localhost:8080` | | Where the platforms send the browser back after sign-in; must match the redirect URIs you register |
 | `STUDIO37_DOMAIN` | | | Cloud file only: your domain, for Caddy's certificate and `STUDIO37_PUBLIC_URL` |
 | `STUDIO37_AGENT_PERMISSIONS` | `safe` | | `safe` (allowlist) or `bypass` (any command; the launcher and cloud file set it) |
-| `STUDIO37_RELAY_URL` | unset | | Your own WhatsApp webhook relay ([deploy it](docs/platforms.md#run-your-own-relay-whatsapp)); WhatsApp can't connect without it. `STUDIO37_AUTH_URL` is still read if this is unset |
+| `STUDIO37_RELAY_URL` | unset | | Your own WhatsApp webhook relay ([deploy it](docs/platforms.md#run-your-own-relay-whatsapp)), if you don't use a [tunnel](docs/platforms.md#whatsapp-through-a-cloudflare-tunnel). `STUDIO37_AUTH_URL` is still read if this is unset |
 | `STUDIO37_ALLOW_PRIVATE_URLS` | unset | | `1` lets website scans, video imports and Bluesky/Mastodon servers use addresses on your own network (localhost, LAN, `10.x`, `192.168.x`); refused by default |
 | `STUDIO37_UPDATE_URL` | `https://api.github.com/repos/Shaitrish/37studio/releases/latest` | | Where the update check looks for new releases (GitHub Releases, every 6 hours); a fork can point at its own `…/releases/latest` |
 | `STUDIO37_DATA` | `./data` | | Everything lives here: `37studio.db`, `secret.key`, `tenants/`, `projects/`, `templates/` |
@@ -253,7 +253,7 @@ Browser ──► 37studio (Go, one binary) ──► SQLite + data/ (companies,
              ├─ claude -p, the editor agent ──► ffmpeg · npx hyperframes · 37studio gen / transcribe / clip
              ├─ hyperframes render (Chrome + ffmpeg) ──► out/*.mp4, *.png
              ├─ post queue ──► Facebook · Instagram · YouTube · TikTok · LinkedIn · X · Pinterest · Bluesky · Mastodon
-             └─ inbox loop ──► Messenger, Instagram (Graph API) · WhatsApp (through your own relay)
+             └─ inbox loop ──► Messenger, Instagram (Graph API) · WhatsApp (webhook through your tunnel, or your own relay)
 ```
 
 **Claude Code does the editing. HyperFrames renders. Go serves. React is the UI.** All of it, with ffmpeg, Chrome, Node.js, Python and fonts, ships in one Docker image for amd64 and arm64.
@@ -269,7 +269,7 @@ Browser ──► 37studio (Go, one binary) ──► SQLite + data/ (companies,
 
 **Is it really free?** Yes: MIT licensed, no license key, no paid tier. You pay the AI providers for what you use.
 
-**What leaves my computer?** Calls to the AI providers you set up (Anthropic, and Gemini and ElevenLabs if you add them), uploads to the platforms you connect, the update check (GitHub Releases), and, only if you set up WhatsApp, your own relay at `STUDIO37_RELAY_URL`, where incoming WhatsApp messages wait in your Cloudflare account until your copy pulls them (at most 7 days). Nothing is sent to Shaitrish or studio.shaitrish.com. Any agent may read a company's brand files and source folder, so they go to Anthropic as part of its work.
+**What leaves my computer?** Calls to the AI providers you set up (Anthropic, and Gemini and ElevenLabs if you add them), uploads to the platforms you connect, the update check (GitHub Releases), and, only if you set up WhatsApp, Meta's webhooks coming in through your own Cloudflare Tunnel (or waiting on your own relay until your copy pulls them, at most 7 days). Nothing is sent to Shaitrish or studio.shaitrish.com. Any agent may read a company's brand files and source folder, so they go to Anthropic as part of its work.
 
 **The page doesn't open, or port 8080 is in use.** Another program has port 8080. Close it and run the start file again. `docker compose logs` shows what the app is doing.
 

@@ -31,3 +31,16 @@ func TestGuardCrossOrigin(t *testing.T) {
 		}
 	}
 }
+
+// With a password set, Meta's webhook still gets through (its handler checks Meta's signature); nothing else does.
+func TestGuardWebhookSkipsPassword(t *testing.T) {
+	t.Setenv("STUDIO37_PASSWORD", "pw")
+	h := Guard(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	for path, want := range map[string]int{"/webhooks/meta": 200, "/api/projects": 401} {
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, httptest.NewRequest("POST", "http://localhost:8080"+path, nil))
+		if w.Code != want {
+			t.Errorf("%s: %d, want %d", path, w.Code, want)
+		}
+	}
+}

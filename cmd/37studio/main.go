@@ -138,6 +138,8 @@ func routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/inbox/thread", httpapi.JSON(social.GetThread))
 	mux.HandleFunc("POST /api/inbox/draft", httpapi.JSON(social.DraftReply))
 	mux.HandleFunc("POST /api/inbox/reply", httpapi.JSON(social.SendReply))
+	mux.HandleFunc("GET /webhooks/meta", social.WhatsAppWebhook) // WhatsApp straight to this copy through a tunnel
+	mux.HandleFunc("POST /webhooks/meta", social.WhatsAppWebhook)
 
 	mux.HandleFunc("GET /api/assistant", httpapi.JSON(assistant.Get))
 	mux.HandleFunc("POST /api/assistant/messages", httpapi.JSON(assistant.Post))
