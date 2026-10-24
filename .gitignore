@@ -1,10 +1,10 @@
 data/
-37studio
+/37studio
 .env
 web/node_modules/
 web/dist/
 tmp/
-vidbit
+/vidbit
 worker/.wrangler/
 worker/node_modules/
 worker/public/37studio.zip
