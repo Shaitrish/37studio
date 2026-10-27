@@ -8,6 +8,7 @@ import { ScanModal, TenantModal } from "./Clients";
 import { CampaignGrid, CampaignModal } from "./Campaigns";
 import { SocialTab } from "./Social";
 import { AutopilotTab } from "./Autopilot";
+import { VoicesTab } from "./Voices";
 
 const folders = [
   { id: "logo", label: "Logos & marks", hint: "SVG or transparent PNG, light and dark variants", accept: ".svg,image/*" },
@@ -82,6 +83,7 @@ export default function ClientPage({ id, tab = "library" }: { id: number; tab?: 
         { value: "library", label: `Brand library (${t.assets?.length ?? 0})` },
         { value: "campaigns", label: `Campaigns (${campaigns?.length ?? 0})` },
         { value: "projects", label: `Projects (${projects?.length ?? 0})` },
+        { value: "voices", label: "Voices" },
         { value: "social", label: "Social" },
         { value: "autopilot", label: "Autopilot" },
         { value: "design", label: "Design system" },
@@ -90,6 +92,8 @@ export default function ClientPage({ id, tab = "library" }: { id: number; tab?: 
       ]} />
 
       {tab === "library" && <Library tenant={t} reload={reload} />}
+
+      {tab === "voices" && <VoicesTab tenant={t} />}
 
       {tab === "social" && <SocialTab tenantId={id} />}
 

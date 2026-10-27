@@ -159,6 +159,17 @@ create table if not exists posts(
   created_at text not null default current_timestamp
 );
 create index if not exists posts_due on posts(status, publish_at);
+create table if not exists brand_voices( -- ElevenLabs voices a brand speaks in, by name
+  id integer primary key,
+  tenant_id integer not null references tenants(id) on delete cascade,
+  name text not null,
+  voice_id text not null, -- ElevenLabs voice id
+  language text not null default '', -- '' = any language
+  notes text not null default '', -- when to use it, for the agent
+  is_default integer not null default 0, -- this brand's voice for its language
+  cloned integer not null default 0, -- made here from a recording, so deleting it here deletes it at ElevenLabs too
+  created_at text not null default current_timestamp
+);
 create table if not exists queued_messages( -- typed while the agent was busy; sent when its turn ends
   id integer primary key,
   project_id integer not null references projects(id) on delete cascade,
@@ -307,25 +318,27 @@ func Num(v any) float64 {
 }
 
 var settingDefaults = map[string]string{
-	"run_budget_usd":      "25",
-	"image_model":         "gemini-nano-banana-2.1",
-	"image_price":         "0.0504",
-	"video_model":         "gemini-omni-1.1-flash",
-	"video_price_per_sec": "0.10",
-	"voice_model":         "eleven_v4",
-	"voice_default":       "Xb7hH8MSUJpSbSDYk0k2", // Alice, ElevenLabs premade
-	"voice_bn":            "70QpbCWFDvTpWo8ZKOUb", // Niharika, energetic Bengali creator
-	"voice_price_per_1k":  "0.20",
-	"sfx_price_per_sec":   "0.01",
-	"music_price_per_min": "0.50",
-	"gen_ask_above_usd":   "5", // generated media per project the agent may spend before asking; 0 = always ask
-	"render_workers":      "auto",
-	"render_gpu":          "false",
-	"render_fast_capture": "false",
-	"render_draft_fps":    "15",
-	"currency":            "USD",
-	"timezone":            "UTC", // replaced by the browser's zone when an autopilot plan is saved
-	"fx_rate":             "1",
+	"run_budget_usd":        "25",
+	"image_model":           "gemini-nano-banana-2.1",
+	"image_price":           "0.0504",
+	"video_model":           "gemini-omni-1.1-flash",
+	"video_price_per_sec":   "0.10",
+	"voice_model":           "eleven_v4",
+	"voice_default":         "Xb7hH8MSUJpSbSDYk0k2", // Alice, ElevenLabs premade
+	"voice_bn":              "70QpbCWFDvTpWo8ZKOUb", // Niharika, energetic Bengali creator
+	"voice_price_per_1k":    "0.20",
+	"revoice_model":         "eleven_multilingual_sts_v2",
+	"revoice_price_per_min": "0.20", // ElevenLabs voice changer bills about 1,000 credits a minute, like 1,000 characters of voiceover
+	"sfx_price_per_sec":     "0.01",
+	"music_price_per_min":   "0.50",
+	"gen_ask_above_usd":     "5", // generated media per project the agent may spend before asking; 0 = always ask
+	"render_workers":        "auto",
+	"render_gpu":            "false",
+	"render_fast_capture":   "false",
+	"render_draft_fps":      "15",
+	"currency":              "USD",
+	"timezone":              "UTC", // replaced by the browser's zone when an autopilot plan is saved
+	"fx_rate":               "1",
 }
 
 func Setting(k string) string {

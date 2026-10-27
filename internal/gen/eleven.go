@@ -18,21 +18,26 @@ import (
 )
 
 // ElevenLabs: voiceover (TTS), sound effects and music. All three return MP3 bytes.
-const elevenURL = "https://api.elevenlabs.io"
+var elevenURL = "https://api.elevenlabs.io"
 
 func eleven(method, path string, body any) ([]byte, error) {
-	key := os.Getenv("ELEVENLABS_API_KEY")
-	if key == "" {
-		return nil, errors.New("ELEVENLABS_API_KEY is not set")
-	}
 	var rd io.Reader
 	if body != nil {
 		b, _ := json.Marshal(body)
 		rd = bytes.NewReader(b)
 	}
 	req, _ := http.NewRequest(method, elevenURL+path, rd)
-	req.Header.Set("xi-api-key", key)
 	req.Header.Set("Content-Type", "application/json")
+	return elevenSend(req)
+}
+
+// elevenSend signs one request with the ElevenLabs key and returns the reply, or ElevenLabs' own error.
+func elevenSend(req *http.Request) ([]byte, error) {
+	key := os.Getenv("ELEVENLABS_API_KEY")
+	if key == "" {
+		return nil, errors.New("ELEVENLABS_API_KEY is not set: add your ElevenLabs key in Settings → AI services")
+	}
+	req.Header.Set("xi-api-key", key)
 	res, err := geminiClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -43,14 +48,6 @@ func eleven(method, path string, body any) ([]byte, error) {
 		err = fmt.Errorf("elevenlabs %d: %s", res.StatusCode, textutil.Tail(string(raw), 400))
 	}
 	return raw, err
-}
-
-// VoiceFor picks the configured voice for a language: Bangla gets its own, everything else the default.
-func VoiceFor(lang string) string {
-	if lang == "bn" && store.Setting("voice_bn") != "" {
-		return store.Setting("voice_bn")
-	}
-	return store.Setting("voice_default")
 }
 
 func Voice(pid, tenant int64, text, voice, out string) error {

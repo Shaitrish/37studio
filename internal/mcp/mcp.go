@@ -103,6 +103,24 @@ var Tools = []mcpTool{
 	{Name: "delete_company_asset", Desc: "Remove a file from a brand's library.", Method: "DELETE", Path: "/api/tenants/{company_id}/assets",
 		Query: map[string]string{"path": "path"}, Props: map[string]any{"company_id": brand, "path": pStr("Library path, like logo/mark.svg")}, Required: []string{"company_id", "path"}},
 
+	// brand voices
+	{Name: "list_brand_voices", Desc: "A brand's saved voices (cloned from a recording or added from ElevenLabs): name, language, notes and which is the default for its language. The editor agent uses them by name.",
+		Method: "GET", Path: "/api/tenants/{company_id}/voices", Props: map[string]any{"company_id": brand}, Required: []string{"company_id"}},
+	{Name: "clone_brand_voice", Desc: "Clone a person's voice from a recording (audio or video, a minute or two of clear speech, from a URL or as base64) with ElevenLabs and save it to the brand. Only clone a voice the user has the speaker's permission to use; needs a paid ElevenLabs plan.",
+		Props: map[string]any{"company_id": brand, "name": pStr("Voice name, like the speaker's name"), "language": pStr("Language code it speaks, like bn or en; empty for any"),
+			"notes": pStr("When to use it: tone, who it is"), "is_default": pBool("Make it the brand's default voice for its language"), "remove_noise": pBool("Clean background noise out of the recording first"),
+			"filename": pStr("File name with extension"), "url": pStr("Download the recording from here"), "content_base64": pStr("Or the recording itself, base64-encoded (small files)")},
+		Required: []string{"company_id", "name", "filename"}, Do: cloneBrandVoice},
+	{Name: "add_brand_voice", Desc: "Save a voice already in the ElevenLabs account (list_voices) to a brand, so its videos can use it by name.",
+		Method: "POST", Path: "/api/tenants/{company_id}/voices", Props: map[string]any{"company_id": brand, "voice_id": pStr("ElevenLabs voice id"),
+			"name": pStr("Name to use it by (default: its ElevenLabs name)"), "language": pStr("Language code it speaks; empty for any"), "notes": pStr("When to use it"),
+			"is_default": pBool("Make it the brand's default voice for its language")}, Required: []string{"company_id", "voice_id"}},
+	{Name: "update_brand_voice", Desc: "Rename a brand voice, change its language or notes, or make it the default for its language.", Method: "PUT", Path: "/api/brand-voices/{brand_voice_id}",
+		Props: map[string]any{"brand_voice_id": pInt("The brand voice's id (list_brand_voices)"), "name": pStr("Name"), "language": pStr("Language code; empty for any"),
+			"notes": pStr("When to use it"), "is_default": pBool("Default for its language")}, Required: []string{"brand_voice_id"}},
+	{Name: "delete_brand_voice", Desc: "Remove a voice from a brand; a voice cloned here is deleted from the ElevenLabs account too. Videos already made keep their audio. Ask the user first.",
+		Method: "DELETE", Path: "/api/brand-voices/{brand_voice_id}", Props: map[string]any{"brand_voice_id": pInt("The brand voice's id")}, Required: []string{"brand_voice_id"}},
+
 	// campaigns
 	{Name: "list_campaigns", Desc: "Campaigns, optionally for one brand.", Method: "GET", Path: "/api/campaigns", Query: byTenant, Props: map[string]any{"company_id": brand}},
 	{Name: "create_campaign", Desc: "Group a brand's videos around one launch, offer or product. The brief reaches every video's agent.",
@@ -140,9 +158,11 @@ var Tools = []mcpTool{
 	{Name: "cancel_import", Desc: "Stop a footage download that is still running.", Method: "DELETE", Path: "/api/projects/{project_id}/import", Props: map[string]any{"project_id": project}, Required: []string{"project_id"}},
 	{Name: "set_transcription", Desc: "Switch a project's transcription off (skip: stops a running one) or back on (resume).", Method: "POST", Path: "/api/projects/{project_id}/transcript",
 		Props: map[string]any{"project_id": project, "action": pEnum("What to do", "skip", "resume")}, Required: []string{"project_id", "action"}},
-	{Name: "generate_media", Desc: "Generate an image or video clip (Gemini) or a voiceover, sound effect or music (ElevenLabs) into the project's drafts. Billed to those keys.",
-		Method: "POST", Path: "/api/projects/{project_id}/generate", Props: map[string]any{"project_id": project, "kind": pEnum("What to make", "image", "video", "voice", "sfx", "music"),
-			"prompt": pStr("What it should be, or the words to speak"), "aspect": pStr("Format, like 9:16"), "seconds": pInt("Length, for clips, sound and music")}, Required: []string{"project_id", "kind", "prompt"}},
+	{Name: "generate_media", Desc: "Generate an image or video clip (Gemini) or a voiceover, sound effect or music (ElevenLabs) into the project's drafts, or speak an existing voiceover again in another voice (revoice). Billed to those keys. To change a video's voice, prefer asking its editor agent (send_message), which also swaps the files in the composition.",
+		Method: "POST", Path: "/api/projects/{project_id}/generate", Props: map[string]any{"project_id": project, "kind": pEnum("What to make", "image", "video", "voice", "revoice", "sfx", "music"),
+			"prompt": pStr("What it should be, or the words to speak (not for revoice)"), "aspect": pStr("Format, like 9:16"), "seconds": pInt("Length, for clips, sound and music"),
+			"voice": pStr("voice and revoice: one of the brand's voices by name (default: the brand's voice for the video's language)"), "audio": pStr("revoice: the voiceover in the project, like comp/assets/vo.mp3")},
+		Required: []string{"project_id", "kind"}},
 	{Name: "delete_project_file", Desc: "Delete a file from a project, like an old draft or an unwanted upload.", Method: "DELETE", Path: "/api/projects/{project_id}/files",
 		Query: map[string]string{"path": "path"}, Props: map[string]any{"project_id": project, "path": pStr("Path inside the project, like out/drafts/take1.mp4")}, Required: []string{"project_id", "path"}},
 	{Name: "open_timeline", Desc: "Open the project's timeline editor (HyperFrames Studio) and get its port; the user edits there by hand at http://localhost:<port>.",
@@ -446,6 +466,17 @@ func createVideo(mux http.Handler, a map[string]any) (string, bool) {
 
 func addCompanyAsset(mux http.Handler, a map[string]any) (string, bool) {
 	return mcpUpload(mux, fmt.Sprintf("/api/tenants/%v/assets?folder=%s", a["company_id"], url.QueryEscape(store.Str(a["folder"]))), a)
+}
+
+func cloneBrandVoice(mux http.Handler, a map[string]any) (string, bool) {
+	q := url.Values{"name": {store.Str(a["name"])}, "language": {store.Str(a["language"])}, "notes": {store.Str(a["notes"])}}
+	if a["is_default"] == true {
+		q.Set("default", "1")
+	}
+	if a["remove_noise"] == true {
+		q.Set("remove_noise", "1")
+	}
+	return mcpUpload(mux, fmt.Sprintf("/api/tenants/%v/voices/clone?%s", a["company_id"], q.Encode()), a)
 }
 
 func addProjectFile(mux http.Handler, a map[string]any) (string, bool) {

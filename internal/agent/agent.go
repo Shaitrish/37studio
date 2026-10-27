@@ -131,6 +131,7 @@ Brand asset library (read-only): {assets}
   logo/ people/ images/ graphics/ (SVG icons, illustrations) videos/ fonts/ audio/ design/ (site screenshots, raw tokens) other/
   {captions} describes every file: caption, site section, source. Read it to pick the right asset.
 Copy what you use into comp/assets/; never modify the library.
+Voices: {voices}
 {source}Design system: {design}
   Their real colors, type scale, radii, spacing, shadows and component styles, as a HyperFrames design spec. Right after creating comp/, copy it to comp/design.md; its frontmatter is brand truth (exact hex, fonts, weights, radii). If it is missing, use the brand colors above.
 
@@ -184,10 +185,13 @@ The editor can open comp/ in HyperFrames Studio, the timeline editor, and move, 
 ## Paid AI media (billed per use, so only when footage and brand assets can't do the job; say what you generated)
 37studio gen image --prompt "..." --out comp/assets/name.png [--aspect 16:9] [--size 2K] [--ref path ...]
 37studio gen video --prompt "..." --out work/name.mp4 [--aspect 9:16] [--image first-frame.png]
-37studio gen voice --prompt "the exact script to speak" --out comp/assets/vo.mp3   (ElevenLabs; picks the configured voice for the video's language; write the script in that language)
+37studio gen voice --prompt "the exact script to speak" --out comp/assets/vo.mp3 [--voice "<brand voice name>"]   (ElevenLabs; without --voice it uses the brand's default voice for the video's language; write the script in that language)
+37studio gen revoice --audio comp/assets/vo.mp3 --voice "<brand voice name>" --out comp/assets/vo.mp3   (ElevenLabs voice changer: the same recording spoken by another voice, with the same words and timing)
 37studio gen sfx --prompt "soft whoosh transition" --seconds 1.5 --out comp/assets/whoosh.mp3   (ElevenLabs sound effects)
 37studio gen music --prompt "upbeat lo-fi bed, no vocals, 90 bpm" --seconds 30 --out comp/assets/music.mp3   (ElevenLabs music, 3 s minimum)
 Prefer these over hyperframes tts or stock audio. Keep music under the voice (duck it), and match its length to the video.
+When the editor names a voice ("use Rahim's voice"), use that brand voice; if it isn't one of the brand's voices above, say which voices it has and that they can add one on the brand's Voices tab.
+To change the voice of a video, even a finished one: find every voiceover file the composition plays (npx hyperframes@{hf} timeline --json lists the audio clips) and run gen revoice on each, writing over the same path, so captions and animation stay in sync. Then check it and tell the editor to Export again. Revoice only a voice-only track: a file mixed with music turns the music into speech, and changing the voice of someone speaking on camera won't match their lips (ask first). If a voiceover is mixed with music, or revoice fails, make it again with gen voice --voice from its script (transcribe the old file if you don't have the script), and re-time the captions to the new audio.
 Generated media costs the editor money. If gen exits with "Ask the editor first", stop and ask in plain words what you want to make and roughly what it costs; run it again with --approved only after they agree.
 For the same person, product or character across shots, make one reference image first and pass it to every later image with --ref, and use those images as video first frames (--image), so they stay consistent.
 
@@ -211,8 +215,29 @@ func harnessPrompt(p map[string]any) string {
 		"{knowledge}", cmp.Or(textutil.Head(files.TenantDoc(p["tenant_id"].(int64), "knowledge.md"), 8000), "-"),
 		"{design}", filepath.Join(files.TenantRoot(p["tenant_id"].(int64)), "design.md"),
 		"{captions}", filepath.Join(files.TenantRoot(p["tenant_id"].(int64)), "assets.json"), "{source}", sourceText(p["tenant_id"].(int64)),
+		"{voices}", voicesText(p["tenant_id"].(int64)),
 		"{hf}", config.HFVersion, "{resolution}", cmp.Or(res, "landscape"), "{renderflags}", strings.TrimRight(" "+strings.Join(renderFlags("high"), " "), " "), "{draftflags}", strings.Join(renderFlags("draft"), " "), "{campaign}", campaignText(p["campaign_id"]), "{social}", CaptionSpec,
 	).Replace(harness)
+}
+
+// voicesText lists the brand's saved voices, which the agent passes to gen voice and gen revoice by name.
+func voicesText(tenant int64) string {
+	vs, _ := store.Rows("select name, language, notes, is_default from brand_voices where tenant_id=? order by is_default desc, name", tenant)
+	if len(vs) == 0 {
+		return "none saved for this brand, so voiceovers use the app's default voice. The editor can clone a voice from a recording, or add an ElevenLabs voice, on the brand's Voices tab."
+	}
+	lines := []string{"the brand's saved voices; pass the name to --voice."}
+	for _, v := range vs {
+		line := fmt.Sprintf("  - %q, speaks %s", v["name"], cmp.Or(store.Str(v["language"]), "any language"))
+		if v["is_default"] == int64(1) {
+			line += ", the default for " + cmp.Or(store.Str(v["language"]), "every language") + " (used when you leave out --voice)"
+		}
+		if n := strings.TrimSpace(store.Str(v["notes"])); n != "" {
+			line += ": " + n
+		}
+		lines = append(lines, line)
+	}
+	return strings.Join(lines, "\n")
 }
 
 // sourceText points the agent at the brand's project folder, when they added one.
