@@ -6,6 +6,8 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 
 ### Added
 - **Desktop app for Linux and Windows (preview)**: 37Studio in its own window, without Docker. Each release has a .deb for Ubuntu 24.04+ and Debian 13+ and a plain program for other Linux, for amd64 and arm64, and a .zip for Windows 10 and 11 on Intel and AMD. On Windows, unpack it and run `install-windows.ps1` to put 37Studio in the Start menu; your work is kept in `%AppData%\37Studio`. Links, the timeline editor and social sign-ins open in your browser, and downloads and backups ask where to save. The Overview page lists the tools still missing on your computer, with the command to install them — `winget` commands on Windows, including Git for Windows, whose bash is what the agent runs its commands through there. See docs/desktop.md.
+- **Brand voices** (a brand's Voices tab): clone a person's voice from a short recording, or add any voice from your ElevenLabs account, and pick a default for each language. The agent speaks voiceovers in the brand's default, or in any of its voices you name in chat.
+- **Change a video's voice**: ask the agent to "use Rahim's voice", even on a finished video, and it speaks the existing voiceover again in that voice with the same words and timing, so captions stay in sync. Then press Export again.
 
 ### Changed
 - `docker stop` and restarts now let 37Studio finish what it's doing and stop running agent turns and renders, instead of leaving them running in the background.

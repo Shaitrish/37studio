@@ -11,6 +11,7 @@ import (
 
 	"github.com/Shaitrish/37studio/internal/agent"
 	"github.com/Shaitrish/37studio/internal/files"
+	"github.com/Shaitrish/37studio/internal/gen"
 	"github.com/Shaitrish/37studio/internal/httpapi"
 	"github.com/Shaitrish/37studio/internal/source"
 	"github.com/Shaitrish/37studio/internal/store"
@@ -95,6 +96,7 @@ func Delete(r *http.Request) (any, error) {
 		return nil, httpapi.Bad("one of this brand's videos is uploading right now; wait for it to finish")
 	}
 	ts, _ := store.Rows("select id from templates where tenant_id=?", id)
+	voices := gen.ClonedVoices(id)
 
 	tx, err := store.DB.Begin()
 	if err != nil {
@@ -106,7 +108,7 @@ func Delete(r *http.Request) (any, error) {
 		"delete from posts where project_id in (select id from projects where tenant_id=?)",
 		"delete from projects where tenant_id=?",
 		"delete from campaigns where tenant_id=?",
-		"delete from tenants where id=?", // templates, Autopilot plans and accounts go with it (on delete cascade)
+		"delete from tenants where id=?", // templates, Autopilot plans, accounts and voices go with it (on delete cascade)
 	} {
 		if _, err := tx.Exec(q, id); err != nil {
 			return nil, err
@@ -115,6 +117,7 @@ func Delete(r *http.Request) (any, error) {
 	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
+	go gen.DeleteVoices(voices) // the brand's cloned voices leave the ElevenLabs account too
 	for _, p := range ps {
 		os.RemoveAll(files.ProjectDir(p["id"].(int64)))
 	}

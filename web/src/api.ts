@@ -46,6 +46,11 @@ export interface Campaign {
   projects?: Project[]; cost?: number;
 }
 export interface Voice { id: string; name: string; language?: string; gender?: string; use?: string; preview?: string }
+/** A voice saved to a brand (voices.go): cloned here from a recording, or picked from the ElevenLabs account. language "" = any. */
+export interface BrandVoice {
+  id: number; tenant_id: number; name: string; voice_id: string; language: string; notes: string; is_default: number; cloned: number;
+  created_at: string; samples: FileInfo[];
+}
 export const languages: [string, string][] = [["bn", "Bangla"], ["en", "English"], ["hi", "Hindi"], ["ur", "Urdu"], ["ar", "Arabic"], ["es", "Spanish"]];
 export const languageName = (code: string) => languages.find(([c]) => c === code)?.[1] ?? code;
 export interface Preset { id: string; label: string; aspect: string; seconds: number; blurb: string }

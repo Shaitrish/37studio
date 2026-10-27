@@ -121,6 +121,11 @@ func Routes() *http.ServeMux {
 	mux.HandleFunc("DELETE /api/tenants/{id}/assets", httpapi.JSON(company.DeleteAsset))
 	mux.HandleFunc("POST /api/tenants/{id}/source", httpapi.JSON(source.Upload))
 	mux.HandleFunc("PUT /api/tenants/{id}/assets", httpapi.JSON(company.UpdateAsset))
+	mux.HandleFunc("GET /api/tenants/{id}/voices", httpapi.JSON(gen.ListBrandVoices))
+	mux.HandleFunc("POST /api/tenants/{id}/voices", httpapi.JSON(gen.AddBrandVoice))
+	mux.HandleFunc("POST /api/tenants/{id}/voices/clone", httpapi.JSON(gen.CloneBrandVoice))
+	mux.HandleFunc("PUT /api/brand-voices/{id}", httpapi.JSON(gen.UpdateBrandVoice))
+	mux.HandleFunc("DELETE /api/brand-voices/{id}", httpapi.JSON(gen.DeleteBrandVoice))
 
 	mux.HandleFunc("GET /api/campaigns", httpapi.JSON(company.ListCampaigns))
 	mux.HandleFunc("POST /api/campaigns", httpapi.JSON(company.SaveCampaign))

@@ -302,6 +302,7 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
                 <div className="form">
                   <Field label="Voice model" hint="eleven_v4 speaks Bangla">{input("voice_model")}</Field>
                   <Field label="Voiceover price" hint="USD per 1,000 characters">{input("voice_price_per_1k", { type: "number", min: 0, step: 0.01 })}</Field>
+                  <Field label="Voice change price" hint="USD per minute of voiceover spoken again in another voice">{input("revoice_price_per_min", { type: "number", min: 0, step: 0.01 })}</Field>
                   <Field label="Sound effect price" hint="USD per second">{input("sfx_price_per_sec", { type: "number", min: 0, step: 0.001 })}</Field>
                   <Field label="Music price" hint="USD per minute">{input("music_price_per_min", { type: "number", min: 0, step: 0.01 })}</Field>
                 </div>
