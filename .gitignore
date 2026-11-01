@@ -17,3 +17,7 @@ worker/public/intro.gif
 *-backup.json
 *.tgz
 .gstack/
+# desktop build: copies desktop/build.sh makes, and its output
+cmd/37studio-desktop/web/
+cmd/37studio-desktop/icon.png
+desktop/bin/

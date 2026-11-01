@@ -320,6 +320,19 @@ func StopProc(id int64) error {
 	return kill(id)
 }
 
+// KillAll ends every run, with its children, when the app quits.
+func KillAll() {
+	procMu.Lock()
+	ids := make([]int64, 0, len(procs))
+	for id := range procs {
+		ids = append(ids, id)
+	}
+	procMu.Unlock()
+	for _, id := range ids {
+		kill(id)
+	}
+}
+
 // kill ends whatever runs for this id, with its children, and says nothing in the chat.
 func kill(id int64) error {
 	procMu.Lock()

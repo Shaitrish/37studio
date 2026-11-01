@@ -123,11 +123,13 @@ data/
 
 ## Code map
 
-The Go code builds one binary, `37studio`, that serves the app and runs the agent's helper commands (`gen`, `clip`, `transcribe`). `cmd/37studio` wires it together; everything else is in `internal/`, one package per area. Dependencies point downward: the low packages (`config`, `store`, `httpapi`, `remote`, `files`, `textutil`) import nothing of ours, and nothing imports `cmd`. The agent tells Autopilot and the clip queue that a turn ended through `agent.AfterTurn`, so it never imports them.
+The Go code builds one binary, `37studio`, that serves the app and runs the agent's helper commands (`gen`, `clip`, `transcribe`). `internal/server` wires it together and `cmd/37studio` runs it (`cmd/37studio-desktop` runs the same server in a native Wails window, with its own `go.mod`); everything else is in `internal/`, one package per area. Dependencies point downward: the low packages (`config`, `store`, `httpapi`, `remote`, `files`, `textutil`) import nothing of ours, and nothing imports `cmd`. The agent tells Autopilot and the clip queue that a turn ended through `agent.AfterTurn`, so it never imports them.
 
 | Package | What |
 | --- | --- |
-| `cmd/37studio` | `main`: subcommands, background loops, every HTTP route |
+| `cmd/37studio` | `main` for Docker and servers: runs `internal/server`, stops it on SIGTERM |
+| `cmd/37studio-desktop` | The desktop app: the same server shown in a Wails window (own `go.mod`, so the image never builds Wails) |
+| `internal/server` | Startup and recovery, background loops, every HTTP route, graceful shutdown |
 | `internal/config` | Settings from the environment and `.env` |
 | `internal/store` | SQLite schema, row helpers, settings and their defaults |
 | `internal/httpapi` | JSON handler adapter, errors, request helpers, basic auth |
