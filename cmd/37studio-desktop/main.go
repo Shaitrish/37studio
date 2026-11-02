@@ -21,6 +21,7 @@ import (
 
 	"github.com/Shaitrish/37studio/internal/config"
 	"github.com/Shaitrish/37studio/internal/server"
+	"github.com/Shaitrish/37studio/internal/social"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
@@ -46,7 +47,7 @@ func main() {
 		Icon:        icon,
 		// One copy per user: a second one would open the same database and run Autopilot and the inbox twice.
 		SingleInstance: &application.SingleInstanceOptions{
-			UniqueID: "com.shaitrish.37studio",
+			UniqueID: "com.shaitrish.studio37", // D-Bus refuses an element that starts with a digit
 			OnSecondInstanceLaunch: func(application.SecondInstanceData) {
 				if win != nil {
 					win.Restore()
@@ -102,6 +103,16 @@ func main() {
 		MinWidth:  960,
 		MinHeight: 640,
 	})
+	server.Desktop.OpenURL = app.Browser.OpenURL
+	server.Desktop.SaveAs = func(name string) (string, error) {
+		return app.Dialog.SaveFile().SetFilename(name).CanCreateDirectories(true).AttachToWindow(win).PromptForSingleSelection()
+	}
+	social.AfterSignIn = func(target string) {
+		win.SetURL(target)
+		win.Restore()
+		win.Show()
+		win.Focus()
+	}
 	app.OnShutdown(func() {
 		stop()
 		<-served

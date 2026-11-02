@@ -165,6 +165,18 @@ export const setToast = (fn: ToastFn) => { toastFn = fn; };
 export const toast: ToastFn = (msg, err) => toastFn(msg, err);
 export const fail = (e: unknown) => toast(e instanceof Error ? e.message : String(e), true);
 
+// The desktop app's window opens no tabs and saves no downloads by itself: links go to the system browser and
+// downloads to a Save dialog, through the app (internal/server/desktop.go). main.tsx sets this from /api/meta.
+export let desktop = false;
+export const setDesktop = (v: boolean) => { desktop = v; };
+export const openExternal = (url: string) =>
+  api("/desktop/open", { body: { url: new URL(url, location.href).href } }).catch(fail);
+export function saveFile(href: string, name?: string) {
+  const u = new URL(href, location.href);
+  api<{ saved: string }>("/desktop/save", { body: { path: u.pathname + u.search, name } })
+    .then((r) => { if (r.saved) toast(`Saved to ${r.saved}`); }, fail);
+}
+
 // Donation ask at a happy moment (a finished export, the 10th inbox reply), at most once a month.
 // ponytail: per-browser localStorage; another browser may ask once more, which is harmless.
 let nudgeFn: (why: string) => void = () => {};

@@ -86,6 +86,18 @@ docker compose up --build
 
 To work on the code with hot reload, see [CONTRIBUTING.md](CONTRIBUTING.md#running-it-from-source).
 
+### Desktop app, without Docker (preview)
+
+37Studio in its own window, installed into your app menu, with no Docker. For now it is Linux only and built from source; Windows and Mac installers come later.
+
+```bash
+sudo apt install libgtk-4-dev libwebkitgtk-6.0-dev pkg-config   # once
+git clone https://github.com/Shaitrish/37studio.git && cd 37studio
+./desktop/install-linux.sh                                     # then open 37Studio from the app menu
+```
+
+It needs Go 1.26 and Node.js 22, plus Claude Code, ffmpeg and Python on the computer. [docs/desktop.md](docs/desktop.md) has the full guide: updating, uninstalling, using your Docker data, and how it differs from the Docker version.
+
 ### Run it in the cloud
 
 Run it on a server when a team shares it, or when Autopilot and auto-replies should keep going while your laptop sleeps. [`docker-compose.cloud.yml`](docker-compose.cloud.yml) runs the app behind [Caddy](https://caddyserver.com), which gets and renews an HTTPS certificate for your domain by itself.

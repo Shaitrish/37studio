@@ -32,6 +32,7 @@ go build ./... && go vet ./... && go test ./...   # backend: run all three befor
 gofmt -l .                                       # must print nothing
 cd web && npm run build                          # UI: type-checks (tsc) and builds
 ./desktop/build.sh                               # desktop app into desktop/bin/37studio (Linux: GTK 4 + WebKitGTK 6.0 headers)
+./desktop/install-linux.sh                       # build it and add it to this Linux user's app menu (--uninstall removes it)
 ./dev.sh                                         # backend (air, hot rebuild) + UI (Vite) on :5173
 docker compose up --build                        # the whole app on :8080, as users run it
 node --check relay/src.js                        # WhatsApp relay syntax
