@@ -4,6 +4,8 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-11-04
+
 ### Fixed
 - **Desktop app on Ubuntu**: the window now opens from the app menu. The .deb adds the AppArmor profile Ubuntu 23.10 and newer require before WebKit can draw the window; without it 37Studio closed straight away unless started from a terminal.
 
@@ -77,7 +79,8 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 - Templates: start a new video from an earlier video's look.
 - Several videos from one source, and a Library of every finished video.
 
-[Unreleased]: https://github.com/Shaitrish/37studio/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/Shaitrish/37studio/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/Shaitrish/37studio/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/Shaitrish/37studio/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/Shaitrish/37studio/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/Shaitrish/37studio/compare/v0.6.0...v0.7.0
