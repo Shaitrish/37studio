@@ -1,1 +1,1 @@
-{"version": "0.9.0", "notes": "Desktop app for Linux and Windows (preview), brand voices with ElevenLabs cloning, and changing a finished video's voice", "url": "https://studio.shaitrish.com/"}
+{"version": "0.9.1", "notes": "Desktop app on Ubuntu now opens from the app menu (the .deb adds the AppArmor profile WebKit needs). Website: a desktop app page and a download section with both ways to run 37Studio.", "url": "https://studio.shaitrish.com/"}
