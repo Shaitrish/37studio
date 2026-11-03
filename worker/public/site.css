@@ -411,3 +411,21 @@ pre.cmd { background: var(--ink); color: #f4f3f6; border-radius: 12px; padding: 
 .hero-alt b { color: var(--ember-ink); font-weight: 600; }
 .hero-alt a { color: var(--ink); text-underline-offset: 3px; }
 .prose ol > li, .prose ul > li { min-width: 0; }
+
+/* download: desktop app and Docker side by side */
+.ways { display: grid; gap: 16px; }
+@media (min-width: 900px) { .ways { grid-template-columns: 1fr 1fr; } }
+.way { display: flex; flex-direction: column; align-items: flex-start; background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 28px; box-shadow: var(--shadow); min-width: 0; }
+.way h3 { font-size: 24px; margin-top: 14px; }
+.way-sub { margin-top: 6px; color: var(--muted); font-size: 15.5px; }
+.way .os { margin-top: 16px; }
+.way-tag { font: 500 12px "Geist Mono", monospace; color: var(--muted); background: var(--soft); border-radius: 6px; padding: 4px 9px; }
+.way-tag.new { color: var(--ember-ink); background: var(--ember-soft); }
+.wsteps { list-style: none; counter-reset: w; padding: 0; margin: 22px 0 0; display: grid; gap: 10px; width: 100%; }
+.wsteps li { counter-increment: w; display: grid; grid-template-columns: 26px 1fr; column-gap: 12px; font-size: 14px; color: var(--muted); }
+.wsteps li::before { content: counter(w); grid-row: span 2; width: 26px; height: 26px; border-radius: 8px; background: var(--ember); color: #fff; display: grid; place-items: center; font: 500 12.5px "Geist Mono", monospace; }
+.wsteps b { color: var(--ink); font-size: 15px; font-weight: 600; }
+.wsteps a { color: var(--ember-ink); text-underline-offset: 3px; }
+.wsteps code { font-size: 12px; }
+.way-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: auto; padding-top: 26px; width: 100%; }
+.way .req-chips { margin-left: 0; width: 100%; }

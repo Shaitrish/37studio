@@ -85,7 +85,7 @@
       <h1 style="margin-top:18px">Videos made, posted and <span class="u">answered.</span></h1>
       <p class="lead">Turn a short brief into on-brand videos and posts, publish them everywhere and answer every message, on your own computer or server.</p>
       <div class="ctas">
-        <a class="btn ink" href="#download"><svg><use href="#i-down"/></svg>Download for Windows &amp; Mac</a>
+        <a class="btn ink" href="#download"><svg><use href="#i-down"/></svg>Download for Windows, Mac &amp; Linux</a>
         <a class="btn" href="https://github.com/Shaitrish/37studio" aria-label="Star 37Studio on GitHub"><svg><use href="#i-star"/></svg>GitHub<span class="stars" hidden></span></a>
       </div>
       <p class="hero-alt"><b>New:</b> <a href="/desktop">desktop app for Windows and Linux</a>, no Docker (preview)</p>
@@ -432,27 +432,53 @@
   <div class="wrap">
     <div class="head rv">
       <span class="eyebrow">Download</span>
-      <h2>Four steps to your first video</h2>
-      <div class="os">
-        <span><svg><use href="#i-pc"/></svg>Windows 10, 11</span>
-        <span><img src="/logos/apple.svg" alt="" width="15" height="15">macOS, Apple Silicon and Intel</span>
-        <span><img src="/logos/linux.svg" alt="" width="15" height="15">Linux</span>
-        <span><svg><use href="#i-server"/></svg>Your own server</span>
-      </div>
+      <h2>Two ways to run it</h2>
+      <p class="lead">Both are free, keep everything on your computer and make the same videos. Pick the one that fits your computer.</p>
     </div>
-    <ol class="dsteps">
-      <li class="rv"><span class="n">1</span><img src="/logos/docker.svg" alt="" width="36" height="36"><b>Install Docker Desktop</b><a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="noopener">Free download</a></li>
-      <li class="rv"><span class="n">2</span><svg><use href="#i-folder"/></svg><b>Download and unzip</b>37studio.zip, anywhere</li>
-      <li class="rv"><span class="n">3</span><svg><use href="#i-click"/></svg><b>Double-click start</b><span><code>start.bat</code> or <code>start.command</code></span></li>
-      <li class="rv"><span class="n">4</span><svg><use href="#i-browser"/></svg><b>Add your Claude key</b>then your first brand</li>
-    </ol>
-    <div class="dl-foot rv">
-      <a class="btn ink" href="/37studio.zip" download><svg><use href="#i-down"/></svg>Download 37Studio</a>
-      <a class="btn" href="/setup">Full setup guide</a>
-      <a class="btn" href="/desktop"><svg><use href="#i-pc"/></svg>Desktop app, no Docker</a>
-      <span class="req-chips"><span>16 GB RAM</span><span>20 GB disk</span><span>3 GB first download</span></span>
+    <div class="ways">
+      <article class="way rv">
+        <span class="way-tag new">New · preview</span>
+        <h3>Desktop app</h3>
+        <p class="way-sub">Runs directly on your computer, in its own window. No Docker.</p>
+        <div class="os">
+          <span><svg><use href="#i-pc"/></svg>Windows 10, 11</span>
+          <span><img src="/logos/linux.svg" alt="" width="15" height="15">Linux</span>
+        </div>
+        <ol class="wsteps">
+          <li><b>Download the app</b>for Windows or Linux</li>
+          <li><b>Install it</b>Start-menu installer or a .deb</li>
+          <li><b>Install the tools it lists</b>Claude Code, ffmpeg, Node.js, Python</li>
+          <li><b>Add your Claude key</b>then your first brand</li>
+        </ol>
+        <div class="way-foot">
+          <a class="btn ink" href="/desktop"><svg><use href="#i-down"/></svg>Get the desktop app</a>
+          <span class="req-chips"><span>No Docker</span><span>Mac coming later</span></span>
+        </div>
+      </article>
+      <article class="way rv">
+        <span class="way-tag">Everything included</span>
+        <h3>Docker app</h3>
+        <p class="way-sub">Every tool comes bundled and updates on each start. Works on a Mac and on a server too.</p>
+        <div class="os">
+          <span><svg><use href="#i-pc"/></svg>Windows 10, 11</span>
+          <span><img src="/logos/apple.svg" alt="" width="15" height="15">macOS</span>
+          <span><img src="/logos/linux.svg" alt="" width="15" height="15">Linux</span>
+          <span><svg><use href="#i-server"/></svg>Your own server</span>
+        </div>
+        <ol class="wsteps">
+          <li><b>Install Docker Desktop</b><a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="noopener">Free download</a></li>
+          <li><b>Download and unzip</b>37studio.zip, anywhere</li>
+          <li><b>Double-click start</b><span><code>start.bat</code> or <code>start.command</code></span></li>
+          <li><b>Add your Claude key</b>then your first brand</li>
+        </ol>
+        <div class="way-foot">
+          <a class="btn ink" href="/37studio.zip" download><svg><use href="#i-down"/></svg>Download 37Studio</a>
+          <a class="btn" href="/setup">Setup guide</a>
+          <span class="req-chips"><span>16 GB RAM</span><span>3 GB first download</span></span>
+        </div>
+      </article>
     </div>
-    <p class="muted dl-note">No Docker? The <a href="/desktop">desktop app</a> (preview) runs 37Studio in its own window on Windows and Linux. Running it around the clock? Use the <a href="https://github.com/Shaitrish/37studio#run-it-in-the-cloud">cloud guide</a>: one compose file with HTTPS and a password. Developer? Clone the repo and run <code>docker compose up --build</code>.</p>
+    <p class="muted dl-note">Running it around the clock? Use the <a href="https://github.com/Shaitrish/37studio#run-it-in-the-cloud">cloud guide</a>: one compose file with HTTPS and a password. Developer? Clone the repo and run <code>docker compose up --build</code>.</p>
   </div>
 </section>
 
@@ -463,7 +489,7 @@
       <details class="rv"><summary>Is 37Studio free?</summary><p>Yes. It's free and open source under the MIT License: no trial, no license key and no paid tier. AI usage is separate and billed to your own Claude plan or Anthropic, Google and ElevenLabs accounts. If you'd rather have someone set it up for you, <a href="https://wa.me/8801635191148?text=Hi%2C%20I%27d%20like%20help%20setting%20up%2037Studio" target="_blank" rel="noopener">message us</a>.</p></details>
       <details class="rv"><summary>Can I contribute?</summary><p>Please do. The code is on <a href="https://github.com/Shaitrish/37studio">GitHub</a>: report bugs and ask for features in Issues, and send pull requests. The README explains how to run it from source.</p></details>
       <details class="rv"><summary>Can I control how the AI replies?</summary><p>Yes, per brand. Choose off, drafts for approval or replies on their own; write rules for tone, sign-off, what never to promise and when to hand over to a person; and keep the knowledge base it answers from up to date. Facts only ever come from that knowledge base.</p></details>
-      <details class="rv"><summary>Do I need a server?</summary><p>No. Everything runs on your own Windows PC, Mac or Linux machine inside Docker. If you want replies and Autopilot running around the clock, you can also run it on your own Linux server with HTTPS and a password; the <a href="https://github.com/Shaitrish/37studio#run-it-in-the-cloud">cloud guide</a> shows how. The only things that leave your computer are calls to the AI providers and the social platforms you connect.</p></details>
+      <details class="rv"><summary>Do I need a server?</summary><p>No. Everything runs on your own Windows PC, Mac or Linux machine, inside Docker or, on Windows and Linux, as the <a href="/desktop">desktop app</a>. If you want replies and Autopilot running around the clock, you can also run it on your own Linux server with HTTPS and a password; the <a href="https://github.com/Shaitrish/37studio#run-it-in-the-cloud">cloud guide</a> shows how. The only things that leave your computer are calls to the AI providers and the social platforms you connect.</p></details>
       <details class="rv"><summary>What happens when my computer is off?</summary><p>Nothing is lost. Messenger and Instagram keep messages on Meta, and Meta retries WhatsApp messages for a while (a relay of your own keeps them 7 days). When 37Studio starts again it answers everything the platform still allows a reply to: messages from the last 24 hours and comments up to two days old. For round-the-clock replies, keep it on a computer that doesn't sleep, such as a Mac mini, or run it on a server.</p></details>
       <details class="rv"><summary>Can I use my Claude subscription instead of an API key?</summary><p>Yes. Run <code>claude setup-token</code> in Claude Code on your computer and paste the token in Settings → Keys; the agent then works within your Pro or Max plan. Anthropic's terms govern using a subscription in other apps, so an Anthropic API key is the fully supported route.</p></details>
       <details class="rv"><summary>Can I use my Runway, Kling or other video subscription?</summary><p>Not directly. Monthly plans for video tools such as Runway, Kling or Google AI Pro work only on their own websites; using a model from another app needs a separate API key that's billed on its own. Make the clip on their site, then upload it to a project or paste a Google Drive link, and the agent edits it like any other footage. For clips generated inside 37Studio, add a Gemini key. More video models are on our list.</p></details>
@@ -471,7 +497,7 @@
       <details class="rv"><summary>Does it only make videos?</summary><p>No. It also makes thumbnails, square and portrait posts, announcements and covers in each brand's look, and can generate images with Gemini. Videos post straight to every platform you connect; images download as PNG for now.</p></details>
       <details class="rv"><summary>Which platforms can it post to?</summary><p>Facebook Pages, Instagram business accounts, YouTube, TikTok, LinkedIn, X, Pinterest boards, Bluesky and Mastodon, many accounts per brand. Bluesky and Mastodon connect with an app password or token. The others need a free developer app of your own, set up once by following the <a href="/setup#social">setup guide</a>, including a Meta app for Facebook and Instagram. Until each platform reviews your app, YouTube keeps uploads private and TikTok allows only private posts or drafts. Threads only accepts videos from a public web address, which an app on your computer doesn't have; Meta removed posting to Groups and personal profiles; and Reddit and Snapchat have no usable API for posting videos.</p></details>
       <details class="rv"><summary>Does WhatsApp work?</summary><p>Yes, in beta, for a number on the WhatsApp Business API. Meta delivers WhatsApp messages only to a public web address, so you give 37Studio one with a free Cloudflare Tunnel that opens only the webhook path; the <a href="/connect#whatsapp-steps">connect guide</a> walks through it. Keeping the same number on the WhatsApp Business phone app at the same time needs Meta to approve your app as a Tech Provider, so use a number dedicated to the API.</p></details>
-      <details class="rv"><summary>Why is the first download so big?</summary><p>About 3 GB, once. 37Studio bundles every tool its AI agent works with, so you install nothing else: Claude Code and OpenCode, the HyperFrames video engine with its own Chrome for rendering, ffmpeg for cutting and encoding, Node.js, Python, and fonts for Bangla, English and emoji. Updates after that only download what changed.</p></details>
+      <details class="rv"><summary>Why is the first download so big?</summary><p>The Docker version is about 3 GB, once. It bundles every tool its AI agent works with, so you install nothing else: Claude Code and OpenCode, the HyperFrames video engine with its own Chrome for rendering, ffmpeg for cutting and encoding, Node.js, Python, and fonts for Bangla, English and emoji. Updates after that only download what changed. The <a href="/desktop">desktop app</a> is a much smaller download, because it uses the tools you install on your computer instead.</p></details>
       <details class="rv"><summary>Which languages does it work in?</summary><p>Any language Claude writes, from English and Spanish to Hindi and Bangla. Videos, voiceovers, captions and replies follow the language you choose, and replies follow the customer's language and script. Long recordings, like a 2-hour class, are transcribed on your own computer with an open Whisper model that knows about 100 languages: no per-minute fees, and the audio never leaves your PC.</p></details>
       <details class="rv"><summary>Where is my data? Do you collect anything?</summary><p>Everything lives in a <code>data</code> folder next to the app on your computer (or your server): brands, footage, finished videos, messages and settings, with your keys encrypted. We don't collect it, and the app sends nothing to us. The <a href="/privacy">privacy page</a> lists everything it sends anywhere, such as the update check to GitHub.</p></details>
     </div>
