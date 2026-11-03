@@ -176,6 +176,11 @@ sudo npm install -g @anthropic-ai/claude-code</pre>
     <p>Git for Windows is missing. Install it with <code>winget install Git.Git</code>, then close 37Studio and open it again.</p>
     <h3>Something is missing</h3>
     <p>Overview → <b>Finish setup</b> lists each missing tool with the command to install it. After installing, press <b>Check again</b>. On Windows, open 37Studio again so it sees the new PATH.</p>
+    <h3>Ubuntu: the window doesn't open from the app menu</h3>
+    <p>Ubuntu only lets programs with an AppArmor profile use the sandbox the window is drawn in. The .deb from 0.9.1 on adds the profile itself. With 0.9.0 or the .tar.gz, add it once in a terminal (change the path if you unpacked the .tar.gz somewhere else):</p>
+    <pre class="cmd">app=/usr/lib/37studio/37studio
+printf 'abi &lt;abi/4.0&gt;,\ninclude &lt;tunables/global&gt;\nprofile 37studio %s flags=(unconfined) {\n  userns,\n}\n' "$(realpath "$app")" | sudo tee /etc/apparmor.d/37studio
+sudo apparmor_parser -r /etc/apparmor.d/37studio</pre>
     <h3>The program doesn't open on Linux</h3>
     <p>Run <code>./37studio</code> from a terminal to see why. Usually GTK 4 or WebKitGTK 6.0 is missing: install <code>gtk4</code> and <code>webkitgtk6.0</code> (Fedora) or <code>libgtk-4-1</code> and <code>libwebkitgtk-6.0-4</code> (Ubuntu, Debian).</p>
 

@@ -4,6 +4,9 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 
 ## [Unreleased]
 
+### Fixed
+- **Desktop app on Ubuntu**: the window now opens from the app menu. The .deb adds the AppArmor profile Ubuntu 23.10 and newer require before WebKit can draw the window; without it 37Studio closed straight away unless started from a terminal.
+
 ## [0.9.0] - 2026-11-04
 
 ### Added
