@@ -13,14 +13,15 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/Shaitrish/37studio/internal/config"
 	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/httpapi"
+	"github.com/Shaitrish/37studio/internal/proc"
 	"github.com/Shaitrish/37studio/internal/store"
 )
 
@@ -113,8 +114,8 @@ func CLI(args []string) int {
 		}
 		cmd := exec.Command(py, append([]string{script}, args...)...)
 		cmd.Stdout, cmd.Stderr = logf, logf
-		cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true} // outlives this command, the agent's turn and its Stop button
-		if err := cmd.Start(); err != nil {
+		// Detached: it outlives this command, the agent's turn and its Stop button, and is reached by pid after.
+		if err := proc.StartDetached(cmd); err != nil {
 			fmt.Fprintln(os.Stderr, "transcribe:", err)
 			return 1
 		}
@@ -144,11 +145,11 @@ func CLI(args []string) int {
 
 // transcribing reports whether pid is a live run of the script (not a zombie, not a reused pid).
 func transcribing(pid int) bool {
-	if pid <= 0 || syscall.Kill(pid, 0) != nil {
+	if !proc.Alive(pid) {
 		return false
 	}
 	cmdline, err := os.ReadFile(fmt.Sprintf("/proc/%d/cmdline", pid))
-	return err != nil || bytes.Contains(cmdline, []byte("37studio-transcribe")) // no /proc outside Linux: trust kill
+	return err != nil || bytes.Contains(cmdline, []byte("37studio-transcribe")) // no /proc outside Linux: trust the pid
 }
 
 func lastLines(s string, n int) string {
@@ -166,19 +167,47 @@ func Python() (string, error) {
 		return "", err
 	}
 	venv := filepath.Join(cache, "37studio", "asr")
-	py := filepath.Join(venv, "bin", "python")
-	if exec.Command(py, "-c", "import faster_whisper, yt_dlp").Run() == nil {
+	py := venvProgram(venv, "python")
+	if proc.Command(py, "-c", "import faster_whisper, yt_dlp").Run() == nil {
 		return py, nil
 	}
+	sys, err := SystemPython()
+	if err != nil {
+		return "", err
+	}
 	fmt.Fprintln(os.Stderr, "Setting up local transcription and downloads, once (about 200 MB)…")
-	for _, c := range [][]string{{"python3", "-m", "venv", venv}, {filepath.Join(venv, "bin", "pip"), "install", "--quiet", fasterWhisper, "yt-dlp[default,curl-cffi]"}} {
-		cmd := exec.Command(c[0], c[1:]...)
+	for _, c := range [][]string{{sys, "-m", "venv", venv}, {venvProgram(venv, "pip"), "install", "--quiet", fasterWhisper, "yt-dlp[default,curl-cffi]"}} {
+		cmd := proc.Command(c[0], c[1:]...)
 		cmd.Stdout, cmd.Stderr = os.Stderr, os.Stderr
 		if err := cmd.Run(); err != nil {
-			return "", fmt.Errorf("%v failed: %w (needs python3 with venv)", c, err)
+			return "", fmt.Errorf("%v failed: %w (needs Python 3 with venv)", c, err)
 		}
 	}
 	return py, nil
+}
+
+// SystemPython is the Python 3 on this computer that the transcription venv is built from. Windows comes last on
+// the name python3: every Windows installer makes python.exe, and the python3.exe on PATH there is usually the
+// Microsoft Store stub, which opens the Store instead of running anything.
+func SystemPython() (string, error) {
+	names := []string{"python3", "python"}
+	if runtime.GOOS == "windows" {
+		names = []string{"python", "python3"}
+	}
+	for _, n := range names {
+		if p, err := exec.LookPath(n); err == nil {
+			return p, nil
+		}
+	}
+	return "", fmt.Errorf("Python 3 isn't installed, or isn't on PATH")
+}
+
+// venvProgram is where a virtualenv keeps one of its programs: bin/<name> on Unix, Scripts\<name>.exe on Windows.
+func venvProgram(venv, name string) string {
+	if runtime.GOOS == "windows" {
+		return filepath.Join(venv, "Scripts", name+".exe")
+	}
+	return filepath.Join(venv, "bin", name)
 }
 
 // subtitlesFor picks the subtitles next to media: same name first (the video's language if there are several),
@@ -346,7 +375,7 @@ func Action(r *http.Request) (any, error) {
 			return nil, err
 		}
 		if pid, _ := strconv.Atoi(strings.TrimSpace(files.ReadFile(filepath.Join(dir, "run.pid")))); transcribing(pid) {
-			syscall.Kill(-pid, syscall.SIGTERM) // the script leads its own session (Setsid), so this stops all of it
+			proc.TerminatePID(pid) // the script leads its own session or group, so this stops all of it
 		}
 	case "resume":
 		os.Remove(filepath.Join(dir, "skip"))

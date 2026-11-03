@@ -11,6 +11,7 @@ import (
 
 	"github.com/Shaitrish/37studio/internal/config"
 	"github.com/Shaitrish/37studio/internal/httpapi"
+	"github.com/Shaitrish/37studio/internal/proc"
 	"github.com/Shaitrish/37studio/internal/textutil"
 )
 
@@ -53,7 +54,7 @@ func EnsureTool(name string) error {
 		return fmt.Errorf("can't install %s: npm isn't available. From source, run npm i -g %s@%s", name, t.pkg, t.version)
 	}
 	os.MkdirAll(toolsDir(), 0o755)
-	cmd := exec.Command("npm", "install", "--prefix", toolsDir(), "--no-audit", "--no-fund", "--loglevel=error", t.pkg+"@"+t.version)
+	cmd := proc.Command("npm", "install", "--prefix", toolsDir(), "--no-audit", "--no-fund", "--loglevel=error", t.pkg+"@"+t.version)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("installing %s failed: %s", name, textutil.Tail(strings.TrimSpace(string(out)), 600))
 	}

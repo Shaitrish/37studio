@@ -16,6 +16,7 @@ import (
 func TestBackup(t *testing.T) {
 	config.DataDir = t.TempDir()
 	Open()
+	t.Cleanup(Close)
 	DB.Exec("insert into settings(key,value) values('currency','BDT')")
 	for _, f := range []string{"secret.key", "tenants/1/knowledge.md", "projects/1/comp/index.html", "projects/1/out/final.mp4", "projects/1/input/class.mp4", "codex/auth.json"} {
 		os.MkdirAll(filepath.Dir(filepath.Join(config.DataDir, f)), 0o755)

@@ -17,6 +17,7 @@ import (
 func TestDeleteProjectFile(t *testing.T) {
 	config.DataDir = t.TempDir()
 	store.Open()
+	t.Cleanup(store.Close)
 	out := filepath.Join(files.ProjectDir(1), "out")
 	os.MkdirAll(out, 0o755)
 	os.WriteFile(filepath.Join(out, "a.mp4"), []byte("v"), 0o644)
@@ -47,6 +48,7 @@ func TestDeleteProjectFile(t *testing.T) {
 func TestStorageAndCleanup(t *testing.T) {
 	config.DataDir = t.TempDir()
 	store.Open()
+	t.Cleanup(store.Close)
 	store.DB.Exec("insert into tenants(id,name) values(1,'Shop')")
 	store.DB.Exec("insert into projects(id,tenant_id,title,kind,aspect,seconds,quality) values(1,1,'A','reel','9:16',30,'standard'),(2,1,'B','reel','9:16',30,'standard')")
 	d := filepath.Join(files.ProjectDir(1), "out", "drafts")

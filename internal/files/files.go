@@ -9,7 +9,6 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -21,6 +20,7 @@ import (
 
 	"github.com/Shaitrish/37studio/internal/config"
 	"github.com/Shaitrish/37studio/internal/httpapi"
+	"github.com/Shaitrish/37studio/internal/proc"
 )
 
 func Copy(from, to string) error {
@@ -141,7 +141,7 @@ func MediaSeconds(p string) float64 {
 	if v, ok := durCache.Load(key); ok {
 		return v.(float64)
 	}
-	out, _ := exec.Command("ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", p).Output()
+	out, _ := proc.Command("ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", p).Output()
 	d, _ := strconv.ParseFloat(strings.TrimSpace(string(out)), 64)
 	durCache.Store(key, d)
 	return d
@@ -196,8 +196,17 @@ func SafeName(s string) string {
 	if s == "" {
 		return "file"
 	}
+	// Windows resolves these names to a device whatever the extension, so opening clip.mp4 named con.mp4 would
+	// write to the console rather than the project. Harmless elsewhere: it only renames an unlikely upload.
+	if stem, _, _ := strings.Cut(strings.ToUpper(s), "."); winDevices[stem] {
+		return "_" + s
+	}
 	return s
 }
+
+var winDevices = map[string]bool{"CON": true, "PRN": true, "AUX": true, "NUL": true,
+	"COM1": true, "COM2": true, "COM3": true, "COM4": true, "COM5": true, "COM6": true, "COM7": true, "COM8": true, "COM9": true,
+	"LPT1": true, "LPT2": true, "LPT3": true, "LPT4": true, "LPT5": true, "LPT6": true, "LPT7": true, "LPT8": true, "LPT9": true}
 
 // Within joins rel onto root without letting it escape root.
 func Within(root, rel string) string {
@@ -239,7 +248,7 @@ func Handler() http.Handler {
 }
 
 func VideoSize(p string) (w, h int) {
-	out, _ := exec.Command("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=p=0", p).Output()
+	out, _ := proc.Command("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=p=0", p).Output()
 	fmt.Sscanf(strings.TrimSpace(string(out)), "%d,%d", &w, &h)
 	return
 }

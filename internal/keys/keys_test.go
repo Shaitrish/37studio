@@ -11,7 +11,9 @@ import (
 
 // Without any Claude sign-in the app says where to add a key, instead of Claude Code's "Please run /login".
 func TestClaudeReadyAndHints(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home) // the one os.UserHomeDir reads on Windows
 	t.Setenv("ANTHROPIC_API_KEY", "")
 	t.Setenv("CLAUDE_CODE_OAUTH_TOKEN", "")
 	if err := ClaudeReady(); err == nil || !strings.Contains(err.Error(), "Settings → Keys") {

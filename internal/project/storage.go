@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/Shaitrish/37studio/internal/config"
@@ -37,8 +36,7 @@ func Storage(r *http.Request) (any, error) {
 			if err != nil {
 				return nil
 			}
-			if st, ok := info.Sys().(*syscall.Stat_t); ok && st.Nlink > 1 {
-				k := [2]uint64{uint64(st.Dev), st.Ino}
+			if k, shared := files.LinkKey(p, info); shared {
 				if seen[k] {
 					return nil
 				}
@@ -79,11 +77,7 @@ func Storage(r *http.Request) (any, error) {
 		t["total"] = size(files.TenantRoot(t["id"].(int64)), func(string) string { return "" })[""]
 		total += t["total"].(int64)
 	}
-	var free uint64
-	var fsst syscall.Statfs_t
-	if syscall.Statfs(config.DataDir, &fsst) == nil {
-		free = fsst.Bavail * uint64(fsst.Bsize)
-	}
+	free := files.FreeSpace(config.DataDir)
 	return map[string]any{"total": total, "free": free, "projects": ps, "brands": ts}, err
 }
 
