@@ -45,6 +45,7 @@ func TestBskyFacets(t *testing.T) {
 func TestMastodonAndBluesky(t *testing.T) {
 	config.DataDir = t.TempDir()
 	store.Open()
+	t.Cleanup(store.Close)
 	store.DB.Exec("insert into tenants(id,name) values(1,'Shop')")
 	video := filepath.Join(t.TempDir(), "reel.mp4")
 	os.WriteFile(video, []byte("not really a video"), 0o644)

@@ -9,10 +9,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/Shaitrish/37studio/internal/agent"
@@ -20,6 +18,7 @@ import (
 	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/httpapi"
 	"github.com/Shaitrish/37studio/internal/keys"
+	"github.com/Shaitrish/37studio/internal/proc"
 	"github.com/Shaitrish/37studio/internal/remote"
 	"github.com/Shaitrish/37studio/internal/source"
 	"github.com/Shaitrish/37studio/internal/store"
@@ -187,9 +186,9 @@ func startScan(id int64, site, notes string) error {
 	if os.Getenv("GEMINI_API_KEY") == "" {
 		args = append(args, "--skip-vision") // with a key, capture writes Gemini Vision descriptions of every asset
 	}
-	capture := exec.CommandContext(ctx, "npx", args...)
+	capture := proc.CommandContext(ctx, "npx", args...)
 	capture.Dir = dir
-	capture.Cancel = func() error { return syscall.Kill(-capture.Process.Pid, syscall.SIGKILL) }
+	capture.Cancel = func() error { return proc.Kill(capture) } // the timeout ends npx, Node and Chrome under it
 	var out bytes.Buffer
 	capture.Stdout, capture.Stderr = &out, &out
 

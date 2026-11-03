@@ -19,6 +19,7 @@ import (
 func TestWhatsAppSync(t *testing.T) {
 	config.DataDir = t.TempDir()
 	store.Open()
+	t.Cleanup(store.Close)
 	var gotAfter []string
 	relay := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotAfter = append(gotAfter, r.URL.Query().Get("after"))
@@ -70,6 +71,7 @@ func TestInboxAnswerable(t *testing.T) {
 func TestWhatsAppWebhook(t *testing.T) {
 	config.DataDir = t.TempDir()
 	store.Open()
+	t.Cleanup(store.Close)
 	t.Setenv("META_APP_SECRET", "s3cret")
 	t.Setenv("META_VERIFY_TOKEN", "verify-me")
 	store.DB.Exec("insert into tenants(id,name) values(1,'Shop')")

@@ -14,12 +14,12 @@ import (
 	"regexp"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/Shaitrish/37studio/internal/config"
 	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/httpapi"
+	"github.com/Shaitrish/37studio/internal/proc"
 	"github.com/Shaitrish/37studio/internal/store"
 	"github.com/Shaitrish/37studio/internal/textutil"
 )
@@ -48,7 +48,7 @@ func CodexReady() bool {
 }
 
 func codexCmd(args ...string) *exec.Cmd {
-	cmd := exec.Command("codex", args...)
+	cmd := proc.Command("codex", args...)
 	cmd.Env = Env("CODEX_HOME=" + codexHome())
 	return cmd
 }
@@ -224,10 +224,10 @@ func CodexLogin(r *http.Request) (any, error) {
 		return loginInfo, nil
 	}
 	cmd := codexCmd("login", "--device-auth")
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true} // `codex` is a Node wrapper around the real binary: stop both
 	out, _ := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
-	if err := cmd.Start(); err != nil {
+	// `codex` is a Node wrapper around the real binary: proc.Start groups both, so a sign-out stops them together.
+	if err := proc.Start(cmd); err != nil {
 		return nil, err
 	}
 	loginCmd, loginInfo, loginErr = cmd, nil, ""
@@ -245,6 +245,7 @@ func CodexLogin(r *http.Request) (any, error) {
 			}
 		}
 		err := cmd.Wait()
+		proc.Done(cmd)
 		loginMu.Lock()
 		if loginCmd == cmd { // not already cancelled by a sign-out
 			if err != nil {
@@ -278,7 +279,7 @@ func CodexStatus(r *http.Request) (any, error) {
 func CodexLogout(r *http.Request) (any, error) {
 	loginMu.Lock()
 	if loginCmd != nil {
-		syscall.Kill(-loginCmd.Process.Pid, syscall.SIGKILL)
+		proc.Kill(loginCmd)
 	}
 	loginCmd, loginInfo, loginErr = nil, nil, ""
 	loginMu.Unlock()

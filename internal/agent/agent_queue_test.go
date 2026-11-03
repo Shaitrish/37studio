@@ -12,6 +12,7 @@ import (
 func TestQueuedMessages(t *testing.T) {
 	config.DataDir = t.TempDir()
 	store.Open()
+	t.Cleanup(store.Close)
 	store.DB.Exec("insert into tenants(id,name) values(1,'Shop')")
 	store.DB.Exec("insert into projects(id,tenant_id,title,kind,aspect,seconds,quality) values(1,1,'A','reel','9:16',30,'standard')")
 	store.DB.Exec("insert into queued_messages(project_id,text,quality) values(1,'first',''),(1,'second','fast')")

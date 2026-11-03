@@ -15,6 +15,7 @@ const packages: Record<string, Record<string, string>> = {
   ffmpeg: { linux: "ffmpeg", darwin: "ffmpeg", windows: "Gyan.FFmpeg" },
   node: { linux: "nodejs npm", darwin: "node", windows: "OpenJS.NodeJS.LTS" },
   python: { linux: "python3 python3-venv", darwin: "python", windows: "Python.Python.3.13" },
+  git: { linux: "git", darwin: "git", windows: "Git.Git" },
 };
 const claudeInstall = (os: string) => `${os === "linux" ? "sudo " : ""}npm install -g @anthropic-ai/claude-code`;
 const installCmd = (tool: string, os: string) =>
@@ -52,6 +53,9 @@ export default function Overview() {
   const checks = meta ? [
     { ok: meta.env.anthropic || meta.env.claude_login, label: "Claude for the editor agent: a key, a plan token, or Claude Code signed in on this computer", fix: "Settings → AI services" },
     tool("claude", meta.env.claude, "Claude Code CLI installed"),
+    // Only Windows: Claude Code runs the agent's commands through Git for Windows' bash, so without it every
+    // step the agent takes fails. Every Unix already has a shell, so the row would be noise there.
+    ...(os === "windows" ? [tool("git", meta.env.shell, "Git for Windows, which runs the commands the agent uses")] : []),
     tool("ffmpeg", meta.env.ffmpeg, "ffmpeg installed, for cutting and encoding video"),
     tool("node", meta.env.node, "Node.js 22 or newer, for rendering and the timeline editor"),
     tool("python", meta.env.python, "Python 3, for transcription and YouTube or Drive imports"),

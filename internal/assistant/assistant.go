@@ -21,6 +21,7 @@ import (
 	"github.com/Shaitrish/37studio/internal/config"
 	"github.com/Shaitrish/37studio/internal/httpapi"
 	"github.com/Shaitrish/37studio/internal/keys"
+	"github.com/Shaitrish/37studio/internal/proc"
 	"github.com/Shaitrish/37studio/internal/store"
 	"github.com/Shaitrish/37studio/internal/textutil"
 )
@@ -106,7 +107,7 @@ func startAssistant(text, quality string) error {
 		"--strict-mcp-config", "--mcp-config", cfg, "--settings", `{"disableAllHooks":true}`,
 		"--max-budget-usd", store.Setting("run_budget_usd"), "--append-system-prompt", assistantPrompt,
 		"--tools", "WebFetch,WebSearch", "--allowedTools", "mcp__37studio,WebFetch,WebSearch"}, session...)
-	cmd := exec.Command(config.ClaudeBin, args...)
+	cmd := proc.Command(config.ClaudeBin, args...)
 	cmd.Dir = dir
 	cmd.Stdin = strings.NewReader(agent.Recap(assistantID, "claude") + text) // turns another model answered meanwhile
 	cmd.Env = agent.Env("STUDIO37_DATA=" + config.DataDir)
@@ -151,7 +152,7 @@ func startOpenCode(dir, text string, q agent.Quality) error {
 	if sid != "" {
 		args = append(args, "--session", sid)
 	}
-	cmd := exec.Command("opencode", append(args, "--", agent.Recap(assistantID, "opencode")+text)...)
+	cmd := proc.Command("opencode", append(args, "--", agent.Recap(assistantID, "opencode")+text)...)
 	cmd.Dir = dir
 	cmd.Env = agent.Env("STUDIO37_DATA="+config.DataDir, "OPENCODE_CONFIG="+cfg)
 	return run(cmd, text, func(r io.Reader) {

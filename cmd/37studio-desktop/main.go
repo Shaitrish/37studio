@@ -36,6 +36,7 @@ var icon []byte
 func main() {
 	// The agent calls `37studio gen|clip|transcribe` while the app runs: answer those first, with no window and no
 	// single-instance lock, or every call would just focus the open window.
+	attachConsole()
 	if code, ok := server.CLI(os.Args[1:]); ok {
 		os.Exit(code)
 	}

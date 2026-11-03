@@ -6,11 +6,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 
 	"github.com/Shaitrish/37studio/internal/config"
 	"github.com/Shaitrish/37studio/internal/httpapi"
+	"github.com/Shaitrish/37studio/internal/proc"
 	"github.com/Shaitrish/37studio/internal/textutil"
 )
 
@@ -53,7 +55,7 @@ func EnsureTool(name string) error {
 		return fmt.Errorf("can't install %s: npm isn't available. From source, run npm i -g %s@%s", name, t.pkg, t.version)
 	}
 	os.MkdirAll(toolsDir(), 0o755)
-	cmd := exec.Command("npm", "install", "--prefix", toolsDir(), "--no-audit", "--no-fund", "--loglevel=error", t.pkg+"@"+t.version)
+	cmd := proc.Command("npm", "install", "--prefix", toolsDir(), "--no-audit", "--no-fund", "--loglevel=error", t.pkg+"@"+t.version)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("installing %s failed: %s", name, textutil.Tail(strings.TrimSpace(string(out)), 600))
 	}
@@ -73,4 +75,25 @@ func InstallTool(r *http.Request) (any, error) {
 		return nil, err
 	}
 	return map[string]bool{"installed": true}, nil
+}
+
+// ShellReady reports whether the agent can run shell commands at all. Claude Code's Bash tool uses Git for
+// Windows' bash there -- the prompts lean on ls, cp, head and jq -- and looks for it where Git installs itself
+// rather than on PATH, so a computer without Git has an editor agent that fails on its first command. The
+// bash.exe in System32 is the WSL launcher, not a shell, so finding that one doesn't count.
+func ShellReady() bool {
+	if runtime.GOOS != "windows" {
+		return true // every Unix has a shell
+	}
+	for _, base := range []string{os.Getenv("ProgramFiles"), os.Getenv("ProgramW6432"), os.Getenv("ProgramFiles(x86)"),
+		filepath.Join(os.Getenv("LOCALAPPDATA"), "Programs")} {
+		if base == "" {
+			continue
+		}
+		if st, err := os.Stat(filepath.Join(base, "Git", "bin", "bash.exe")); err == nil && !st.IsDir() {
+			return true
+		}
+	}
+	p, err := exec.LookPath("bash")
+	return err == nil && !strings.EqualFold(filepath.Dir(p), filepath.Join(os.Getenv("SystemRoot"), "System32"))
 }

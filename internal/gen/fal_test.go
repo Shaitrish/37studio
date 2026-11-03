@@ -25,6 +25,7 @@ func TestMain(m *testing.M) {
 func TestFalVideo(t *testing.T) {
 	config.DataDir = t.TempDir()
 	store.Open()
+	t.Cleanup(store.Close)
 	t.Setenv("FAL_KEY", "k")
 	var srv *httptest.Server
 	var got map[string]any

@@ -16,7 +16,6 @@ import (
 	"slices"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/google/uuid"
@@ -25,6 +24,7 @@ import (
 	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/httpapi"
 	"github.com/Shaitrish/37studio/internal/keys"
+	"github.com/Shaitrish/37studio/internal/proc"
 	"github.com/Shaitrish/37studio/internal/source"
 	"github.com/Shaitrish/37studio/internal/store"
 	"github.com/Shaitrish/37studio/internal/templates"
@@ -287,21 +287,21 @@ func IsRunning(id int64) bool {
 	return procs[id] != nil
 }
 
-// Launch starts cmd in its own process group (so Stop also kills ffmpeg/Chrome children) and
-// calls done with the wait error once it exits. ponytail: unix-only; Windows runs 37Studio via Docker.
+// Launch starts cmd with everything it spawns (so Stop also kills ffmpeg/Chrome children) and
+// calls done with the wait error once it exits.
 func Launch(id int64, cmd *exec.Cmd, done func(error)) error {
 	procMu.Lock()
 	defer procMu.Unlock()
 	if procs[id] != nil {
 		return httpapi.Bad("something is already running on this project")
 	}
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	if err := cmd.Start(); err != nil {
+	if err := proc.Start(cmd); err != nil {
 		return err
 	}
 	procs[id] = cmd
 	go func() {
 		err := cmd.Wait()
+		proc.Done(cmd)
 		procMu.Lock()
 		delete(procs, id)
 		procMu.Unlock()
@@ -341,7 +341,7 @@ func kill(id int64) error {
 	if cmd == nil {
 		return nil
 	}
-	return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+	return proc.Kill(cmd)
 }
 
 func AddEvent(pid int64, kind string, v any) {
@@ -381,7 +381,7 @@ func ClaudeCmd(dir string, q Quality, system, addDir, prompt string, extra ...st
 		args = append(args, "--permission-mode", "acceptEdits", "--allowedTools", strings.Join(safeTools, ","))
 	}
 	exe, _ := os.Executable()
-	cmd := exec.Command(config.ClaudeBin, append(args, extra...)...)
+	cmd := proc.Command(config.ClaudeBin, append(args, extra...)...)
 	cmd.Dir = dir
 	cmd.Stdin = strings.NewReader(prompt)
 	cmd.Env = Env("STUDIO37_DATA="+config.DataDir, "PATH="+filepath.Dir(exe)+string(os.PathListSeparator)+os.Getenv("PATH"))
@@ -665,7 +665,7 @@ func StartRender(id int64, name, quality string) error {
 	if quality == "draft" {
 		out = "out/drafts/" + strings.TrimSuffix(name, ".mp4") + "-draft.mp4"
 	}
-	cmd := exec.Command("npx", append([]string{"-y", "hyperframes@" + config.HFVersion, "render", "comp", "--output", out, "--quality", quality}, renderFlags(quality)...)...)
+	cmd := proc.Command("npx", append([]string{"-y", "hyperframes@" + config.HFVersion, "render", "comp", "--output", out, "--quality", quality}, renderFlags(quality)...)...)
 	cmd.Dir = files.ProjectDir(id)
 	pr, pw := io.Pipe()
 	cmd.Stdout, cmd.Stderr = pw, pw

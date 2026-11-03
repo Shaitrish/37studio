@@ -10,7 +10,6 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -19,6 +18,7 @@ import (
 	"github.com/Shaitrish/37studio/internal/config"
 	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/httpapi"
+	"github.com/Shaitrish/37studio/internal/proc"
 	"github.com/Shaitrish/37studio/internal/store"
 	"github.com/Shaitrish/37studio/internal/textutil"
 )
@@ -57,7 +57,7 @@ func Open(r *http.Request) (any, error) {
 	// --background returns once Studio is ready and reuses a session that survived a 37Studio restart.
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "npx", "-y", "hyperframes@"+config.HFVersion, "preview", "--background", "--no-open", "--json",
+	cmd := proc.CommandContext(ctx, "npx", "-y", "hyperframes@"+config.HFVersion, "preview", "--background", "--no-open", "--json",
 		"--port", fmt.Sprint(public+1000))
 	cmd.Dir = comp
 	out, err := cmd.Output()
@@ -89,7 +89,7 @@ func Close(r *http.Request) (any, error) {
 	}
 	delete(studioPorts, id)
 	delete(studioSrvs, id)
-	cmd := exec.Command("npx", "-y", "hyperframes@"+config.HFVersion, "preview", "--stop")
+	cmd := proc.Command("npx", "-y", "hyperframes@"+config.HFVersion, "preview", "--stop")
 	cmd.Dir = filepath.Join(files.ProjectDir(id), "comp")
 	return nil, cmd.Run()
 }
