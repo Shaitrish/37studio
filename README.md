@@ -88,7 +88,7 @@ To work on the code with hot reload, see [CONTRIBUTING.md](CONTRIBUTING.md#runni
 
 ### Desktop app, without Docker (preview)
 
-37Studio in its own window, in your app menu, with no Docker. For now it is Linux and Windows; a Mac build comes later. From the release after 0.8.0 on (until then, [build it yourself](docs/desktop.md#build-it-yourself)), download the file for your computer from the [latest release](https://github.com/Shaitrish/37studio/releases/latest).
+37Studio in its own window, in your app menu, with no Docker. For now it is Linux and Windows; a Mac build comes later. From 0.9.0 on, download the file for your computer from [studio.shaitrish.com/desktop](https://studio.shaitrish.com/desktop) or the [latest release](https://github.com/Shaitrish/37studio/releases/latest).
 
 On Ubuntu or Debian, the `.deb`:
 

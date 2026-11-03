@@ -392,3 +392,22 @@ pre.cmd { background: var(--ink); color: #f4f3f6; border-radius: 12px; padding: 
 .lang-switch button { font: inherit; font-size: 14px; font-weight: 500; padding: 7px 16px; border-radius: 99px; border: 1px solid var(--line); background: var(--card); color: var(--muted); cursor: pointer; }
 .lang-switch button[aria-pressed="true"] { background: var(--ink); color: var(--card); border-color: var(--ink); }
 .intro-video video { display: block; width: 100%; height: auto; background: #111; }
+
+/* desktop app downloads */
+.dl-ver { margin-top: 14px; font-size: 14px; }
+.dl-ver a { color: var(--ember-ink); text-underline-offset: 3px; }
+.dl-cards { display: grid; gap: 12px; margin: 14px 0; }
+@media (min-width: 760px) { .dl-cards { grid-template-columns: repeat(3, 1fr); } }
+.dl-card { display: flex; flex-direction: column; gap: 6px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); font-size: 14px; color: var(--muted); }
+.dl-card.mine { border-color: var(--ember); box-shadow: 0 0 0 3px var(--ember-soft), var(--shadow); order: -1; }
+.dl-card .ic { width: 30px; height: 30px; color: var(--ember-ink); margin-bottom: 4px; }
+.dl-card b { color: var(--ink); font-size: 16px; }
+.dl-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 10px; }
+.prose .dl-btns a { color: inherit; text-decoration: none; }
+.prose .dl-btns a.ink { color: #fff; }
+.dl-note { font-size: 14px; }
+.note.mine { border-left-color: var(--violet); }
+.hero-alt { margin-top: 14px; font-size: 14.5px; color: var(--fg2); }
+.hero-alt b { color: var(--ember-ink); font-weight: 600; }
+.hero-alt a { color: var(--ink); text-underline-offset: 3px; }
+.prose ol > li, .prose ul > li { min-width: 0; }

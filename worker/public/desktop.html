@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>37Studio desktop app for Windows and Linux</title>
+<meta name="description" content="Download the 37Studio desktop app (preview): the same AI video studio and social media desk in its own window on Windows 10, 11 and Linux, without Docker. Free and open source.">
+<meta property="og:title" content="37Studio desktop app">
+<meta property="og:description" content="37Studio in its own window on Windows and Linux, without Docker. Free and open source.">
+<meta property="og:image" content="https://studio.shaitrish.com/og.png">
+<meta property="og:url" content="https://studio.shaitrish.com/desktop">
+<meta name="theme-color" content="#fbfaf8">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></symbol>
+    <symbol id="i-pc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8.5 20h7M12 16.5V20"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3.5 8 4.5v8l-8 4.5-8-4.5V8z"/><path d="m4 8 8 4.5L20 8M12 12.5v8"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="m7 10 3 2.5L7 15M12.5 15h4.5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav scrolled" id="top">
+  <div class="wrap">
+    <a class="brand" href="/"><img src="/favicon.svg" alt="">37Studio <small>by Shaitrish</small></a>
+    <nav aria-label="Pages">
+      <a href="/#how">How it works</a>
+      <a href="/desktop" aria-current="page" style="background:var(--soft)">Desktop app</a>
+      <a href="/setup">Setup guide</a>
+      <a href="https://github.com/Shaitrish/37studio">GitHub</a>
+      <a href="/donate">Donate</a>
+    </nav>
+    <div class="right"><a class="btn sm ink" href="#download"><svg><use href="#i-down"/></svg>Download</a></div>
+  </div>
+</header>
+
+<main>
+<section class="doc-hero">
+  <div class="dots" aria-hidden="true" style="position:absolute;inset:0;-webkit-mask-image:radial-gradient(ellipse at 85% 0%,#000,transparent 60%);mask-image:radial-gradient(ellipse at 85% 0%,#000,transparent 60%)"></div>
+  <div class="wrap">
+    <span class="eyebrow">Desktop app · preview</span>
+    <h1 style="margin-top:14px">37Studio in its own window</h1>
+    <p class="lead">The same studio as the Docker version, as a normal app on Windows and Linux: the same brands, projects, agent and publishing, with no Docker to install. It's a preview, so tell us on <a href="https://github.com/Shaitrish/37studio/issues">GitHub</a> what breaks.</p>
+    <p class="dl-ver muted" id="ver">Files from the <a href="https://github.com/Shaitrish/37studio/releases/latest">latest release</a> on GitHub.</p>
+  </div>
+</section>
+
+<div class="wrap doc">
+  <nav class="toc" aria-label="On this page">
+    <a href="#download">Download</a>
+    <a href="#install">Install</a>
+    <a href="#tools">Tools the agent uses</a>
+    <a href="#which">Desktop or Docker?</a>
+    <a href="#update">Updates and removing</a>
+    <a href="#trouble">Troubleshooting</a>
+  </nav>
+
+  <article class="prose">
+    <h2 id="download">Download</h2>
+    <div class="dl-cards">
+      <div class="dl-card" data-for="win">
+        <svg class="ic"><use href="#i-pc"/></svg>
+        <b>Windows</b>
+        <span>Windows 10 and 11, Intel or AMD. A .zip with the app and a Start-menu installer.</span>
+        <div class="dl-btns">
+          <a class="btn sm ink" data-asset="windows-amd64\.zip$" href="https://github.com/Shaitrish/37studio/releases/latest"><svg><use href="#i-down"/></svg>Windows (.zip)</a>
+        </div>
+      </div>
+      <div class="dl-card" data-for="linux">
+        <svg class="ic"><use href="#i-box"/></svg>
+        <b>Ubuntu and Debian</b>
+        <span>Ubuntu 24.04 or newer, Debian 13 or newer. Installs ffmpeg and Python with it.</span>
+        <div class="dl-btns">
+          <a class="btn sm ink" data-asset="_amd64\.deb$" href="https://github.com/Shaitrish/37studio/releases/latest"><svg><use href="#i-down"/></svg>.deb, Intel/AMD</a>
+          <a class="btn sm" data-asset="_arm64\.deb$" href="https://github.com/Shaitrish/37studio/releases/latest"><svg><use href="#i-down"/></svg>.deb, ARM</a>
+        </div>
+      </div>
+      <div class="dl-card" data-for="linux">
+        <svg class="ic"><use href="#i-terminal"/></svg>
+        <b>Other Linux</b>
+        <span>Fedora, Arch and the rest: the bare program. Needs GTK 4 and WebKitGTK 6.0.</span>
+        <div class="dl-btns">
+          <a class="btn sm" data-asset="linux-amd64\.tar\.gz$" href="https://github.com/Shaitrish/37studio/releases/latest"><svg><use href="#i-down"/></svg>.tar.gz, Intel/AMD</a>
+          <a class="btn sm" data-asset="linux-arm64\.tar\.gz$" href="https://github.com/Shaitrish/37studio/releases/latest"><svg><use href="#i-down"/></svg>.tar.gz, ARM</a>
+        </div>
+      </div>
+    </div>
+    <p class="dl-note muted">Not sure which Linux file? <code>dpkg --print-architecture</code> or <code>uname -m</code> says <code>amd64</code>/<code>x86_64</code> (Intel/AMD) or <code>arm64</code>/<code>aarch64</code> (ARM). Each release also has <code>.sha256</code> files to check the downloads against.</p>
+    <div class="note" id="mac-note"><b>On a Mac?</b> The desktop app doesn't run on macOS yet. Use the <a href="/#download">ready-made Docker app</a>, which works on Apple Silicon and Intel Macs today.</div>
+
+    <h2 id="install">Install</h2>
+    <div class="os-tabs" role="tablist" aria-label="Your computer">
+      <button role="tab" data-os="win" aria-selected="true">Windows</button>
+      <button role="tab" data-os="deb" aria-selected="false">Ubuntu and Debian</button>
+      <button role="tab" data-os="linux" aria-selected="false">Other Linux</button>
+    </div>
+    <div data-os-panel="win">
+      <ol>
+        <li>Download the Windows .zip above.</li>
+        <li>Right-click it → <b>Properties</b> → tick <b>Unblock</b> → <b>OK</b>, then unpack it. Windows marks downloaded files and refuses to run what it marked.</li>
+        <li>In the unpacked folder, right-click <code>install-windows.ps1</code> → <b>Run with PowerShell</b>. It copies 37Studio to <code>%LOCALAPPDATA%\Programs\37Studio</code> and adds it to the Start menu. No admin rights needed.</li>
+        <li>Install <a href="#tools">the tools the agent uses</a>.</li>
+        <li>Press the Windows key, type <b>37Studio</b> and open it. Overview → <b>Finish setup</b> lists anything still missing.</li>
+      </ol>
+      <div class="note"><b>"Windows protected your PC"?</b> The app isn't signed yet, so the first start may show this. Click <b>More info</b> → <b>Run anyway</b>. Signing comes with the first release out of preview.</div>
+      <p>From a terminal instead of right-clicking: <code>powershell -ExecutionPolicy Bypass -File .\install-windows.ps1</code>. You can also run <code>37studio.exe</code> straight from the unpacked folder; keep its name, because the agent runs <code>37studio</code> commands from that folder.</p>
+    </div>
+    <div data-os-panel="deb" hidden>
+      <ol>
+        <li>Download the .deb for your computer above.</li>
+        <li>Install it. This also installs ffmpeg and Python if they're missing:
+          <pre class="cmd">sudo apt install ./37studio_*_amd64.deb</pre>
+          (on an ARM computer, the file ends in <code>_arm64.deb</code>).</li>
+        <li>Install <a href="#tools">Claude Code and Node.js 22 or newer</a>.</li>
+        <li>Open <b>37Studio</b> from your app menu. Overview → <b>Finish setup</b> lists anything still missing.</li>
+      </ol>
+    </div>
+    <div data-os-panel="linux" hidden>
+      <ol>
+        <li>Install GTK 4 and WebKitGTK 6.0. On Fedora: <pre class="cmd">sudo dnf install gtk4 webkitgtk6.0</pre></li>
+        <li>Download the .tar.gz for your computer above, unpack it and run the program:
+          <pre class="cmd">tar -xzf 37studio-*-linux-amd64.tar.gz
+./37studio</pre></li>
+        <li>Install <a href="#tools">the tools the agent uses</a>. Keep the program's name <code>37studio</code>: the agent runs it by that name.</li>
+      </ol>
+    </div>
+    <p>Your work is kept in <code>%AppData%\37Studio</code> on Windows and <code>~/.local/share/37studio</code> on Linux. Links, the timeline editor and social sign-ins open in your browser, and downloads and backups ask where to save.</p>
+
+    <h2 id="tools">Tools the agent uses</h2>
+    <p>The Docker version ships these inside its image. The desktop app uses the ones on your computer, so install them once:</p>
+    <table>
+      <thead><tr><th>Tool</th><th>What for</th></tr></thead>
+      <tbody>
+        <tr><td>Claude Code</td><td>the editor agent, the Assistant, captions and replies</td></tr>
+        <tr><td>ffmpeg</td><td>cutting, checking and encoding video</td></tr>
+        <tr><td>Node.js 22 or newer</td><td>rendering, previews and the timeline editor</td></tr>
+        <tr><td>Python 3 with venv</td><td>transcription and YouTube or Drive imports (about 200 MB more installs itself the first time)</td></tr>
+        <tr><td>Noto fonts (Linux)</td><td>Bangla, other scripts and emoji in rendered videos</td></tr>
+        <tr><td>Git for Windows (Windows)</td><td>the shell the agent runs its commands through on Windows</td></tr>
+      </tbody>
+    </table>
+    <h3>Windows</h3>
+    <pre class="cmd">winget install Git.Git Gyan.FFmpeg OpenJS.NodeJS.LTS Python.Python.3.13
+npm install -g @anthropic-ai/claude-code</pre>
+    <p>Open a new terminal before the second line, so it finds <code>npm</code>.</p>
+    <h3>Ubuntu and Debian</h3>
+    <pre class="cmd">sudo apt install ffmpeg nodejs npm python3 python3-venv fonts-noto-core fonts-noto-color-emoji
+sudo npm install -g @anthropic-ai/claude-code</pre>
+    <p>Ubuntu before 26.04 and Debian before 13 come with an older Node.js: install version 22 or newer from <a href="https://nodejs.org" target="_blank" rel="noopener">nodejs.org</a> and leave <code>nodejs npm</code> out of the first line.</p>
+    <p>Then add your Claude key in <b>Settings → Keys</b>, as in step 4 of the <a href="/setup#keys">setup guide</a>. Everything after that is the same as the Docker version.</p>
+
+    <h2 id="which">Desktop or Docker?</h2>
+    <div class="req">
+      <div><b>Pick the desktop app if</b>you're on Windows or Linux, don't want Docker, and are happy to install a few tools yourself. Nothing runs in the background but the app itself.</div>
+      <div><b>Pick the Docker version if</b>you're on a Mac, run it on a server, or want every tool bundled and set up for you. It's the fully supported way, and it updates itself on each start.</div>
+    </div>
+    <p>Both keep their data in a different folder. To move your Docker brands and videos into the desktop app, see <a href="https://github.com/Shaitrish/37studio/blob/main/docs/desktop.md">docs/desktop.md</a> on GitHub.</p>
+
+    <h2 id="update">Updates and removing</h2>
+    <ul>
+      <li><b>Updates:</b> Settings → About says when a new version is out. Download it from this page and install it the same way. On Windows, close 37Studio first, then run <code>install-windows.ps1</code> again.</li>
+      <li><b>Remove on Windows:</b> <code>.\install-windows.ps1 -Uninstall</code>. Your work in <code>%AppData%\37Studio</code> stays.</li>
+      <li><b>Remove on Ubuntu or Debian:</b> <code>sudo apt remove 37studio</code>. Your work in <code>~/.local/share/37studio</code> stays.</li>
+    </ul>
+
+    <h2 id="trouble">Troubleshooting</h2>
+    <h3>The agent stops on its first step on Windows</h3>
+    <p>Git for Windows is missing. Install it with <code>winget install Git.Git</code>, then close 37Studio and open it again.</p>
+    <h3>Something is missing</h3>
+    <p>Overview → <b>Finish setup</b> lists each missing tool with the command to install it. After installing, press <b>Check again</b>. On Windows, open 37Studio again so it sees the new PATH.</p>
+    <h3>The program doesn't open on Linux</h3>
+    <p>Run <code>./37studio</code> from a terminal to see why. Usually GTK 4 or WebKitGTK 6.0 is missing: install <code>gtk4</code> and <code>webkitgtk6.0</code> (Fedora) or <code>libgtk-4-1</code> and <code>libwebkitgtk-6.0-4</code> (Ubuntu, Debian).</p>
+
+    <div class="note" style="margin-top:40px"><b>Stuck?</b> Open an issue on <a href="https://github.com/Shaitrish/37studio/issues">GitHub</a>, or read the <a href="https://github.com/Shaitrish/37studio/blob/main/docs/desktop.md">full desktop guide</a>, which also covers building the app yourself.</div>
+  </article>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="brand" href="/"><img src="/favicon.svg" alt="">37Studio <small>by Shaitrish</small></a>
+      <p style="margin-top:12px">Made in Dhaka by <a href="https://shaitrish.com" style="text-decoration:underline;text-underline-offset:3px">Shaitrish</a>.<br>Open source under the <a href="https://github.com/Shaitrish/37studio/blob/main/LICENSE" style="text-decoration:underline;text-underline-offset:3px">MIT License</a>.</p>
+    </div>
+    <div class="links">
+      <a href="/">Home</a>
+      <a href="/setup">Setup guide</a>
+      <a href="/privacy">Privacy</a>
+      <a href="mailto:jahangir@shaitrish.com">jahangir@shaitrish.com</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Install steps for one computer; remembers the choice and guesses it the first time.
+  const tabs = [...document.querySelectorAll(".os-tabs button")];
+  function pick(os) {
+    tabs.forEach((t) => t.setAttribute("aria-selected", t.dataset.os === os));
+    document.querySelectorAll("[data-os-panel]").forEach((p) => (p.hidden = p.dataset.osPanel !== os));
+    try { localStorage.setItem("37studio:desktop-os", os); } catch {}
+  }
+  tabs.forEach((t) => t.addEventListener("click", () => pick(t.dataset.os)));
+  const ua = navigator.userAgent;
+  const guess = /Windows/.test(ua) ? "win" : /Linux/.test(ua) && !/Android/.test(ua) ? "linux" : /Mac/.test(ua) ? "mac" : "";
+  let saved = null;
+  try { saved = localStorage.getItem("37studio:desktop-os"); } catch {}
+  pick(saved || (guess === "linux" ? "deb" : "win"));
+  // Lift the card for this computer to the top; Mac visitors see the Docker note first.
+  const mine = [...document.querySelectorAll(`.dl-card[data-for="${guess}"]`)];
+  mine.forEach((c) => c.classList.add("mine"));
+  if (guess === "mac") document.getElementById("mac-note").classList.add("mine");
+
+  // Point each button at the file in the latest release. Without this (offline, or GitHub's 60-calls-an-hour limit)
+  // the buttons keep opening the release page, which lists the same files. Right after a release the desktop files
+  // take about 15 minutes to build, so a file that isn't there yet also keeps the release-page link.
+  fetch("https://api.github.com/repos/Shaitrish/37studio/releases/latest").then((r) => r.ok ? r.json() : null).then((rel) => {
+    if (!rel) return;
+    const find = (re) => rel.assets.find((a) => new RegExp(re).test(a.name));
+    document.querySelectorAll("[data-asset]").forEach((a) => {
+      const f = find(a.dataset.asset);
+      if (f) { a.href = f.browser_download_url; a.title = f.name; }
+    });
+    // A release whose desktop files aren't built yet (or one from before 0.9.0) mustn't be named as the download.
+    if (!document.querySelector('[data-asset][href*="/download/"]')) return;
+    const v = rel.tag_name.replace(/^v/, "");
+    document.getElementById("ver").innerHTML = `Version ${v}, from the <a href="${rel.html_url}">release on GitHub</a>.`;
+  }).catch(() => {});
+</script>
+</body>
+</html>
