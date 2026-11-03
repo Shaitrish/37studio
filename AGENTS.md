@@ -9,16 +9,19 @@ Guidance for AI coding agents (Claude Code, Codex, Cursor and others) and for pe
 ## Layout
 
 ```
-cmd/37studio/        main: subcommands (gen, clip, transcribe), background loops, every HTTP route
+cmd/37studio/        main for Docker and servers: starts internal/server, stops it on SIGTERM
+cmd/37studio-desktop/ the native desktop app (Wails 3, its own go.mod): the same server in a window
 internal/            the Go backend, one package per area (map: docs/architecture.md#code-map)
   config store httpapi remote files textutil   low level: these import nothing of ours
   keys agent gen transcribe timeline templates source
   company project social autopilot costs
   mcp assistant update
+  server               on top: startup, background loops, every HTTP route (used by both mains)
 web/                 React + Vite + TypeScript UI (pages/, ui.tsx, api.ts, styles.css)
 worker/              Cloudflare Worker: the static product website (public/)
 relay/               optional WhatsApp webhook relay users deploy themselves (Cloudflare Worker + D1)
 dist/                the launcher bundle people download (docker-compose.yml, start.bat/.command/.sh)
+desktop/             desktop build, local install and Linux packaging scripts (CI: .github/workflows/desktop.yml)
 docs/                platforms.md (per-platform setup), architecture.md
 ```
 
@@ -28,6 +31,9 @@ docs/                platforms.md (per-platform setup), architecture.md
 go build ./... && go vet ./... && go test ./...   # backend: run all three before you finish
 gofmt -l .                                       # must print nothing
 cd web && npm run build                          # UI: type-checks (tsc) and builds
+./desktop/build.sh                               # desktop app into desktop/bin/37studio (Linux: GTK 4 + WebKitGTK 6.0 headers)
+./desktop/install-linux.sh                       # build it and add it to this Linux user's app menu (--uninstall removes it)
+./desktop/package-linux.sh                       # .deb + .tar.gz for this machine's architecture into desktop/dist (CI attaches them to releases)
 ./dev.sh                                         # backend (air, hot rebuild) + UI (Vite) on :5173
 docker compose up --build                        # the whole app on :8080, as users run it
 node --check relay/src.js                        # WhatsApp relay syntax
@@ -36,7 +42,7 @@ node --check relay/src.js                        # WhatsApp relay syntax
 ## How the backend is built
 
 - **Dependencies point down.** Low packages never import higher ones, and nothing imports `cmd`. If a low package needs to call up, add a hook the way `agent.AfterTurn` does: `main` registers `autopilot.Advance` and `project.ClipAdvance`, so the agent never imports them. `go build` rejects import cycles, so you'll know.
-- **Handlers** have the shape `func(r *http.Request) (any, error)` and are wrapped with `httpapi.JSON` in `cmd/37studio/main.go`. Return `httpapi.Bad("plain message")` for user errors. A `sql.ErrNoRows` becomes a 404 by itself.
+- **Handlers** have the shape `func(r *http.Request) (any, error)` and are wrapped with `httpapi.JSON` in `internal/server/server.go`. Return `httpapi.Bad("plain message")` for user errors. A `sql.ErrNoRows` becomes a 404 by itself.
 - **Database:** `store.Row`, `store.Rows`, `store.Save(table, allowedCols, id, body)`, settings through `store.Setting`. The schema lives in `internal/store/store.go` and only ever grows with `create table if not exists` and `alter table … add column`; never break existing data folders.
 - **Files:** use `files.ProjectDir`, `files.TenantDir` and the rest. Join user-supplied paths only with `files.Within`, which can't escape its root.
 - **Outbound calls:** use `remote.Call` / `remote.CallWith`, so the platform's own error message reaches the user. Stream big uploads (`remote.Multipart`, `remote.Uploads`); never read a video into memory.
@@ -63,4 +69,4 @@ node --check relay/src.js                        # WhatsApp relay syntax
 
 ## Releasing (maintainers)
 
-Bump `Version` in `internal/update/update.go` and move `CHANGELOG.md`'s Unreleased entries under a `## [X.Y.Z] - date` heading, then run `./release.sh "What changed"`. It pushes the multi-arch image to ghcr.io, zips `dist/` into the website's download, deploys the website Worker and tags the commit `vX.Y.Z` with a GitHub Release, which every copy's update check reads. Never commit `data/`, `.env` or any backup of them.
+Bump `Version` in `internal/update/update.go` and move `CHANGELOG.md`'s Unreleased entries under a `## [X.Y.Z] - date` heading, then run `./release.sh "What changed"`. It pushes the multi-arch image to ghcr.io, zips `dist/` into the website's download, deploys the website Worker and tags the commit `vX.Y.Z` with a GitHub Release, which every copy's update check reads; publishing it makes CI build the Linux desktop packages and attach them. Never commit `data/`, `.env` or any backup of them.

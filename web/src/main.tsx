@@ -5,7 +5,7 @@ import {
   SquaresFourIcon, SunIcon, TagIcon,
 } from "@phosphor-icons/react";
 import "./styles.css";
-import { api, donateURL, makerURL, repoURL, setDisplay, setNudge, setToast, snoozeNudge, useApi } from "./api";
+import { api, desktop, donateURL, makerURL, type Meta, openExternal, repoURL, saveFile, setDesktop, setDisplay, setNudge, setToast, snoozeNudge, useApi } from "./api";
 import { Mark, Modal } from "./ui";
 // Each page loads when first opened, so the first screen doesn't wait for the project editor and its video player.
 // After an update the old page's files are gone from the server, so a tab left open reloads once to get the new ones.
@@ -168,5 +168,17 @@ function App() {
   );
 }
 
-// Display currency must be known before the first money value renders.
-api<Record<string, string>>("/settings").then(setDisplay, () => {}).finally(() => createRoot(document.getElementById("root")!).render(<App />));
+// In the desktop app, new-tab links and downloads would do nothing in the window: hand them to the app instead.
+// Capture phase, so it runs whatever the link's own handlers do.
+document.addEventListener("click", (e) => {
+  const a = desktop && !e.defaultPrevented ? (e.target as Element).closest?.("a[href]") as HTMLAnchorElement | null : null;
+  if (!a) return;
+  if (a.hasAttribute("download")) { e.preventDefault(); saveFile(a.href, a.download || undefined); }
+  else if (a.target === "_blank") { e.preventDefault(); openExternal(a.href); }
+}, true);
+
+// Display currency must be known before the first money value renders; whether this is the desktop app, before the first click.
+Promise.all([
+  api<Record<string, string>>("/settings").then(setDisplay, () => {}),
+  api<Meta>("/meta").then((m) => setDesktop(!!m.env.desktop), () => {}),
+]).finally(() => createRoot(document.getElementById("root")!).render(<App />));

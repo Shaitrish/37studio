@@ -3,7 +3,7 @@ import {
   ArrowClockwiseIcon, ArrowSquareOutIcon, ButterflyIcon, FacebookLogoIcon, Icon, InstagramLogoIcon, LinkBreakIcon, LinkedinLogoIcon, MastodonLogoIcon,
   PinterestLogoIcon, ShareNetworkIcon, SparkleIcon, TiktokLogoIcon, TrashIcon, WhatsappLogoIcon, XLogoIcon, YoutubeLogoIcon,
 } from "@phosphor-icons/react";
-import { ago, api, Captions, connectGuideURL, date, fail, parseTime, Platform, Post, Project, SocialAccount, toast, useApi } from "../api";
+import { ago, api, Captions, connectGuideURL, date, desktop, fail, openExternal, parseTime, Platform, Post, Project, SocialAccount, toast, useApi } from "../api";
 import { Empty, Field, Modal, Seg, Status } from "../ui";
 
 const platforms: Record<Platform, { label: string; Icon: Icon; limit: number }> = {
@@ -74,8 +74,13 @@ function AccountLabel({ a }: { a: Pick<SocialAccount, "platform" | "name" | "pic
 export function SocialTab({ tenantId }: { tenantId: number }) {
   const { data, reload } = useApi<SocialInfo>(`/tenants/${tenantId}/social`);
   const pendingKey = location.hash.split("/")[4]; // the OAuth callback lands on #/clients/<id>/social/<key>
+  // The desktop app signs in through the system browser (Google refuses embedded ones); the account picker then
+  // opens back here by itself.
   const connect = (prov: string) => {
-    location.href = `/api/oauth/${prov}/start?tenant=${tenantId}&return=${encodeURIComponent(location.origin + location.pathname)}`;
+    const url = `/api/oauth/${prov}/start?tenant=${tenantId}&return=${encodeURIComponent(location.origin + location.pathname)}`;
+    if (!desktop) { location.href = url; return; }
+    openExternal(url + "&handoff=1");
+    toast("Finish signing in in your browser. 37Studio comes back here when you're done.");
   };
   const disconnect = (a: SocialAccount) =>
     confirm(`Disconnect ${a.name} (${platforms[a.platform].label})? Posts already scheduled to it will fail.`) &&

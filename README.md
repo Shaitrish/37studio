@@ -86,6 +86,17 @@ docker compose up --build
 
 To work on the code with hot reload, see [CONTRIBUTING.md](CONTRIBUTING.md#running-it-from-source).
 
+### Desktop app, without Docker (preview)
+
+37Studio in its own window, in your app menu, with no Docker. For now it is Linux only; Windows and Mac come later. From the release after 0.8.0 on (until then, [build it yourself](docs/desktop.md#build-it-yourself)), download the `.deb` for your computer from the [latest release](https://github.com/Shaitrish/37studio/releases/latest) and install it:
+
+```bash
+sudo apt install ./37studio_*_amd64.deb                  # also installs ffmpeg and Python
+sudo npm install -g @anthropic-ai/claude-code            # needs Node.js 22 or newer
+```
+
+Then open **37Studio** from the app menu. [docs/desktop.md](docs/desktop.md) has the full guide: other Linux, building it yourself, using your Docker data, and how it differs from the Docker version.
+
 ### Run it in the cloud
 
 Run it on a server when a team shares it, or when Autopilot and auto-replies should keep going while your laptop sleeps. [`docker-compose.cloud.yml`](docker-compose.cloud.yml) runs the app behind [Caddy](https://caddyserver.com), which gets and renews an HTTPS certificate for your domain by itself.

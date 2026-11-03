@@ -74,7 +74,17 @@ type oauthState struct {
 	tenant             int64
 	provider, ret, pkc string
 	at                 time.Time
+	handoff            bool // started from the desktop app's window: AfterSignIn takes the user back there
 }
+
+// AfterSignIn is set by the desktop app. Its window can't host platform sign-ins (Google refuses embedded browsers),
+// so they run in the system browser; when one started from the window ends, this opens target (the account picker)
+// back in the window, and the browser tab only says to go back.
+var AfterSignIn func(target string)
+
+const signedInPage = `<!doctype html><meta charset="utf-8"><title>Signed in</title>
+<body style="font:16px system-ui,sans-serif;max-width:32rem;margin:15vh auto;padding:0 16px;text-align:center">
+<h1 style="font-size:22px">Signed in</h1><p>Go back to 37Studio to choose which accounts belong to the brand. You can close this tab.</p>`
 
 type socialAccount struct {
 	Platform  string `json:"platform"`
@@ -114,7 +124,8 @@ func OAuthStart(w http.ResponseWriter, r *http.Request) {
 	if u, err := url.Parse(ret); err != nil || (u.Scheme != "http" && u.Scheme != "https") {
 		ret = "/"
 	}
-	key, st := randToken(24), &oauthState{tenant: tenant, provider: prov, ret: strings.Split(ret, "#")[0], pkc: randToken(48), at: time.Now()}
+	key, st := randToken(24), &oauthState{tenant: tenant, provider: prov, ret: strings.Split(ret, "#")[0], pkc: randToken(48), at: time.Now(),
+		handoff: AfterSignIn != nil && r.URL.Query().Get("handoff") == "1"}
 	oauthMu.Lock()
 	states[key] = st
 	oauthMu.Unlock()
@@ -197,7 +208,14 @@ func OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	oauthMu.Lock()
 	pending[key] = pc
 	oauthMu.Unlock()
-	http.Redirect(w, r, fmt.Sprintf("%s#/clients/%d/social/%s", st.ret, st.tenant, key), http.StatusFound)
+	target := fmt.Sprintf("%s#/clients/%d/social/%s", st.ret, st.tenant, key)
+	if st.handoff {
+		AfterSignIn(target)
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprint(w, signedInPage)
+		return
+	}
+	http.Redirect(w, r, target, http.StatusFound)
 }
 
 // metaUserToken trades the login code for a long-lived user token. Page tokens fetched with a long-lived user token

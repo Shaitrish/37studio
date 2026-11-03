@@ -2,7 +2,7 @@ import "@hyperframes/player";
 import { ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpIcon, BookmarkSimpleIcon, CheckCircleIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FileTextIcon, FilmStripIcon, GlobeIcon, ListChecksIcon, PencilLineIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MicrophoneSlashIcon, MusicNotesIcon, SpeakerHighIcon, ImageIcon, PlayIcon, PauseIcon, PaperclipIcon, MagnifyingGlassIcon, SlidersHorizontalIcon, SparkleIcon, SquareIcon, TerminalWindowIcon, TrashIcon, MagicWandIcon, WrenchIcon, XIcon } from "@phosphor-icons/react";
 import { Quality } from "../api";
-import { api, bytes, ChatEvent, clock, fail, FileInfo, go, languageName, Meta, nudge, Project, toast, upload, cash, useApi } from "../api";
+import { api, bytes, ChatEvent, clock, desktop, fail, FileInfo, go, languageName, Meta, nudge, openExternal, Project, toast, upload, cash, useApi } from "../api";
 import { DropZone, Empty, Md, FileTile, KindIcon, ModelOptions, ModelPicker, Progress, Seg, Status, projectStatus } from "../ui";
 import { presetIcon } from "./Projects";
 import { PostsCard, PublishModal } from "./Social";
@@ -83,13 +83,14 @@ export default function ProjectPage({ id }: { id: number }) {
   const act = (path: string, body: object = {}, msg?: string) =>
     api(`/projects/${id}/${path}`, { body }).then(() => { if (msg) toast(msg); reload(); }, fail);
 
-  // Open the window before the await so popup blockers treat it as a direct click.
+  // Open the window before the await so popup blockers treat it as a direct click. The desktop app has no tabs:
+  // the editor opens in the system browser, and the app's own window stays on the project.
   async function openTimeline() {
-    const w = window.open("", "_blank");
+    const w = desktop ? null : window.open("", "_blank");
     try {
       const r = await api<{ port: number; project: string }>(`/projects/${id}/studio`, { body: {} });
       const url = `${location.protocol}//${location.hostname}:${r.port}/#project/${r.project}`;
-      if (w) w.location.href = url; else location.href = url;
+      if (desktop) openExternal(url); else if (w) w.location.href = url; else location.href = url;
       reload();
     } catch (e) { w?.close(); fail(e); }
   }

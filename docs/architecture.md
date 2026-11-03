@@ -123,11 +123,13 @@ data/
 
 ## Code map
 
-The Go code builds one binary, `37studio`, that serves the app and runs the agent's helper commands (`gen`, `clip`, `transcribe`). `cmd/37studio` wires it together; everything else is in `internal/`, one package per area. Dependencies point downward: the low packages (`config`, `store`, `httpapi`, `remote`, `files`, `textutil`) import nothing of ours, and nothing imports `cmd`. The agent tells Autopilot and the clip queue that a turn ended through `agent.AfterTurn`, so it never imports them.
+The Go code builds one binary, `37studio`, that serves the app and runs the agent's helper commands (`gen`, `clip`, `transcribe`). `internal/server` wires it together and `cmd/37studio` runs it (`cmd/37studio-desktop` runs the same server in a native Wails window, with its own `go.mod`); everything else is in `internal/`, one package per area. Dependencies point downward: the low packages (`config`, `store`, `httpapi`, `remote`, `files`, `textutil`) import nothing of ours, and nothing imports `cmd`. The agent tells Autopilot and the clip queue that a turn ended through `agent.AfterTurn`, so it never imports them.
 
 | Package | What |
 | --- | --- |
-| `cmd/37studio` | `main`: subcommands, background loops, every HTTP route |
+| `cmd/37studio` | `main` for Docker and servers: runs `internal/server`, stops it on SIGTERM |
+| `cmd/37studio-desktop` | The desktop app: the same server shown in a Wails window (own `go.mod`, so the image never builds Wails) |
+| `internal/server` | Startup and recovery, background loops, every HTTP route, graceful shutdown |
 | `internal/config` | Settings from the environment and `.env` |
 | `internal/store` | SQLite schema, row helpers, settings and their defaults |
 | `internal/httpapi` | JSON handler adapter, errors, request helpers, basic auth |
@@ -157,7 +159,7 @@ The Go code builds one binary, `37studio`, that serves the app and runs the agen
 
 ## Releasing
 
-Maintainers bump `Version` in `internal/update/update.go`, then run `./release.sh "What changed"`. It builds and pushes `ghcr.io/shaitrish/37studio:<version>` and `:latest` for `linux/amd64` and `linux/arm64` (arm64 under QEMU, through a `studio37` buildx builder it creates; needs about 15 GB of free disk), zips `dist/` into the download, deploys the website Worker, and tags the commit `vX.Y.Z` with a GitHub Release. Set `IMAGE=` for another registry and log in with `docker login ghcr.io` first. Every copy asks GitHub for the latest release (`https://api.github.com/repos/Shaitrish/37studio/releases/latest`, or a fork's through `STUDIO37_UPDATE_URL`) at most every 6 hours and shows "Version X available" in the sidebar; the launcher pulls the new image on its next start. Copies older than 0.6.0 still read `version.json` from the website until they update, so `release.sh` keeps writing it.
+Maintainers bump `Version` in `internal/update/update.go`, then run `./release.sh "What changed"`. It builds and pushes `ghcr.io/shaitrish/37studio:<version>` and `:latest` for `linux/amd64` and `linux/arm64` (arm64 under QEMU, through a `studio37` buildx builder it creates; needs about 15 GB of free disk), zips `dist/` into the download, deploys the website Worker, and tags the commit `vX.Y.Z` with a GitHub Release. Publishing that release starts `.github/workflows/desktop.yml`, which builds the Linux desktop app on Ubuntu 24.04 for amd64 and arm64 (`desktop/package-linux.sh`: a .deb, a .tar.gz and their SHA-256 sums) and attaches the files to the release; it also builds them on every pull request, as artifacts of the run. Set `IMAGE=` for another registry and log in with `docker login ghcr.io` first. Every copy asks GitHub for the latest release (`https://api.github.com/repos/Shaitrish/37studio/releases/latest`, or a fork's through `STUDIO37_UPDATE_URL`) at most every 6 hours and shows "Version X available" in the sidebar; the launcher pulls the new image on its next start. Copies older than 0.6.0 still read `version.json` from the website until they update, so `release.sh` keeps writing it.
 
 Chrome for Testing has no Linux arm64 build, so on arm64 HyperFrames renders with Playwright's pinned arm64 headless shell (`HYPERFRAMES_BROWSER_PATH`), as HyperFrames' own `Dockerfile.render` does.
 

@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"encoding/json"
@@ -15,7 +15,7 @@ import (
 func TestMCP(t *testing.T) {
 	config.DataDir = t.TempDir()
 	store.Open()
-	mux := routes()
+	mux := Routes()
 	rpc := func(method string, params any) map[string]any {
 		t.Helper()
 		raw, _ := json.Marshal(map[string]any{"jsonrpc": "2.0", "id": 1, "method": method, "params": params})

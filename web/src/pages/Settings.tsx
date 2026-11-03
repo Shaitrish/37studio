@@ -3,7 +3,7 @@ import {
   ArrowSquareOutIcon, CaretRightIcon, ChartLineUpIcon, CheckCircleIcon, CircleIcon, CpuIcon, InfoIcon, KeyIcon, PlugsConnectedIcon,
   DownloadSimpleIcon, HardDrivesIcon, RocketLaunchIcon, ShareNetworkIcon, WarningCircleIcon, Icon,
 } from "@phosphor-icons/react";
-import { api, bytes, connectGuideURL, donateURL, fail, languageName, makerURL, Meta, money, repoURL, setDisplay, toast, useApi, Voice } from "../api";
+import { api, bytes, connectGuideURL, desktop, donateURL, fail, languageName, makerURL, Meta, money, repoURL, setDisplay, toast, useApi, Voice } from "../api";
 import { Field, Seg } from "../ui";
 import { Brand, BrandId } from "../brands";
 
@@ -544,7 +544,9 @@ function AboutSection({ meta }: { meta?: Meta }) {
   const { data: upd } = useApi<Update>("/update");
   const checks: [string, boolean | undefined][] = [
     ["Claude Code is installed", meta?.env.claude], ["ffmpeg is installed (video processing)", meta?.env.ffmpeg],
-    ["Claude is connected", meta?.env.anthropic || meta?.env.claude_login], ["The agent runs with full permissions inside the container", meta?.env.bypass],
+    ["Node.js is installed (rendering, timeline editor)", meta?.env.node], ["Python 3 is installed (transcription, link imports)", meta?.env.python],
+    ["Claude is connected", meta?.env.anthropic || meta?.env.claude_login],
+    [desktop ? "The agent may run any command on this computer" : "The agent runs with full permissions inside the container", meta?.env.bypass],
     ["The app has a password (for servers)", meta?.env.password],
   ];
   return (
@@ -554,7 +556,9 @@ function AboutSection({ meta }: { meta?: Meta }) {
         <div className="card-b stack" style={{ gap: 10 }}>
           <p style={{ margin: 0 }}>
             37Studio <strong>{upd?.current}</strong>
-            {upd?.newer ? <> · <strong style={{ color: "var(--primary)" }}>version {upd.latest} is available.</strong> Close 37Studio and open it again from the launcher to update.</>
+            {upd?.newer ? <> · <strong style={{ color: "var(--primary)" }}>version {upd.latest} is available.</strong>{" "}
+              {desktop ? <>Download it from the <a href={upd.url} target="_blank" rel="noreferrer" style={{ color: "var(--primary)" }}>release page</a> (the .deb for Ubuntu and Debian), install it, and open 37Studio again.</>
+                : "Close 37Studio and open it again from the launcher to update."}</>
               : upd?.error ? <span className="muted"> · couldn't check for updates right now</span> : upd?.latest ? <span className="muted"> · up to date</span> : null}
           </p>
           {upd?.newer && upd.notes && <p className="small muted" style={{ margin: 0 }}>{upd.notes}</p>}
@@ -617,7 +621,7 @@ function StorageSection() {
           </div>
           <p className="small muted" style={{ margin: 0 }}>
             <WarningCircleIcon size={14} style={{ verticalAlign: -2 }} /> The zip holds your API keys and account logins, so keep it somewhere private.
-            To restore it, close 37Studio, unzip it into an empty data folder (<span className="mono">data/</span> next to the launcher), and open 37Studio again.
+            To restore it, close 37Studio, unzip it into an empty data folder (<span className="mono">{desktop ? "~/.local/share/37studio" : "data/"}</span>{desktop ? "" : " next to the launcher"}), and open 37Studio again.
           </p>
         </div>
       </Section>

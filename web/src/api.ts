@@ -50,7 +50,7 @@ export const languages: [string, string][] = [["bn", "Bangla"], ["en", "English"
 export const languageName = (code: string) => languages.find(([c]) => c === code)?.[1] ?? code;
 export interface Preset { id: string; label: string; aspect: string; seconds: number; blurb: string }
 export interface Quality { id: string; label: string; model: string; effort: string; note: string; harness: string; group?: string }
-export interface Meta { presets: Preset[]; qualities: Quality[]; hf_version: string; data_dir: string; env: Record<string, boolean> }
+export interface Meta { presets: Preset[]; qualities: Quality[]; hf_version: string; data_dir: string; os: string; env: Record<string, boolean> }
 export interface ChatEvent { id: number; kind: string; body: string; created_at: string }
 
 export async function api<T = any>(path: string, opts: { method?: string; body?: unknown } = {}): Promise<T> {
@@ -164,6 +164,18 @@ let toastFn: ToastFn = () => {};
 export const setToast = (fn: ToastFn) => { toastFn = fn; };
 export const toast: ToastFn = (msg, err) => toastFn(msg, err);
 export const fail = (e: unknown) => toast(e instanceof Error ? e.message : String(e), true);
+
+// The desktop app's window opens no tabs and saves no downloads by itself: links go to the system browser and
+// downloads to a Save dialog, through the app (internal/server/desktop.go). main.tsx sets this from /api/meta.
+export let desktop = false;
+export const setDesktop = (v: boolean) => { desktop = v; };
+export const openExternal = (url: string) =>
+  api("/desktop/open", { body: { url: new URL(url, location.href).href } }).catch(fail);
+export function saveFile(href: string, name?: string) {
+  const u = new URL(href, location.href);
+  api<{ saved: string }>("/desktop/save", { body: { path: u.pathname + u.search, name } })
+    .then((r) => { if (r.saved) toast(`Saved to ${r.saved}`); }, fail);
+}
 
 // Donation ask at a happy moment (a finished export, the 10th inbox reply), at most once a month.
 // ponytail: per-browser localStorage; another browser may ask once more, which is harmless.

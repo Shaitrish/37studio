@@ -1,12 +1,30 @@
 import { useState } from "react";
 import { ArrowRightIcon, CheckCircleIcon, PlusIcon, SparkleIcon, WarningIcon } from "@phosphor-icons/react";
-import { Meta, Project, cash, go, ago, useApi } from "../api";
+import { Meta, Project, cash, go, ago, repoURL, toast, useApi } from "../api";
 import { Empty, Status, projectStatus } from "../ui";
 import { ProjectTable, presetIcon } from "./Projects";
 import { NewProjectModal } from "./NewProject";
 import { approve } from "./Autopilot";
 
 interface Costs { total: number; this_month: number }
+
+// The Docker image has every tool the agent runs; the desktop app uses this computer's, so it says how to install
+// the missing ones with the usual package manager: apt (Ubuntu, Debian), Homebrew (macOS) or winget (Windows).
+const manager: Record<string, string> = { linux: "sudo apt install", darwin: "brew install", windows: "winget install" };
+const packages: Record<string, Record<string, string>> = {
+  ffmpeg: { linux: "ffmpeg", darwin: "ffmpeg", windows: "Gyan.FFmpeg" },
+  node: { linux: "nodejs npm", darwin: "node", windows: "OpenJS.NodeJS.LTS" },
+  python: { linux: "python3 python3-venv", darwin: "python", windows: "Python.Python.3.13" },
+};
+const claudeInstall = (os: string) => `${os === "linux" ? "sudo " : ""}npm install -g @anthropic-ai/claude-code`;
+const installCmd = (tool: string, os: string) =>
+  tool === "claude" ? claudeInstall(os) : `${manager[os] ?? manager.linux} ${packages[tool][os] ?? packages[tool].linux}`;
+// Everything missing in one go; winget takes one package at a time, and Claude Code installs with npm, so it goes last.
+function installAll(missing: string[], os: string) {
+  const pkgs = missing.filter((t) => packages[t]).map((t) => packages[t][os] ?? packages[t].linux);
+  const lines = !pkgs.length ? [] : os === "windows" ? pkgs.map((p) => `winget install ${p}`) : [`${manager[os] ?? manager.linux} ${pkgs.join(" ")}`];
+  return [...lines, ...(missing.includes("claude") ? [claudeInstall(os)] : [])].join("\n");
+}
 
 const pipeline = [
   { value: "running", label: "Agent working" },
@@ -20,7 +38,7 @@ const greeting = () => { const h = new Date().getHours(); return h < 12 ? "Good 
 export default function Overview() {
   const { data: projects, reload } = useApi<Project[]>("/projects");
   const { data: costs } = useApi<Costs>("/costs");
-  const { data: meta } = useApi<Meta>("/meta");
+  const { data: meta, reload: recheck } = useApi<Meta>("/meta");
   const [creating, setCreating] = useState(false);
 
   const all = projects ?? [];
@@ -28,10 +46,15 @@ export default function Overview() {
   const active = all.filter((p) => ["running", "review", "draft"].includes(projectStatus(p)));
   const review = all.filter((p) => projectStatus(p) === "review" && !p.autopilot_stage);
   const approvals = all.filter((p) => p.autopilot_stage === "approve");
+  const desktop = !!meta?.env.desktop, os = meta?.os ?? "linux";
+  const tool = (id: string, ok: boolean, label: string) =>
+    ({ id, ok, label, fix: desktop ? installCmd(id, os) : id === "claude" ? "bundled in the Docker image; else npm i -g @anthropic-ai/claude-code" : "bundled in the Docker image" });
   const checks = meta ? [
     { ok: meta.env.anthropic || meta.env.claude_login, label: "Claude for the editor agent: a key, a plan token, or Claude Code signed in on this computer", fix: "Settings → AI services" },
-    { ok: meta.env.claude, label: "Claude Code CLI installed", fix: "bundled in the Docker image; else npm i -g @anthropic-ai/claude-code" },
-    { ok: meta.env.ffmpeg, label: "ffmpeg installed", fix: "bundled in the Docker image" },
+    tool("claude", meta.env.claude, "Claude Code CLI installed"),
+    tool("ffmpeg", meta.env.ffmpeg, "ffmpeg installed, for cutting and encoding video"),
+    tool("node", meta.env.node, "Node.js 22 or newer, for rendering and the timeline editor"),
+    tool("python", meta.env.python, "Python 3, for transcription and YouTube or Drive imports"),
     { ok: meta.env.gemini, label: "Gemini key for image and video generation (optional)", fix: "Settings → AI services" },
     { ok: meta.env.eleven, label: "ElevenLabs key for voiceover, sound effects and music (optional)", fix: "Settings → AI services" },
   ] : [];
@@ -67,6 +90,24 @@ export default function Overview() {
               </div>
             ))}
           </div>
+          {desktop && (() => {
+            const missing = checks.flatMap((c) => ("id" in c && !c.ok ? [c.id] : []));
+            if (!missing.length) return null;
+            const cmd = installAll(missing, os);
+            return (
+              <div className="stack" style={{ padding: "12px 16px 16px", gap: 8 }}>
+                <span className="small muted">
+                  The desktop app uses the tools installed on this computer. Run this in a terminal to install what's missing, then click Check again.{" "}
+                  <a href={`${repoURL}/blob/main/docs/desktop.md`} target="_blank" rel="noreferrer" style={{ color: "var(--primary)" }}>Setup guide</a>
+                </span>
+                <pre className="mono" style={{ margin: 0, padding: "10px 12px", background: "var(--muted)", borderRadius: "var(--radius-sm)", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{cmd}</pre>
+                <span className="row" style={{ gap: 8 }}>
+                  <button className="btn sm" onClick={() => navigator.clipboard?.writeText(cmd).then(() => toast("Copied. Paste it into a terminal."))}>Copy</button>
+                  <button className="btn ghost sm" onClick={recheck}>Check again</button>
+                </span>
+              </div>
+            );
+          })()}
         </div>
       )}
 
