@@ -4,8 +4,12 @@ package proc
 
 import (
 	"context"
+	"os"
 	"os/exec"
+	"path/filepath"
+	"regexp"
 	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"unsafe"
@@ -14,19 +18,74 @@ import (
 )
 
 // Command and CommandContext build a command the way 37Studio wants every tool it runs to be built: with no
-// console window. ffmpeg, ffprobe, npx, Python and the agent CLIs are all console programs and the desktop app is
-// not, so without this Windows gives each run a console of its own and black windows flash over the app -- once
-// per file while the Library lists footage.
-func Command(name string, args ...string) *exec.Cmd { return noWindow(exec.Command(name, args...)) }
+// console window, and without cmd.exe in the way. ffmpeg, ffprobe, npx, Python and the agent CLIs are all console
+// programs and the desktop app is not, so without CREATE_NO_WINDOW Windows gives each run a console of its own and
+// black windows flash over the app -- once per file while the Library lists footage.
+func Command(name string, args ...string) *exec.Cmd {
+	return noWindow(exec.Command(realProgram(name), args...))
+}
 
 func CommandContext(ctx context.Context, name string, args ...string) *exec.Cmd {
-	return noWindow(exec.CommandContext(ctx, name, args...))
+	return noWindow(exec.CommandContext(ctx, realProgram(name), args...))
 }
 
 func noWindow(cmd *exec.Cmd) *exec.Cmd {
 	flags(cmd, windows.CREATE_NO_WINDOW)
 	return cmd
 }
+
+var resolved sync.Map // program name -> what to run, so the Library doesn't pay for a PATH walk per file
+
+// realProgram follows an npm .cmd shim to the program it actually runs. Go starts a .cmd through cmd.exe, which
+// cuts the command line off at 8191 characters -- shorter than the editor agent's system prompt on its own, so
+// `claude` failed with "The command line is too long" -- while CreateProcess allows 32767. Going straight to the
+// program the shim names leaves cmd.exe, and its limit, out of it.
+//
+// Only a shim that hands its arguments straight to one .exe is followed, which is how Claude Code is installed.
+// npx's shim passes npx-cli.js to node first, so following it to node.exe would drop the script and run the
+// arguments as node's own; shims like that are left alone, and nothing 37Studio starts through one comes near
+// the limit anyway.
+func realProgram(name string) string {
+	if v, ok := resolved.Load(name); ok {
+		return v.(string)
+	}
+	v, found := findProgram(name)
+	if found {
+		// Only a hit is remembered. Finish setup exists so people can install a missing tool with 37Studio open,
+		// and a remembered miss would keep the agent on the bare name -- and back under cmd.exe's limit.
+		resolved.Store(name, v)
+	}
+	return v
+}
+
+func findProgram(name string) (string, bool) {
+	path, err := exec.LookPath(name)
+	if err != nil {
+		return name, false // let exec report it, the way it would have without this
+	}
+	if ext := strings.ToLower(filepath.Ext(path)); ext != ".cmd" && ext != ".bat" {
+		return path, true
+	}
+	shim, err := os.ReadFile(path)
+	if err != nil {
+		return path, true
+	}
+	dir := filepath.Dir(path)
+	for _, m := range shimTarget.FindAllStringSubmatch(string(shim), -1) {
+		target := filepath.Clean(strings.NewReplacer("%dp0%", dir, "%~dp0", dir).Replace(m[1]))
+		if st, err := os.Stat(target); err == nil && !st.IsDir() {
+			return target, true
+		}
+	}
+	return path, true
+}
+
+// A whole line of a shim that runs one program on the arguments it was given and nothing else:
+//
+//	"%dp0%\node_modules\@scope\name\bin\thing.exe"   %*
+//
+// Anchoring both ends is the point. It passes over npx's line, which puts a script between the program and %*.
+var shimTarget = regexp.MustCompile(`(?mi)^\s*"([^"\r\n]+\.exe)"\s+%\*\s*\r?$`)
 
 // jobs holds the job object behind each running command until Done closes it. The handle has to stay open: closing
 // it is what ends the job, so losing it would leave a run unstoppable.

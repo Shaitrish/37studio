@@ -1,6 +1,7 @@
 package proc
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -29,6 +30,9 @@ func TestMain(m *testing.M) {
 		os.Exit(0)
 	case "child":
 		time.Sleep(2 * time.Minute)
+		os.Exit(0)
+	case "arglen":
+		fmt.Println(len(os.Args[len(os.Args)-1]))
 		os.Exit(0)
 	}
 	os.Exit(m.Run())
@@ -131,4 +135,20 @@ func waitGone(pid int) bool {
 		time.Sleep(50 * time.Millisecond)
 	}
 	return false
+}
+
+// The editor agent's system prompt goes on the command line and is over 11,000 characters. Windows runs a .cmd
+// through cmd.exe, which stops at 8191 and fails the run with "The command line is too long"; proc.Command goes
+// to the real program instead, where the limit is 32767.
+func TestLongArgumentSurvives(t *testing.T) {
+	long := strings.Repeat("x", 12000)
+	cmd := Command(os.Args[0], long)
+	cmd.Env = append(os.Environ(), helperEnv+"=arglen")
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("a %d-character argument didn't get through: %v", len(long), err)
+	}
+	if got := strings.TrimSpace(string(out)); got != strconv.Itoa(len(long)) {
+		t.Errorf("the program saw %s characters, want %d", got, len(long))
+	}
 }
