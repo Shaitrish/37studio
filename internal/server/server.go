@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/Shaitrish/37studio/internal/agent"
@@ -216,7 +217,12 @@ func Routes() *http.ServeMux {
 func getMeta(r *http.Request) (any, error) {
 	_, claudeErr := exec.LookPath(config.ClaudeBin)
 	_, ffErr := exec.LookPath("ffmpeg")
+	_, npxErr := exec.LookPath("npx") // HyperFrames renders, previews and the timeline editor all run through npx
+	// Transcription and link imports set up their own venv from python3 on first use (transcribe.Python).
+	_, pyErr := exec.LookPath("python3")
+	python := pyErr == nil || config.Env("STUDIO37_ASR_PYTHON", "") != ""
 	return map[string]any{
+		"os":         runtime.GOOS, // so the setup list can show this computer's install commands
 		"presets":    agent.Presets,
 		"qualities":  agent.AllQualities(),
 		"hf_version": config.HFVersion,
@@ -225,6 +231,8 @@ func getMeta(r *http.Request) (any, error) {
 		"env": map[string]bool{
 			"claude":       claudeErr == nil,
 			"ffmpeg":       ffErr == nil,
+			"node":         npxErr == nil,
+			"python":       python,
 			"gemini":       os.Getenv("GEMINI_API_KEY") != "",
 			"eleven":       os.Getenv("ELEVENLABS_API_KEY") != "",
 			"anthropic":    os.Getenv("ANTHROPIC_API_KEY") != "" || os.Getenv("CLAUDE_CODE_OAUTH_TOKEN") != "",

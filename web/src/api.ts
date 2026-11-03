@@ -50,7 +50,7 @@ export const languages: [string, string][] = [["bn", "Bangla"], ["en", "English"
 export const languageName = (code: string) => languages.find(([c]) => c === code)?.[1] ?? code;
 export interface Preset { id: string; label: string; aspect: string; seconds: number; blurb: string }
 export interface Quality { id: string; label: string; model: string; effort: string; note: string; harness: string; group?: string }
-export interface Meta { presets: Preset[]; qualities: Quality[]; hf_version: string; data_dir: string; env: Record<string, boolean> }
+export interface Meta { presets: Preset[]; qualities: Quality[]; hf_version: string; data_dir: string; os: string; env: Record<string, boolean> }
 export interface ChatEvent { id: number; kind: string; body: string; created_at: string }
 
 export async function api<T = any>(path: string, opts: { method?: string; body?: unknown } = {}): Promise<T> {

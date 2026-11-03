@@ -21,7 +21,7 @@ web/                 React + Vite + TypeScript UI (pages/, ui.tsx, api.ts, style
 worker/              Cloudflare Worker: the static product website (public/)
 relay/               optional WhatsApp webhook relay users deploy themselves (Cloudflare Worker + D1)
 dist/                the launcher bundle people download (docker-compose.yml, start.bat/.command/.sh)
-desktop/             desktop build script (build.sh); packaging comes later
+desktop/             desktop build, local install and Linux packaging scripts (CI: .github/workflows/desktop.yml)
 docs/                platforms.md (per-platform setup), architecture.md
 ```
 
@@ -33,6 +33,7 @@ gofmt -l .                                       # must print nothing
 cd web && npm run build                          # UI: type-checks (tsc) and builds
 ./desktop/build.sh                               # desktop app into desktop/bin/37studio (Linux: GTK 4 + WebKitGTK 6.0 headers)
 ./desktop/install-linux.sh                       # build it and add it to this Linux user's app menu (--uninstall removes it)
+./desktop/package-linux.sh                       # .deb + .tar.gz for this machine's architecture into desktop/dist (CI attaches them to releases)
 ./dev.sh                                         # backend (air, hot rebuild) + UI (Vite) on :5173
 docker compose up --build                        # the whole app on :8080, as users run it
 node --check relay/src.js                        # WhatsApp relay syntax
@@ -68,4 +69,4 @@ node --check relay/src.js                        # WhatsApp relay syntax
 
 ## Releasing (maintainers)
 
-Bump `Version` in `internal/update/update.go` and move `CHANGELOG.md`'s Unreleased entries under a `## [X.Y.Z] - date` heading, then run `./release.sh "What changed"`. It pushes the multi-arch image to ghcr.io, zips `dist/` into the website's download, deploys the website Worker and tags the commit `vX.Y.Z` with a GitHub Release, which every copy's update check reads. Never commit `data/`, `.env` or any backup of them.
+Bump `Version` in `internal/update/update.go` and move `CHANGELOG.md`'s Unreleased entries under a `## [X.Y.Z] - date` heading, then run `./release.sh "What changed"`. It pushes the multi-arch image to ghcr.io, zips `dist/` into the website's download, deploys the website Worker and tags the commit `vX.Y.Z` with a GitHub Release, which every copy's update check reads; publishing it makes CI build the Linux desktop packages and attach them. Never commit `data/`, `.env` or any backup of them.

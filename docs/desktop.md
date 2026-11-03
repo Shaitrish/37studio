@@ -3,19 +3,64 @@
 37Studio as a normal app in its own window, without Docker. It is the same app as the Docker version: the same
 brands, projects, agent and publishing, served to a native window instead of a browser tab.
 
-**Status: preview, Linux only, built from source.** There is no download yet. Windows and Mac builds, installers
-(.exe, .dmg, .deb, AppImage) and automatic setup of the video tools come later. Until then, the
-[ready-made Docker app](../README.md#on-your-computer-the-ready-made-app) is the way to run 37Studio for everyday work.
+**Status: preview, Linux only.** From the release after 0.8.0 on, each [release](https://github.com/Shaitrish/37studio/releases) has a .deb for
+Ubuntu 24.04+ and Debian 13+ and a plain program for other Linux, for Intel/AMD (`amd64`) and ARM (`arm64`) computers.
+Windows and Mac builds and automatic setup of the video tools come later. Until then, the
+[ready-made Docker app](../README.md#on-your-computer-the-ready-made-app) is the way to run 37Studio everywhere else.
 
-## What you need
+## Install from a release (Ubuntu and Debian)
+
+1. On the [latest release](https://github.com/Shaitrish/37studio/releases/latest), download
+   `37studio_<version>_amd64.deb` (or `_arm64.deb` on an ARM computer; `dpkg --print-architecture` says which).
+2. Install it, which also installs ffmpeg and Python if they're missing:
+
+   ```bash
+   sudo apt install ./37studio_*_amd64.deb
+   ```
+
+3. Install Claude Code, which no Linux distribution packages: `sudo npm install -g @anthropic-ai/claude-code`
+   (needs Node.js 22 or newer; see *What you need* below).
+4. Open **37Studio** from your app menu. Overview → **Finish setup** lists anything still missing.
+
+To update, install the next release's .deb the same way: Settings → About says when one is out. To remove the app,
+`sudo apt remove 37studio`; your work stays in `~/.local/share/37studio`.
+
+**Other Linux** (Fedora, Arch, …): download `37studio-<version>-linux-amd64.tar.gz`, unpack it and run `./37studio`.
+It needs GTK 4 and WebKitGTK 6.0 (Fedora: `sudo dnf install gtk4 webkitgtk6.0`) and the tools under *What you need*.
+Keep the program's name `37studio`. Each release's `.sha256` file has the checksums: `sha256sum -c *.sha256`.
+
+## Build it yourself
+
+For changes that aren't released yet, or to work on the app.
+
+### What you need
 
 - Ubuntu 24.04 or newer, Debian 13 or Fedora 40, or another Linux with GTK 4 and WebKitGTK 6.0
-- [Go 1.26](https://go.dev/dl/) or newer and [Node.js 22](https://nodejs.org) or newer
-- The tools the agent uses, installed on this computer as when [running from source](../CONTRIBUTING.md#running-it-from-source):
-  [Claude Code](https://docs.claude.com/en/docs/claude-code) signed in (or a key in Settings), `ffmpeg`, and
-  `python3` with `venv` for transcription and YouTube imports
+- [Go 1.26](https://go.dev/dl/) or newer, to build the app
+- The tools the agent uses. The Docker image ships them; the desktop app uses the ones on this computer:
 
-## Install
+  | Tool | What for |
+  | --- | --- |
+  | Claude Code | the editor agent, the Assistant, captions and replies |
+  | ffmpeg | cutting, probing and encoding video |
+  | Node.js 22 or newer | rendering, previews and the timeline editor (HyperFrames runs through `npx`; its Chrome downloads by itself on the first render) |
+  | Python 3 with venv | transcription and YouTube or Drive imports (faster-whisper and yt-dlp install themselves on first use, about 200 MB) |
+  | Noto fonts | Bangla, other non-Latin scripts and emoji in rendered videos |
+
+  On Ubuntu or Debian, all of them at once:
+
+  ```bash
+  sudo apt install ffmpeg nodejs npm python3 python3-venv fonts-noto-core fonts-noto-color-emoji
+  sudo npm install -g @anthropic-ai/claude-code
+  ```
+
+  Ubuntu before 26.04 and Debian before 13 ship an older Node.js: install version 22 or newer from
+  [nodejs.org](https://nodejs.org) instead, and leave `nodejs npm` out of the first line.
+
+  The app's Overview page lists anything still missing under **Finish setup**, with the command to install it and a
+  **Check again** button.
+
+### Install
 
 1. Install the GTK and WebKit headers once (this asks for your password):
 
@@ -40,7 +85,7 @@ brands, projects, agent and publishing, served to a native window instead of a b
 
 Then follow [First steps](../README.md#first-steps): add your Claude key in Settings → Keys and add a brand.
 
-## Update
+### Update
 
 ```bash
 cd 37studio
@@ -48,7 +93,7 @@ git pull
 ./desktop/install-linux.sh
 ```
 
-## Uninstall
+### Uninstall
 
 ```bash
 ./desktop/install-linux.sh --uninstall
@@ -95,6 +140,8 @@ too old to have WebKitGTK 6.0.
 `update-desktop-database ~/.local/share/applications`.
 
 **The window opens but the agent says Claude or ffmpeg is missing.** The desktop preview uses the tools installed on
-this computer: install them (see *What you need*) and open the app again.
+this computer: install them (see *What you need*), then click **Check again** under Finish setup on the Overview page.
+If a tool still shows as missing, it's installed somewhere the app doesn't look (for example `~/.local/bin` before
+you've logged out and back in): log out and in once, or start the app from a terminal.
 
 **To see what it's doing**, start it from a terminal: `~/.local/lib/37studio/37studio`.

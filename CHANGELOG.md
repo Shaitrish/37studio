@@ -4,6 +4,12 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 
 ## [Unreleased]
 
+### Added
+- **Desktop app for Linux (preview)**: 37Studio in its own window, without Docker. Each release has a .deb for Ubuntu 24.04+ and Debian 13+ and a plain program for other Linux, for amd64 and arm64. Links, the timeline editor and social sign-ins open in your browser, and downloads and backups ask where to save. The Overview page lists the tools still missing on your computer, with the command to install them. See docs/desktop.md.
+
+### Changed
+- `docker stop` and restarts now let 37Studio finish what it's doing and stop running agent turns and renders, instead of leaving them running in the background.
+
 ## [0.8.0] - 2026-10-27
 
 ### Added
