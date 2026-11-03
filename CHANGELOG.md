@@ -4,6 +4,8 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-04
+
 ### Added
 - **Desktop app for Linux and Windows (preview)**: 37Studio in its own window, without Docker. Each release has a .deb for Ubuntu 24.04+ and Debian 13+ and a plain program for other Linux, for amd64 and arm64, and a .zip for Windows 10 and 11 on Intel and AMD. On Windows, unpack it and run `install-windows.ps1` to put 37Studio in the Start menu; your work is kept in `%AppData%\37Studio`. Links, the timeline editor and social sign-ins open in your browser, and downloads and backups ask where to save. The Overview page lists the tools still missing on your computer, with the command to install them — `winget` commands on Windows, including Git for Windows, whose bash is what the agent runs its commands through there. See docs/desktop.md.
 - **Brand voices** (a brand's Voices tab): clone a person's voice from a short recording, or add any voice from your ElevenLabs account, and pick a default for each language. The agent speaks voiceovers in the brand's default, or in any of its voices you name in chat.
@@ -72,7 +74,8 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 - Templates: start a new video from an earlier video's look.
 - Several videos from one source, and a Library of every finished video.
 
-[Unreleased]: https://github.com/Shaitrish/37studio/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/Shaitrish/37studio/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/Shaitrish/37studio/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/Shaitrish/37studio/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/Shaitrish/37studio/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/Shaitrish/37studio/compare/v0.5.0...v0.6.0
