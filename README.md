@@ -140,6 +140,10 @@ The launcher and the cloud file use the `latest` image, so a restart can update 
 
 To build the image from your own checkout on the server, clone the repo and replace the `image:` line in `docker-compose.cloud.yml` with `build: .`.
 
+## One-Click Deploy
+
+[![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/37Studio/)
+
 ## First steps
 
 1. **Add keys.** Settings → Keys: an Anthropic API key, or a Claude subscription token (run `docker compose exec studio claude setup-token` in the launcher's folder; from source the service is `37studio`). Gemini and ElevenLabs are optional. Keys are encrypted at rest and sent only to the provider they belong to. Anthropic's terms govern using a Claude subscription in other apps; an API key is the fully supported route.
