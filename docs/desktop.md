@@ -44,11 +44,12 @@ Windows 10 or 11 on an Intel or AMD computer. The window is drawn by WebView2, w
 4. Install the tools the agent uses, which Windows comes with none of (see *What you need*):
 
    ```powershell
-   winget install Gyan.FFmpeg OpenJS.NodeJS.LTS Python.Python.3.13
+   winget install Git.Git Gyan.FFmpeg OpenJS.NodeJS.LTS Python.Python.3.13
    npm install -g @anthropic-ai/claude-code
    ```
 
-   Open a new terminal afterwards, so it picks up the changed PATH.
+   Open a new terminal afterwards, so it picks up the changed PATH. Git is there for its bash: Claude Code runs
+   the agent's commands through it on Windows, so without Git the agent fails on its first step.
 5. Press the Windows key, type **37Studio** and open it. Overview → **Finish setup** lists anything still missing,
    with the command to install it and a **Check again** button.
 
@@ -87,6 +88,7 @@ For changes that aren't released yet, or to work on the app.
   | Node.js 22 or newer | rendering, previews and the timeline editor (HyperFrames runs through `npx`; its Chrome downloads by itself on the first render) |
   | Python 3 with venv | transcription and YouTube or Drive imports (faster-whisper and yt-dlp install themselves on first use, about 200 MB) |
   | Noto fonts | Bangla, other non-Latin scripts and emoji in rendered videos |
+  | Git for Windows (Windows only) | the shell Claude Code runs the agent's commands through |
 
   On Ubuntu or Debian, all of them at once:
 
@@ -101,7 +103,7 @@ For changes that aren't released yet, or to work on the app.
   On Windows, all of them at once:
 
   ```powershell
-  winget install Gyan.FFmpeg OpenJS.NodeJS.LTS Python.Python.3.13
+  winget install Git.Git Gyan.FFmpeg OpenJS.NodeJS.LTS Python.Python.3.13
   npm install -g @anthropic-ai/claude-code
   ```
 
@@ -243,6 +245,10 @@ nothing else.
 
 **Windows: *Windows protected your PC*, or the app won't start after downloading.** The program isn't signed yet.
 Click **More info** → **Run anyway**, and tick **Unblock** in the .zip's Properties before unpacking it.
+
+**Windows: the agent stops on its first command, or every Bash step fails.** Git for Windows isn't installed.
+Claude Code runs the agent's commands through its bash, and looks for it where Git installs itself rather than on
+PATH, so having `git` elsewhere doesn't help: `winget install Git.Git`, then reopen 37Studio.
 
 **Windows: nothing happens when the agent runs `37studio gen`.** The program has to keep the name `37studio.exe`
 and stay in the folder the app runs from: the agent finds it beside the app.

@@ -100,7 +100,7 @@ sudo npm install -g @anthropic-ai/claude-code            # needs Node.js 22 or n
 On Windows 10 or 11, the `.zip`: unpack it and run `install-windows.ps1`, then install the tools the agent uses.
 
 ```powershell
-winget install Gyan.FFmpeg OpenJS.NodeJS.LTS Python.Python.3.13
+winget install Git.Git Gyan.FFmpeg OpenJS.NodeJS.LTS Python.Python.3.13
 npm install -g @anthropic-ai/claude-code
 ```
 

@@ -230,6 +230,7 @@ func getMeta(r *http.Request) (any, error) {
 		"data_dir":   config.DataDir,
 		"env": map[string]bool{
 			"claude":       claudeErr == nil,
+			"shell":        agent.ShellReady(), // Windows: Claude Code runs the agent's commands through Git for Windows' bash
 			"ffmpeg":       ffErr == nil,
 			"node":         npxErr == nil,
 			"python":       python,
