@@ -12,11 +12,11 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 
 	"github.com/Shaitrish/37studio/internal/agent"
 	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/httpapi"
+	"github.com/Shaitrish/37studio/internal/proc"
 	"github.com/Shaitrish/37studio/internal/remote"
 	"github.com/Shaitrish/37studio/internal/store"
 	"github.com/Shaitrish/37studio/internal/transcribe"
@@ -82,15 +82,15 @@ func ImportVideo(r *http.Request) (any, error) {
 	dir := files.ProjectDir(id)
 	tmp := filepath.Join(dir, "work", "download")
 	lang := agent.ProjectLanguage(p)
-	cmd := exec.Command(py, "-m", "yt_dlp", "--no-playlist", "--newline", "--no-colors", "--windows-filenames",
+	cmd := proc.Command(py, "-m", "yt_dlp", "--no-playlist", "--newline", "--no-colors", "--windows-filenames",
 		"--js-runtimes", "node", // YouTube's player challenges need a JavaScript runtime; the image has Node
 		"-f", "bv*[height<=1080]+ba/b[height<=1080]/b", "--merge-output-format", "mp4",
 		"--write-subs", "--write-auto-subs", "--sub-langs", lang+","+lang+"-orig", "--convert-subs", "srt",
 		"-P", filepath.Join(dir, "input"), "-P", "temp:"+tmp, "-o", "%(title).80B.%(ext)s", u.String())
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	pr, pw := io.Pipe()
 	cmd.Stdout, cmd.Stderr = pw, pw
-	if err := cmd.Start(); err != nil {
+	// yt-dlp shells out to ffmpeg to merge the streams: proc.Start groups them, so Cancel stops both.
+	if err := proc.Start(cmd); err != nil {
 		return nil, err
 	}
 	j := &importJob{URL: u.String(), Line: "Starting the download…", cmd: cmd}
@@ -123,6 +123,7 @@ func ImportVideo(r *http.Request) (any, error) {
 	start := b["start"] == true
 	go func() {
 		err := cmd.Wait()
+		proc.Done(cmd)
 		pw.Close()
 		<-read
 		os.RemoveAll(tmp)
@@ -167,7 +168,7 @@ func CancelImport(r *http.Request) (any, error) {
 	defer importMu.Unlock()
 	if j := importJobs[id]; j != nil && !j.Done && j.cmd.Process != nil {
 		j.Error = "Cancelled."
-		syscall.Kill(-j.cmd.Process.Pid, syscall.SIGTERM)
+		proc.Terminate(j.cmd)
 	}
 	return nil, nil
 }

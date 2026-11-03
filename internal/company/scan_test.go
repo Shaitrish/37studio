@@ -14,6 +14,7 @@ import (
 func TestApplyProfile(t *testing.T) {
 	config.DataDir = t.TempDir()
 	store.Open()
+	t.Cleanup(store.Close)
 	store.DB.Exec("insert into tenants(id,name,website,teacher) values(7,'x.com','https://x.com','Set by editor')")
 	os.MkdirAll(files.TenantRoot(7), 0o755)
 	os.WriteFile(filepath.Join(files.TenantRoot(7), "profile.json"), []byte(`{"name":"X Academy","teacher":"From site","brand_color":"#112233","margin_pct":"10"}`), 0o644)

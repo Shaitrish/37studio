@@ -15,6 +15,7 @@ import (
 func TestQueueClip(t *testing.T) {
 	config.DataDir = t.TempDir()
 	store.Open()
+	t.Cleanup(store.Close)
 	store.DB.Exec("insert into tenants(id,name) values(1,'Shop')")
 	store.DB.Exec("insert into projects(id,tenant_id,title,kind,aspect,seconds,quality,language) values(1,1,'Class 7','hook-reel','9:16',60,'standard','bn')")
 	src := files.ProjectDir(1)

@@ -88,14 +88,23 @@ To work on the code with hot reload, see [CONTRIBUTING.md](CONTRIBUTING.md#runni
 
 ### Desktop app, without Docker (preview)
 
-37Studio in its own window, in your app menu, with no Docker. For now it is Linux only; Windows and Mac come later. From the release after 0.8.0 on (until then, [build it yourself](docs/desktop.md#build-it-yourself)), download the `.deb` for your computer from the [latest release](https://github.com/Shaitrish/37studio/releases/latest) and install it:
+37Studio in its own window, in your app menu, with no Docker. For now it is Linux and Windows; a Mac build comes later. From the release after 0.8.0 on (until then, [build it yourself](docs/desktop.md#build-it-yourself)), download the file for your computer from the [latest release](https://github.com/Shaitrish/37studio/releases/latest).
+
+On Ubuntu or Debian, the `.deb`:
 
 ```bash
 sudo apt install ./37studio_*_amd64.deb                  # also installs ffmpeg and Python
 sudo npm install -g @anthropic-ai/claude-code            # needs Node.js 22 or newer
 ```
 
-Then open **37Studio** from the app menu. [docs/desktop.md](docs/desktop.md) has the full guide: other Linux, building it yourself, using your Docker data, and how it differs from the Docker version.
+On Windows 10 or 11, the `.zip`: unpack it and run `install-windows.ps1`, then install the tools the agent uses.
+
+```powershell
+winget install Git.Git Gyan.FFmpeg OpenJS.NodeJS.LTS Python.Python.3.13
+npm install -g @anthropic-ai/claude-code
+```
+
+Then open **37Studio** from the app menu or the Start menu. [docs/desktop.md](docs/desktop.md) has the full guide: other Linux, building it yourself, using your Docker data, and how it differs from the Docker version.
 
 ### Run it in the cloud
 

@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"slices"
@@ -28,6 +27,7 @@ import (
 	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/httpapi"
 	"github.com/Shaitrish/37studio/internal/keys"
+	"github.com/Shaitrish/37studio/internal/proc"
 	"github.com/Shaitrish/37studio/internal/remote"
 	"github.com/Shaitrish/37studio/internal/store"
 	"github.com/Shaitrish/37studio/internal/textutil"
@@ -517,7 +517,7 @@ func claudeOnce(dir, prompt string) (text string, cost, tokens float64, err erro
 	if err := keys.ClaudeReady(); err != nil {
 		return "", 0, 0, err
 	}
-	cmd := exec.Command(config.ClaudeBin, "-p", "--output-format", "json", "--model", agent.QualityByID("draft").Model, "--effort", "low", "--tools", "",
+	cmd := proc.Command(config.ClaudeBin, "-p", "--output-format", "json", "--model", agent.QualityByID("draft").Model, "--effort", "low", "--tools", "",
 		"--strict-mcp-config", "--settings", `{"disableAllHooks":true}`)
 	cmd.Dir = dir
 	cmd.Stdin = strings.NewReader(prompt)

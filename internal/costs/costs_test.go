@@ -1,6 +1,7 @@
 package costs
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/Shaitrish/37studio/internal/config"
@@ -14,6 +15,7 @@ import (
 func TestQuoteAndPaths(t *testing.T) {
 	config.DataDir = t.TempDir()
 	store.Open()
+	t.Cleanup(store.Close)
 	store.DB.Exec("insert into tenants(id,name) values(1,'A')")
 	store.DB.Exec("insert into projects(id,tenant_id,title) values(1,1,'p1'),(3,1,'empty')")
 	store.DB.Exec("insert into usage(project_id,tenant_id,provider,item,quantity,cost) values(1,1,'anthropic','m',1,6),(1,1,'gemini','img',1,4)")
@@ -41,8 +43,8 @@ func TestQuoteAndPaths(t *testing.T) {
 		t.Error("version compare")
 	}
 
-	if got := files.Within("/data/p", "../../etc/passwd"); got != "/data/p/etc/passwd" {
-		t.Errorf("within escaped root: %s", got)
+	if got, want := files.Within("/data/p", "../../etc/passwd"), filepath.Join("/data/p", "etc", "passwd"); got != want {
+		t.Errorf("within escaped root: got %s, want %s", got, want)
 	}
 	if got := files.SafeName(`..\..\evil video.mp4`); got != "evil video.mp4" {
 		t.Errorf("safeName: %q", got)

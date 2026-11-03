@@ -15,6 +15,7 @@ import (
 func TestMCP(t *testing.T) {
 	config.DataDir = t.TempDir()
 	store.Open()
+	t.Cleanup(store.Close)
 	mux := Routes()
 	rpc := func(method string, params any) map[string]any {
 		t.Helper()

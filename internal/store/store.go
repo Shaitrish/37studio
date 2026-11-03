@@ -210,6 +210,15 @@ func Open() {
 	}
 }
 
+// Close shuts the database down. The server has no use for it -- the process ends instead -- but a test does:
+// Windows refuses to delete a file that is still open, so t.TempDir cleanup fails while the database is.
+func Close() {
+	if DB != nil {
+		DB.Close()
+		DB = nil
+	}
+}
+
 // Rows returns query results as JSON-ready maps; the API is thin enough that structs would only add ceremony.
 func Rows(q string, args ...any) ([]map[string]any, error) {
 	rs, err := DB.Query(q, args...)

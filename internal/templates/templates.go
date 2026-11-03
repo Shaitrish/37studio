@@ -7,13 +7,13 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/Shaitrish/37studio/internal/config"
 	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/httpapi"
+	"github.com/Shaitrish/37studio/internal/proc"
 	"github.com/Shaitrish/37studio/internal/store"
 )
 
@@ -86,7 +86,7 @@ func Save(r *http.Request) (any, error) {
 	}
 	for _, f := range files.List(filepath.Join(files.ProjectDir(id), "out"), "", false) { // newest export first
 		if f.Kind == "video" {
-			exec.Command("ffmpeg", "-y", "-v", "error", "-ss", "1", "-i", filepath.Join(files.ProjectDir(id), "out", f.Path),
+			proc.Command("ffmpeg", "-y", "-v", "error", "-ss", "1", "-i", filepath.Join(files.ProjectDir(id), "out", f.Path),
 				"-frames:v", "1", "-vf", "scale=480:-2", filepath.Join(Dir(tid), "thumb.jpg")).Run()
 			break
 		}

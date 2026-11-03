@@ -1,6 +1,6 @@
-# The desktop app for Linux: built on every pull request and push to main (the files are kept as this run's
-# artifacts), and attached to each GitHub release that release.sh publishes. Built on Ubuntu 24.04 so the program runs
-# on 24.04 and anything newer. Windows and macOS come once the app runs there (docs/desktop.md).
+# The desktop app for Linux and Windows: built on every pull request and push to main (the files are kept as this
+# run's artifacts), and attached to each GitHub release that release.sh publishes. Linux is built on Ubuntu 24.04 so
+# the program runs on 24.04 and anything newer. macOS comes once the app runs there (docs/desktop.md).
 name: desktop
 on:
   push:
@@ -54,3 +54,56 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${{ github.event.release.tag_name }}" desktop/dist/* --clobber
+
+  windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        # ponytail: add windows-11-arm for Windows on ARM once that runner is enabled for this repository.
+        runner: [windows-latest]
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: write # gh release upload
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            cmd/37studio-desktop/go.sum
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      # The desktop app is the only way 37Studio runs on Windows without a container, so this is where a Unix-only
+      # process or disk call would come back unnoticed. ci.yml covers the same ground on Linux.
+      - name: Build
+        run: go build ./...
+      - name: Vet
+        run: go vet ./...
+      - name: Test
+        run: go test ./...
+      - name: Vet the desktop module
+        working-directory: cmd/37studio-desktop
+        run: |
+          New-Item -ItemType Directory -Force web | Out-Null # what go:embed needs; build.ps1 puts the real UI here
+          New-Item -ItemType File -Force web/.keep | Out-Null
+          Copy-Item ../../brand/37studio-icon-1024.png icon.png
+          go vet .
+      - name: Package
+        run: ./desktop/package-windows.ps1 "${{ github.event.release.tag_name }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 37studio-windows-${{ runner.arch }}
+          path: desktop/dist/*
+          if-no-files-found: error
+      - name: Attach to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" @(Get-ChildItem desktop/dist | ForEach-Object { $_.FullName }) --clobber

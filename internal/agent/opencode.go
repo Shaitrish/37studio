@@ -20,6 +20,7 @@ import (
 	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/httpapi"
 	"github.com/Shaitrish/37studio/internal/keys"
+	"github.com/Shaitrish/37studio/internal/proc"
 	"github.com/Shaitrish/37studio/internal/store"
 	"github.com/Shaitrish/37studio/internal/textutil"
 )
@@ -51,7 +52,7 @@ func OpenCodeQualities() []Quality {
 	if _, err := exec.LookPath("opencode"); err != nil {
 		return ocList
 	}
-	cmd := exec.Command("opencode", "models", "--verbose")
+	cmd := proc.Command("opencode", "models", "--verbose")
 	cmd.Env = Env()
 	out, err := cmd.Output()
 	if err != nil {
@@ -114,7 +115,10 @@ func startOpenCode(id int64, p map[string]any, q Quality, text string, announce 
 		args = append(args, "--auto")
 	}
 	exe, _ := os.Executable()
-	cmd := exec.Command("opencode", append(args, prompt)...)
+	// The prompt rides on the command line here, unlike Claude Code and Codex, which read it from stdin. That
+	// caps it at Windows' 32767 characters; opencode ships a real .exe, so proc.Command reaches it without
+	// cmd.exe and its much shorter limit. Move the prompt to stdin if a recap ever grows near that.
+	cmd := proc.Command("opencode", append(args, prompt)...)
 	cmd.Dir = dir
 	cmd.Env = Env(fmt.Sprintf("STUDIO37_PROJECT=%d", id), "STUDIO37_DATA="+config.DataDir,
 		"PATH="+filepath.Dir(exe)+string(os.PathListSeparator)+os.Getenv("PATH"))

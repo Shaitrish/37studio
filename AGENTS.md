@@ -12,7 +12,7 @@ Guidance for AI coding agents (Claude Code, Codex, Cursor and others) and for pe
 cmd/37studio/        main for Docker and servers: starts internal/server, stops it on SIGTERM
 cmd/37studio-desktop/ the native desktop app (Wails 3, its own go.mod): the same server in a window
 internal/            the Go backend, one package per area (map: docs/architecture.md#code-map)
-  config store httpapi remote files textutil   low level: these import nothing of ours
+  config store httpapi remote files textutil proc   low level: these import nothing of ours
   keys agent gen transcribe timeline templates source
   company project social autopilot costs
   mcp assistant update
@@ -21,7 +21,7 @@ web/                 React + Vite + TypeScript UI (pages/, ui.tsx, api.ts, style
 worker/              Cloudflare Worker: the static product website (public/)
 relay/               optional WhatsApp webhook relay users deploy themselves (Cloudflare Worker + D1)
 dist/                the launcher bundle people download (docker-compose.yml, start.bat/.command/.sh)
-desktop/             desktop build, local install and Linux packaging scripts (CI: .github/workflows/desktop.yml)
+desktop/             desktop build, local install and packaging scripts, Linux (.sh) and Windows (.ps1) (CI: .github/workflows/desktop.yml)
 docs/                platforms.md (per-platform setup), architecture.md
 ```
 
@@ -34,6 +34,9 @@ cd web && npm run build                          # UI: type-checks (tsc) and bui
 ./desktop/build.sh                               # desktop app into desktop/bin/37studio (Linux: GTK 4 + WebKitGTK 6.0 headers)
 ./desktop/install-linux.sh                       # build it and add it to this Linux user's app menu (--uninstall removes it)
 ./desktop/package-linux.sh                       # .deb + .tar.gz for this machine's architecture into desktop/dist (CI attaches them to releases)
+.\desktop\build.ps1                              # the same build on Windows, into desktop\bin\37studio.exe
+.\desktop\install-windows.ps1                    # build it and add it to this user's Start menu (-Uninstall removes it)
+.\desktop\package-windows.ps1                    # .zip for this machine's architecture into desktop\dist
 ./dev.sh                                         # backend (air, hot rebuild) + UI (Vite) on :5173
 docker compose up --build                        # the whole app on :8080, as users run it
 node --check relay/src.js                        # WhatsApp relay syntax
@@ -46,6 +49,7 @@ node --check relay/src.js                        # WhatsApp relay syntax
 - **Database:** `store.Row`, `store.Rows`, `store.Save(table, allowedCols, id, body)`, settings through `store.Setting`. The schema lives in `internal/store/store.go` and only ever grows with `create table if not exists` and `alter table … add column`; never break existing data folders.
 - **Files:** use `files.ProjectDir`, `files.TenantDir` and the rest. Join user-supplied paths only with `files.Within`, which can't escape its root.
 - **Outbound calls:** use `remote.Call` / `remote.CallWith`, so the platform's own error message reaches the user. Stream big uploads (`remote.Multipart`, `remote.Uploads`); never read a video into memory.
+- **Running a tool:** build it with `proc.Command`, not `exec.Command`, so the desktop app on Windows doesn't flash a console window per run. Start anything the user can stop with `proc.Start` and end it with `proc.Kill`/`proc.Terminate`, which take the whole tree (ffmpeg and Chrome under a render) on Unix and Windows alike; call `proc.Done` once it has been waited for.
 - **Secrets:** keys live encrypted in the database (`internal/keys`). Name platform secrets `…_SECRET`: `agent.Env` strips every `*_SECRET` variable from the agent's environment. The API shows only a key's last four characters.
 - **The MCP server is the whole app.** Every API route a person can use should have a tool in `internal/mcp` (`TestMCP` checks that each tool's path is a real route). When you add a route, add its tool. The Assistant (`internal/assistant`) is Claude Code, or OpenCode for other providers' models, connected only to that server.
 - **Long work runs in the background** (agent turns, renders, scans, imports, posts) and reports through project events and status. Requests return at once.
@@ -69,4 +73,4 @@ node --check relay/src.js                        # WhatsApp relay syntax
 
 ## Releasing (maintainers)
 
-Bump `Version` in `internal/update/update.go` and move `CHANGELOG.md`'s Unreleased entries under a `## [X.Y.Z] - date` heading, then run `./release.sh "What changed"`. It pushes the multi-arch image to ghcr.io, zips `dist/` into the website's download, deploys the website Worker and tags the commit `vX.Y.Z` with a GitHub Release, which every copy's update check reads; publishing it makes CI build the Linux desktop packages and attach them. Never commit `data/`, `.env` or any backup of them.
+Bump `Version` in `internal/update/update.go` and move `CHANGELOG.md`'s Unreleased entries under a `## [X.Y.Z] - date` heading, then run `./release.sh "What changed"`. It pushes the multi-arch image to ghcr.io, zips `dist/` into the website's download, deploys the website Worker and tags the commit `vX.Y.Z` with a GitHub Release, which every copy's update check reads; publishing it makes CI build the Linux and Windows desktop packages and attach them. Never commit `data/`, `.env` or any backup of them.

@@ -12,6 +12,7 @@ import (
 func TestNextSlot(t *testing.T) {
 	config.DataDir = t.TempDir()
 	store.Open()
+	t.Cleanup(store.Close)
 	store.DB.Exec("insert into settings(key,value) values('timezone','Asia/Dhaka')") // as saved from a browser in Dhaka
 	dhaka, _ := time.LoadLocation("Asia/Dhaka")
 	now := time.Date(2026, 10, 23, 21, 0, 0, 0, dhaka) // Friday 21:00

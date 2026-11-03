@@ -12,6 +12,7 @@ import (
 func TestParseCodex(t *testing.T) {
 	config.DataDir = t.TempDir()
 	store.Open()
+	t.Cleanup(store.Close)
 	in := `{"type":"thread.started","thread_id":"01a1-thread"}
 {"type":"turn.started"}
 {"type":"error","message":"Reconnecting... 2/5 (unexpected status 503)"}

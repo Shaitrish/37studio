@@ -14,6 +14,7 @@ import (
 func TestDeleteCascades(t *testing.T) {
 	config.DataDir = t.TempDir()
 	store.Open()
+	t.Cleanup(store.Close)
 	store.DB.Exec("insert into tenants(id,name) values(1,'Shop'),(2,'Other')")
 	store.DB.Exec("insert into campaigns(id,tenant_id,name) values(1,1,'Eid')")
 	store.DB.Exec("insert into projects(id,tenant_id,campaign_id,title,kind,aspect,seconds,quality) values(1,1,1,'A','reel','9:16',30,'standard'),(2,2,null,'B','reel','9:16',30,'standard')")
