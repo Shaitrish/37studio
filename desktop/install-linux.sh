@@ -31,4 +31,11 @@ Categories=AudioVideo;Video;
 StartupWMClass=37studio
 EOF
 update-desktop-database "$(dirname "$entry")" 2>/dev/null || true
+# Ubuntu 23.10+ needs an AppArmor profile before WebKit's sandbox can start, or the window crashes when opened from
+# the menu. Writing to /etc needs root, so say how instead of asking for a password here.
+if [ "$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null)" = 1 ] && ! grep -qs "$app/37studio" /etc/apparmor.d/*; then
+  echo "Ubuntu needs one more step so the window can open from the menu (it asks for your password):"
+  echo "  printf 'abi <abi/4.0>,\\ninclude <tunables/global>\\nprofile 37studio-local %s flags=(unconfined) {\\n  userns,\\n}\\n' '$app/37studio' | sudo tee /etc/apparmor.d/37studio-local"
+  echo "  sudo apparmor_parser -r /etc/apparmor.d/37studio-local"
+fi
 echo "Installed. Open 37Studio from your app menu (press the Super key and type 37Studio)."

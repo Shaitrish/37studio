@@ -227,6 +227,18 @@ $env:STUDIO37_DATA = "C:\path\to\37Studio\data"; & "$env:LOCALAPPDATA\Programs\3
 **`Package gtk4 was not found` or `webkitgtk-6.0 was not found` while building.** Step 1 wasn't done, or your Linux is
 too old to have WebKitGTK 6.0.
 
+**Ubuntu: the window doesn't open from the app menu, but does from a terminal.** Ubuntu 23.10 and newer only let
+programs with an AppArmor profile use the sandbox WebKit draws the window in, so the window crashes on start (the log,
+`journalctl --user -b | grep 37studio`, says `bwrap: setting up uid map: Permission denied`). The .deb from 0.9.1 on
+installs the profile itself. For 0.9.0, the .tar.gz or a copy you built yourself, add it once, with the path to the
+program you run:
+
+```bash
+app=/usr/lib/37studio/37studio   # or ~/.local/lib/37studio/37studio, or wherever you unpacked the .tar.gz
+printf 'abi <abi/4.0>,\ninclude <tunables/global>\nprofile 37studio %s flags=(unconfined) {\n  userns,\n}\n' "$(realpath "$app")" | sudo tee /etc/apparmor.d/37studio
+sudo apparmor_parser -r /etc/apparmor.d/37studio
+```
+
 **`go: command not found`.** Install Go, or add it to your PATH: `export PATH=$HOME/.local/go/bin:$PATH` if it's in
 `~/.local/go`.
 

@@ -50,6 +50,40 @@ Description: AI video studio and social media desk
  your own computer, with your own AI keys. This is the desktop app: the same studio
  as the Docker image, in its own window, without Docker.
 EOF
+# Ubuntu 23.10 on stops apps without an AppArmor profile from making user namespaces, and WebKit's web process sandbox
+# (bubblewrap) needs one: without it the window crashes on start ("bwrap: setting up uid map: Permission denied")
+# unless the app is launched from a terminal that already has the permission. The profile is the one Ubuntu ships for
+# Epiphany: it confines nothing, it only names the program and allows the namespace. postinst writes it rather than
+# the package shipping it, so a copy someone made by hand for 0.9.0 (docs/desktop.md) is replaced without a prompt.
+install -m755 /dev/stdin "$root/DEBIAN/postinst" <<'EOF'
+#!/bin/sh
+set -e
+if [ "$1" = configure ] && [ -d /etc/apparmor.d ]; then
+  cat > /etc/apparmor.d/37studio <<'PROFILE'
+abi <abi/4.0>,
+include <tunables/global>
+
+profile 37studio /usr/lib/37studio/37studio flags=(unconfined) {
+  userns,
+
+  include if exists <local/37studio>
+}
+PROFILE
+  if [ -d /sys/kernel/security/apparmor ] && command -v apparmor_parser >/dev/null; then
+    apparmor_parser -r -W /etc/apparmor.d/37studio || true
+  fi
+fi
+EOF
+install -m755 /dev/stdin "$root/DEBIAN/postrm" <<'EOF'
+#!/bin/sh
+set -e
+if [ "$1" = remove ] || [ "$1" = purge ]; then
+  if [ -f /etc/apparmor.d/37studio ] && [ -d /sys/kernel/security/apparmor ] && command -v apparmor_parser >/dev/null; then
+    apparmor_parser -R /etc/apparmor.d/37studio 2>/dev/null || true
+  fi
+  rm -f /etc/apparmor.d/37studio
+fi
+EOF
 dpkg-deb --build --root-owner-group "$root" "$out/37studio_${V}_${arch}.deb"
 tar -C desktop/bin -czf "$out/37studio-${V}-linux-${arch}.tar.gz" 37studio
 (cd "$out" && sha256sum 37studio[_-]* > "37studio-${V}-linux-${arch}.sha256")
