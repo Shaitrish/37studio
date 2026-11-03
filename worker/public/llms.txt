@@ -4,5 +4,6 @@
 
 - [Connecting social accounts](https://studio.shaitrish.com/connect.txt): step-by-step setup for Facebook & Instagram, YouTube, TikTok, LinkedIn, X, Pinterest, Bluesky, Mastodon and WhatsApp, written for an AI assistant to walk someone through
 - [Setup guide](https://studio.shaitrish.com/setup): install Docker, start 37Studio, add AI keys
+- [Desktop app](https://studio.shaitrish.com/desktop): the preview app for Windows and Linux without Docker: downloads, install steps and the tools it needs
 - [README](https://github.com/Shaitrish/37studio/blob/main/README.md): features, configuration and environment variables
 - [Architecture](https://github.com/Shaitrish/37studio/blob/main/docs/architecture.md): how the code is organised

@@ -3,7 +3,7 @@
 37Studio as a normal app in its own window, without Docker. It is the same app as the Docker version: the same
 brands, projects, agent and publishing, served to a native window instead of a browser tab.
 
-**Status: preview, Linux and Windows.** From the release after 0.8.0 on, each
+**Status: preview, Linux and Windows.** From 0.9.0 on, each
 [release](https://github.com/Shaitrish/37studio/releases) has a .deb for Ubuntu 24.04+ and Debian 13+ and a plain
 program for other Linux, for Intel/AMD (`amd64`) and ARM (`arm64`) computers, and a .zip for Windows 10 and 11 on
 Intel/AMD. A Mac build and automatic setup of the video tools come later; until then, the
@@ -62,7 +62,7 @@ when one is out. To remove the app, `.\install-windows.ps1 -Uninstall`; your wor
 Each release's `.sha256` file has the checksum to compare against:
 
 ```powershell
-(Get-FileHash .\37studio-0.8.0-windows-amd64.zip -Algorithm SHA256).Hash.ToLower()
+(Get-FileHash .\37studio-0.9.0-windows-amd64.zip -Algorithm SHA256).Hash.ToLower()
 ```
 
 **SmartScreen.** The program isn't signed yet, so the first run may show *Windows protected your PC*: click **More
