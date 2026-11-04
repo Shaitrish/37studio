@@ -42,7 +42,7 @@ const tiktokAPI = "https://open.tiktokapis.com"
 const metaScopes = "pages_show_list,pages_read_engagement,pages_manage_posts,business_management,instagram_basic,instagram_content_publish," +
 	"pages_messaging,pages_manage_metadata,pages_read_user_content,pages_manage_engagement,instagram_manage_messages,instagram_manage_comments" // the last six: Inbox
 
-// Facebook and Instagram use the user's own Meta app (Settings → Keys, or Social → Set up your Meta app), kept in
+// Facebook and Instagram use the user's own Meta app (Settings → Social apps, or Social → Set up your Meta app), kept in
 // Development mode, so their Pages work without App Review and the login never leaves this copy.
 func ownMetaApp() bool { return os.Getenv("META_APP_ID") != "" && os.Getenv("META_APP_SECRET") != "" }
 
@@ -116,7 +116,7 @@ func randToken(n int) string {
 func OAuthStart(w http.ResponseWriter, r *http.Request) {
 	prov := r.PathValue("provider")
 	if !ProviderReady(prov) {
-		http.Error(w, prov+" is not configured. See README → Social publishing.", http.StatusBadRequest)
+		http.Error(w, prov+" is not configured. Add its app keys in Settings → Social apps.", http.StatusBadRequest)
 		return
 	}
 	tenant, _ := strconv.ParseInt(r.URL.Query().Get("tenant"), 10, 64)

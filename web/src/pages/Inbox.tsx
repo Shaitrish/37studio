@@ -82,7 +82,7 @@ function AccessProblems({ errors }: { errors: InboxData["errors"] }) {
   return (
     <div className="card card-b stack small" style={{ gap: 6, background: "var(--warn-soft)" }}>
       <strong className="row" style={{ gap: 6 }}><WarningIcon size={15} /> Some accounts can't be read yet</strong>
-      {perms && <span>The Meta app needs the inbox permissions, then reconnect each brand on its Social tab. See README → Social inbox.</span>}
+      {perms && <span>The Meta app needs the inbox permissions, then reconnect each brand on its Social tab. See <a className="link" href="#/guide/inbox">Guide → Inbox</a>.</span>}
       {igOff && <span>Instagram: in the Instagram app, Settings → Messages and story replies → Message controls → Connected tools, turn on <b>Allow access to messages</b>.</span>}
       <details><summary className="muted" style={{ cursor: "pointer" }}>Details ({errors.length})</summary>
         <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>

@@ -817,7 +817,7 @@ func watchRender(id int64, r io.Reader) []string {
 	return last
 }
 
-// renderFlags are the speed settings from Settings → Rendering, shared by the Export button and the agent.
+// renderFlags are the speed settings from Settings → Performance, shared by the Export button and the agent.
 // Measured on a 59 s, 12-clip Bangla reel (Ryzen laptop, 12 threads, no GPU in headless Chrome):
 // high 195 s; --gpu 178 s but a 50% bigger file; fast capture 207 s; 3 workers 233 s, 6 workers 260 s (CPU-bound,
 // auto's 1 worker is right); draft at 15 fps 114 s. So drafts drop to 15 fps; finals stay on defaults.

@@ -136,7 +136,7 @@ For changes that aren't released yet, or to work on the app.
 3. Press the Super (Windows) key, type **37Studio** and open it. To keep it in the dock, right-click its icon there
    and choose **Pin to Dash**.
 
-Then follow [First steps](../README.md#first-steps): add your Claude key in Settings → Keys and add a brand.
+Then follow [First steps](../README.md#first-steps): add your Claude key in Settings → AI services and add a brand.
 
 ### Install on Windows
 
@@ -155,7 +155,7 @@ it; to keep it handy, right-click it there and choose **Pin to Start** or **Pin 
 To build without installing, `.\desktop\build.ps1` leaves the program at `desktop\bin\37studio.exe`. To build the
 release zip the way CI does, `.\desktop\package-windows.ps1`.
 
-Then follow [First steps](../README.md#first-steps): add your Claude key in Settings → Keys and add a brand.
+Then follow [First steps](../README.md#first-steps): add your Claude key in Settings → AI services and add a brand.
 
 ### Update
 
@@ -189,7 +189,7 @@ folder too to remove everything.
 ## Where your work is kept
 
 Everything lives in one folder: the database, `secret.key` (which decrypts your keys), brand files, footage and
-videos. Back it up, or use Settings → Backup.
+videos. Back it up, or use Settings → Storage → Back up.
 
 | | |
 | --- | --- |

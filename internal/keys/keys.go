@@ -34,7 +34,7 @@ var Names = []struct{ Name, Label, Hint string }{
 	{"META_APP_SECRET", "Meta app secret", "developers.facebook.com → your app → App settings → Basic."},
 	{"META_CONFIG_ID", "Meta login configuration ID", "Facebook Login for Business → Configurations. Needed for Instagram video uploads."},
 	{"META_VERIFY_TOKEN", "WhatsApp webhook verify token", "Only for WhatsApp through a Cloudflare Tunnel: any long random text, entered again in your Meta app's WhatsApp webhook settings."},
-	// Each platform's own developer app, for Brand → Social (README → Platform setup).
+	// Each platform's own developer app, for Brand → Social (docs/platforms.md).
 	{"GOOGLE_CLIENT_ID", "Google OAuth client ID", "YouTube: console.cloud.google.com → Credentials → OAuth client ID (Web application)."},
 	{"GOOGLE_CLIENT_SECRET", "Google OAuth client secret", "The same OAuth client's secret."},
 	{"TIKTOK_CLIENT_KEY", "TikTok client key", "developers.tiktok.com → your app (Desktop platform, Login Kit and Content Posting API)."},
@@ -203,7 +203,7 @@ func Put(r *http.Request) (any, error) {
 	return List(r)
 }
 
-const noClaude = "37Studio has no Claude key yet. Add one in Settings → Keys: an Anthropic API key, or a Claude subscription token. " +
+const noClaude = "37Studio has no Claude key yet. Add one in Settings → AI services: an Anthropic API key, or a Claude subscription token. " +
 	"Claude Desktop's sign-in can't be shared with 37Studio; the setup guide shows how to get a token: https://studio.shaitrish.com/setup#keys"
 
 // ClaudeLoggedIn reports whether Claude Code itself is signed in here (`claude /login`, or Claude Code already set up
@@ -229,9 +229,9 @@ func ClaudeHint(msg string) string {
 	case strings.Contains(m, "not logged in") || strings.Contains(m, "/login"):
 		return noClaude
 	case strings.Contains(m, "expired") && (strings.Contains(m, "oauth") || strings.Contains(m, "token")):
-		return "Your Claude subscription token has expired. Make a new one with `claude setup-token` and paste it in Settings → Keys."
+		return "Your Claude subscription token has expired. Make a new one with `claude setup-token` and paste it in Settings → AI services."
 	case strings.Contains(m, "invalid api key") || strings.Contains(m, "authentication_error") || strings.Contains(m, "invalid x-api-key"):
-		return "Claude didn't accept the key in Settings → Keys. Check it, or create a new one."
+		return "Claude didn't accept the key in Settings → AI services. Check it, or create a new one."
 	case strings.Contains(m, "credit balance"):
 		return "Your Anthropic account is out of credit. Add some at console.anthropic.com → Billing, then try again."
 	}

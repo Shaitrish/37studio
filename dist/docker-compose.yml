@@ -8,7 +8,7 @@ services:
     environment:
       STUDIO37_AGENT_PERMISSIONS: bypass     # the container is the agent's sandbox
     volumes:
-      - ./data:/data                       # your companies, footage, videos and settings: back up this folder
+      - ./data:/data                       # your brands, footage, videos and settings: back up this folder
       - claude-home:/home/node/.claude
       - cache:/home/node/.cache
     shm_size: "1gb"

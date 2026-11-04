@@ -78,7 +78,7 @@ export default function Overview() {
       <div className="card kpis">
         <Kpi label="Active projects" value={String(active.length)} sub={`${count("running")} with the agent now`} />
         <Kpi label="Delivered" value={String(count("delivered"))} sub={`of ${all.length} project${all.length === 1 ? "" : "s"}`} />
-        <Kpi label="Spent this month" value={cash(costs?.this_month ?? 0)} sub="Claude, Gemini and ElevenLabs" />
+        <Kpi label="Spent this month" value={cash(costs?.this_month ?? 0)} sub="all your AI services" />
         <Kpi label="Spent in total" value={cash(costs?.total ?? 0)} sub="see Costs for the breakdown" />
       </div>
 

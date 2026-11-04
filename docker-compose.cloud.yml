@@ -5,7 +5,7 @@
 #   3. Next to this file, create .env with at least:
 #        STUDIO37_DOMAIN=studio.example.com
 #        STUDIO37_PASSWORD=<a long random password without $ signs, e.g. from: openssl rand -base64 24>
-#      API keys and platform credentials can go in .env too, or in Settings → Keys once it's running.
+#      API keys and platform credentials can go in .env too, or in Settings once it's running.
 #   4. mkdir -p data && sudo chown 1000:1000 data      # the app runs as uid 1000 and must be able to write here
 #   5. docker compose -f docker-compose.cloud.yml up -d
 #   6. Open https://studio.example.com and sign in with any username and that password.

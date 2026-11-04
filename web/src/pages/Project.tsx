@@ -356,7 +356,7 @@ function Generate({ p, meta }: { p: Project; meta?: Meta }) {
   }
   return (
     <div className="card">
-      <div className="card-h"><h2>Generate media</h2><span className="small faint">Gemini & ElevenLabs · counted in this project's cost</span></div>
+      <div className="card-h"><h2>Generate media</h2><span className="small faint">images, clips, voice and music · counted in this project's cost</span></div>
       <div className="card-b stack" style={{ gap: 12 }}>
         <Seg value={kind} options={genKinds.map(({ value, label }) => ({ value, label }))} onChange={(v) => { setKind(v); setSeconds(v === "music" ? p.seconds || 30 : 2); }} />
         <textarea className="textarea" rows={3} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={k.hint} />
@@ -367,7 +367,7 @@ function Generate({ p, meta }: { p: Project; meta?: Meta }) {
           )}
           {kind === "voice" && <span className="small muted">Voice for {languageName(p.language || "en")} from Settings</span>}
           <span className="spacer" />
-          {!ready && <span className="small muted">Set {k.provider === "gemini" ? "GEMINI_API_KEY" : "ELEVENLABS_API_KEY"} to enable</span>}
+          {!ready && <span className="small muted">Add a {k.provider === "gemini" ? "Gemini" : "ElevenLabs"} key in Settings → AI services to enable</span>}
           <button className="btn" disabled={!ready || !prompt.trim()} onClick={submit}><SparkleIcon size={15} /> Generate</button>
         </div>
       </div>

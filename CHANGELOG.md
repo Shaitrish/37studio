@@ -4,6 +4,14 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 
 ## [Unreleased]
 
+### Added
+- **Guide** in the sidebar: how to set up and use every part of 37Studio, searchable and readable offline, with buttons that open the page it talks about. The same text is in `docs/guide.md`.
+
+### Changed
+- The browser tab now shows which page you're on.
+- **Costs** moved out of the sidebar's Social group, into Studio.
+- Messages, help text and docs now name the Settings sections the app really has (AI services, Social apps) instead of the old "Settings → Keys", and say "brand" where they still said client or company.
+
 ## [0.9.1] - 2026-11-04
 
 ### Fixed

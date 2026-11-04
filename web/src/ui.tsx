@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, DownloadSimpleIcon, FileAudioIcon, FileTextIcon, FilmStripIcon, ImageIcon, PencilSimpleIcon, TrashIcon, TextTIcon, CloudArrowUpIcon, XIcon } from "@phosphor-icons/react";
-import { AssetMeta, bytes, clock, fail, FileInfo, Project, Quality, Tenant } from "./api";
+import { AssetMeta, bytes, clock, fail, FileInfo, Project, Quality, Tenant, toast } from "./api";
 
 export function Modal({ title, sub, onClose, children, footer, size }: {
   title: string; sub?: string; onClose: () => void; children: ReactNode; footer?: ReactNode; size?: "lg" | "xl";
@@ -299,11 +299,21 @@ export function ModelPicker({ value, qualities, onChange }: { value: string; qua
   );
 }
 
-/** Just enough markdown for agent replies and the knowledge base: paragraphs, lists, headings, **bold**, `code`, links. */
+function CodeBlock({ text }: { text: string }) {
+  return (
+    <div className="code-block">
+      <pre className="mono">{text}</pre>
+      {navigator.clipboard && <button className="btn ghost sm" onClick={() => navigator.clipboard.writeText(text).then(() => toast("Copied"), fail)}>Copy</button>}
+    </div>
+  );
+}
+
+/** Just enough markdown for agent replies, the knowledge base and the Guide: paragraphs, lists, headings, tables, code blocks, **bold**, `code`, links. */
 export function Md({ text, className = "msg-agent" }: { text: string; className?: string }) {
   const blocks: ReactNode[] = [];
   let para: string[] = [];
   let items: string[] = [], ordered = false;
+  let rows: string[][] = [], code: string[] | undefined;
   const flushPara = () => { if (para.length) blocks.push(<p key={blocks.length}>{inline(para.join(" "))}</p>); para = []; };
   const flushList = () => {
     if (!items.length) return;
@@ -311,7 +321,28 @@ export function Md({ text, className = "msg-agent" }: { text: string; className?
     blocks.push(ordered ? <ol key={blocks.length}>{lis}</ol> : <ul key={blocks.length}>{lis}</ul>);
     items = [];
   };
+  const flushTable = () => {
+    if (!rows.length) return;
+    const [head, ...body] = rows;
+    blocks.push(<div className="table-wrap" key={blocks.length}><table className="table">
+      <thead><tr>{head.map((c, i) => <th key={i}>{inline(c)}</th>)}</tr></thead>
+      <tbody>{body.map((r, i) => <tr key={i}>{r.map((c, j) => <td key={j}>{inline(c)}</td>)}</tr>)}</tbody>
+    </table></div>);
+    rows = [];
+  };
+  const flushCode = () => { if (code) blocks.push(<CodeBlock key={blocks.length} text={code.join("\n")} />); code = undefined; };
   for (const line of text.split("\n")) {
+    if (/^\s*```/.test(line)) {
+      if (code) flushCode(); else { flushPara(); flushList(); flushTable(); code = []; }
+      continue;
+    }
+    if (code) { code.push(line); continue; }
+    if (/^\s*\|.*\|\s*$/.test(line)) {
+      flushPara(); flushList();
+      if (!/^[\s|:-]+$/.test(line)) rows.push(line.trim().slice(1, -1).split("|").map((c) => c.trim())); // the --- row only marks the header
+      continue;
+    }
+    flushTable();
     const li = line.match(/^\s*([-*•]|\d+[.)])\s+(.*)/);
     const h = line.match(/^(#{1,6})\s+(.*)/);
     if (li) {
@@ -331,7 +362,7 @@ export function Md({ text, className = "msg-agent" }: { text: string; className?
       para.push(line.trim());
     }
   }
-  flushPara(); flushList();
+  flushPara(); flushList(); flushTable(); flushCode();
   return <div className={className}>{blocks}</div>;
 }
 

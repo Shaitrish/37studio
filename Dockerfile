@@ -6,6 +6,7 @@ WORKDIR /web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci
 COPY web/ ./
+COPY docs/guide.md /docs/guide.md
 RUN npm run build
 
 # ---- API (pure Go SQLite, so no cgo: cross-compiled natively instead of emulated)

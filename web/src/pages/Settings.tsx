@@ -23,7 +23,7 @@ const aiProviders: Provider[] = [
     what: "The brain of 37Studio: it edits your videos, writes captions and drafts replies. One of the two below is enough.",
     get: { label: "Get an API key", url: "https://console.anthropic.com/settings/keys" },
     fields: [
-      { key: "CLAUDE_CODE_OAUTH_TOKEN", label: "Claude Pro or Max plan", help: "Uses your Claude subscription. In the 37Studio folder run docker compose exec studio claude setup-token, sign in, and paste the token it prints. (Claude Desktop's sign-in doesn't carry over.)" },
+      { key: "CLAUDE_CODE_OAUTH_TOKEN", label: "Claude Pro or Max plan", help: `Uses your Claude subscription. ${desktop ? "In a terminal run claude setup-token" : "In the 37Studio folder run docker compose exec studio claude setup-token"}, sign in, and paste the token it prints. (Claude Desktop's sign-in doesn't carry over.)` },
       { key: "ANTHROPIC_API_KEY", label: "Or an Anthropic API key", help: "Pay only for what you use. console.anthropic.com → API keys." },
     ],
     ready: (set) => set("ANTHROPIC_API_KEY") || set("CLAUDE_CODE_OAUTH_TOKEN"),
@@ -245,7 +245,7 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
                     action="Set up" onClick={() => setTab("social")} brands={["facebook", "instagram", "youtube", "tiktok"]} />
                 </div>
               </div>
-              <p className="small faint" style={{ margin: 0 }}>Keys are encrypted on this computer and only ever sent to the service they belong to. 37Studio's makers never see them.</p>
+              <p className="small faint" style={{ margin: 0 }}>Keys are encrypted on this computer and only ever sent to the service they belong to. 37Studio's makers never see them. New here? The <a className="link" href="#/guide">Guide</a> walks through every step.</p>
             </>
           )}
 

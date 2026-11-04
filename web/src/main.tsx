@@ -1,7 +1,7 @@
 import { lazy as lazyPage, Suspense, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  ChartPieSliceIcon, ChatCircleDotsIcon, ChatsCircleIcon, FilmSlateIcon, FilmStripIcon, GearSixIcon, HeartIcon, IconContext, MegaphoneIcon, MonitorIcon, MoonIcon, SidebarSimpleIcon,
+  BookOpenIcon, ChartPieSliceIcon, ChatCircleDotsIcon, ChatsCircleIcon, FilmSlateIcon, FilmStripIcon, GearSixIcon, HeartIcon, IconContext, MegaphoneIcon, MonitorIcon, MoonIcon, SidebarSimpleIcon,
   SquaresFourIcon, SunIcon, TagIcon,
 } from "@phosphor-icons/react";
 import "./styles.css";
@@ -28,6 +28,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const Inbox = lazy(() => import("./pages/Inbox"));
 const Library = lazy(() => import("./pages/Library"));
 const Assistant = lazy(() => import("./pages/Assistant"));
+const Guide = lazy(() => import("./pages/Guide"));
 
 const nav = [
   { group: "Studio", items: [
@@ -37,12 +38,16 @@ const nav = [
     { path: "/library", label: "Library", icon: FilmStripIcon },
     { path: "/campaigns", label: "Campaigns", icon: MegaphoneIcon },
     { path: "/clients", label: "Brands", icon: TagIcon },
+    { path: "/costs", label: "Costs", icon: ChartPieSliceIcon },
   ] },
   { group: "Social", items: [
     { path: "/inbox", label: "Inbox", icon: ChatsCircleIcon },
-    { path: "/costs", label: "Costs", icon: ChartPieSliceIcon },
+  ] },
+  { group: "Help", items: [
+    { path: "/guide", label: "Guide", icon: BookOpenIcon },
   ] },
 ];
+const pageTitles = Object.fromEntries([...nav.flatMap((g) => g.items.map((i) => [i.path, i.label])), ["/settings", "Settings"]]);
 
 // Per-browser UI preferences. Storage can throw (private mode); the defaults still work.
 const pref = (k: string, v?: string) => { try { if (v === undefined) return localStorage.getItem("37studio:" + k); localStorage.setItem("37studio:" + k, v); } catch {} return v ?? null; };
@@ -91,10 +96,12 @@ function App() {
       case "inbox": return <Inbox />;
       case "settings": return <Settings tab={id} />;
       case "assistant": return <Assistant />;
+      case "guide": return <Guide section={id} />;
       default: return <Overview />;
     }
   })();
   const active = "/" + (section ?? "");
+  useEffect(() => { document.title = pageTitles[active] ? `${pageTitles[active]} · 37Studio` : "37Studio"; }, [active]);
 
   const [collapsed, setCollapsed] = useState(pref("side") === "1");
   const [theme, setTheme] = useState<Theme>((pref("theme") as Theme) || "system");

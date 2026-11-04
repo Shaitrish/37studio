@@ -78,7 +78,7 @@ export function TenantModal({ tenant, onClose, onSaved }: { tenant?: Tenant; onC
         <Field label="Contact person"><input className="input" value={f.contact ?? ""} onChange={set("contact")} /></Field>
         <Field label="Email"><input className="input" type="email" value={f.email ?? ""} onChange={set("email")} /></Field>
         <Field label="Phone"><input className="input" value={f.phone ?? ""} onChange={set("phone")} /></Field>
-        <Field label="Website / course link"><input className="input" value={f.website ?? ""} onChange={set("website")} /></Field>
+        <Field label="Website"><input className="input" value={f.website ?? ""} onChange={set("website")} /></Field>
         <Field label="Spoken language" hint="drives transcription">
           <select className="select" value={f.language} onChange={set("language")}>
             {languages.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -93,7 +93,7 @@ export function TenantModal({ tenant, onClose, onSaved }: { tenant?: Tenant; onC
         <Field label="Accent color">
           <div className="row"><input className="input" type="color" value={f.accent_color} onChange={set("accent_color")} style={{ width: 56 }} /><input className="input mono" value={f.accent_color ?? ""} onChange={set("accent_color")} /></div>
         </Field>
-        <Field label="Profile" hint="who they are, what they teach, tone" full>
+        <Field label="Profile" hint="who they are, what they do, tone" full>
           <textarea className="textarea" value={f.bio ?? ""} onChange={set("bio")} placeholder="What they do, who they serve, how they sound. e.g. Bootstrapped SaaS for clinics; friendly, no jargon." />
         </Field>
         <Field label="Notes for the editor" hint="do's and don'ts" full>

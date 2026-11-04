@@ -231,7 +231,7 @@ function Knowledge({ tenant, reload, onScan }: { tenant: Tenant; reload: () => v
         {tenant.scan_status === "done" && tenant.scan_note && <p className="small muted" style={{ whiteSpace: "pre-wrap" }}>{tenant.scan_note}</p>}
         {!text && !tenant.scanning ? (
           <Empty icon={<GlobeIcon size={28} />} title="No knowledge base yet">
-            Scan their website or project folder, or write what they do, who they teach, their offers and tone.
+            Scan their website or project folder, or write what they do, who they serve, their offers and tone.
             <button className="btn primary" onClick={onScan}><GlobeIcon size={15} /> Scan</button>
           </Empty>
         ) : null}

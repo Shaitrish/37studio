@@ -142,10 +142,10 @@ sudo usermod -aG docker $USER</pre>
     <h3>Option A: your Claude Pro or Max plan</h3>
     <p>Already signed in to <b>Claude Desktop</b> or claude.ai? That sign-in can't be shared with 37Studio, but the same account works here. Open a terminal in the 37Studio folder (Windows 11: right-click inside the folder → <b>Open in Terminal</b>; Windows 10: Shift + right-click → <b>Open PowerShell window here</b>; Mac: right-click the folder → <b>New Terminal at Folder</b>) and run:</p>
     <pre class="cmd">docker compose exec studio claude setup-token</pre>
-    <p>It shows a link. Open it, sign in to Claude, and paste the code back into the terminal. It prints a token starting with <code>sk-ant-oat</code>: paste that into <b>Settings → Keys → Claude subscription token</b>. If Claude Code is already installed on your computer, <code>claude setup-token</code> there gives the same token.</p>
+    <p>It shows a link. Open it, sign in to Claude, and paste the code back into the terminal. It prints a token starting with <code>sk-ant-oat</code>: paste that into <b>Settings → AI services → Claude Pro or Max plan</b>. If Claude Code is already installed on your computer, <code>claude setup-token</code> there gives the same token.</p>
     <div class="note">Anthropic's terms apply to using a Claude subscription in other apps. An API key (option B) is the fully supported route.</div>
     <h3>Option B: an Anthropic API key</h3>
-    <p>At <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a>, add credit under Billing, create a key under <b>API keys</b>, and paste it into <b>Settings → Keys → Anthropic API key</b>. You pay Anthropic for what you use, and every project shows its cost.</p>
+    <p>At <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a>, add credit under Billing, create a key under <b>API keys</b>, and paste it into <b>Settings → AI services → Anthropic API key</b>. You pay Anthropic for what you use, and every project shows its cost.</p>
     <h3>Optional: OpenCode for cheaper routine edits</h3>
     <pre class="cmd">docker compose exec studio opencode auth login</pre>
     <p>Then pick DeepSeek in a project's quality menu for small changes.</p>
@@ -185,7 +185,7 @@ sudo usermod -aG docker $USER</pre>
     <p>Each of these needs a free developer app of your own, made once on the platform's developer site:</p>
     <ol>
       <li>Create the app and add 37Studio's return address to it: <code>http://localhost:8080/api/oauth/<i>name</i>/callback</code>, where <i>name</i> is <code>google</code> for YouTube, or <code>tiktok</code>, <code>linkedin</code>, <code>x</code> or <code>pinterest</code>. X refuses <code>localhost</code>, so its address is <code>http://127.0.0.1:8080/api/oauth/x/callback</code>.</li>
-      <li>Paste the app's ID and secret into <b>Settings → Keys</b>. They're encrypted on your computer.</li>
+      <li>Paste the app's ID and secret into <b>Settings → Social apps</b>. They're encrypted on your computer.</li>
       <li>On the brand's Social tab, click <b>Connect</b> for that platform. For Pinterest, then tick the boards to post to.</li>
     </ol>
     <p>The <a href="https://github.com/Shaitrish/37studio/blob/main/docs/platforms.md">platform guide</a> lists exactly which products, permissions and settings each developer site needs. Until a platform reviews your app, it limits what the app can do: YouTube keeps uploads private, TikTok posts only privately or to the creator's drafts, LinkedIn posts to your own profile (company Pages need LinkedIn's approval), and new Pinterest apps work in Pinterest's sandbox.</p>
@@ -232,9 +232,9 @@ sudo usermod -aG docker $USER</pre>
     <h3>Videos render slowly on a Mac</h3>
     <p>Give Docker more memory and CPU under <b>Settings → Resources</b>, and close heavy apps while rendering.</p>
     <h3>The agent says there's no Claude key</h3>
-    <p>Add one under <b>Settings → Keys</b> (step 4). If you use a subscription token and it stopped working, make a new one with <code>claude setup-token</code>.</p>
+    <p>Add one under <b>Settings → AI services</b> (step 4). If you use a subscription token and it stopped working, make a new one with <code>claude setup-token</code>.</p>
     <h3>Connect says a platform "is not configured"</h3>
-    <p>Its app ID and secret aren't in <b>Settings → Keys</b> yet (step 6).</p>
+    <p>Its app ID and secret aren't in <b>Settings → Social apps</b> yet (step 6).</p>
     <h3>A platform says the return address doesn't match</h3>
     <p>The address in the platform's developer app must be exactly <code>http://localhost:8080/api/oauth/<i>name</i>/callback</code> (for X, <code>http://127.0.0.1:8080/api/oauth/x/callback</code>), with no slash at the end. On a server it starts with your own <code>https://</code> domain instead.</p>
     <h3>Facebook sign-in fails</h3>

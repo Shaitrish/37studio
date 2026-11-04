@@ -109,7 +109,7 @@ Rendering and storage run on your own computer, so they cost nothing. Costs are 
 ```
 data/
   37studio.db           SQLite (WAL): brands, projects, posts, accounts and their encrypted tokens, settings, encrypted keys
-  secret.key            the key that encrypts Settings → Keys and platform tokens; keep it with the database
+  secret.key            the key that encrypts your saved keys and platform tokens; keep it with the database
                         Settings → Storage → Back up downloads both, with brands, templates and projects, as one zip
                         (footage and exports only if asked; `internal/store/backup.go`). Restore: unzip into an empty data/
   tenants/<id>/         a brand's library (assets/), design.md, knowledge.md, replies.md, source/
@@ -153,7 +153,7 @@ The Go code builds one binary, `37studio`, that serves the app and runs the agen
 | `internal/mcp` | The MCP server: the API as tools for other agents and the Assistant |
 | `internal/assistant` | The Assistant chat: Claude Code or OpenCode connected only to the MCP server and the web |
 | `internal/update` | Version and the update check |
-| `web/src` | React UI: `pages/Project.tsx` is the editor workspace, `pages/Social.tsx` the Social tab |
+| `web/src` | React UI: `pages/Project.tsx` is the editor workspace, `pages/Social.tsx` the Social tab, `pages/Guide.tsx` shows `docs/guide.md` |
 | `worker/` | Cloudflare Worker: the static product website (`public/`) |
 | `relay/` | Optional WhatsApp webhook relay (Cloudflare Worker + D1) that users deploy themselves |
 | `dist/`, `release.sh` | The launcher bundle people download, and the script that publishes a release |

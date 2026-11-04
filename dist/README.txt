@@ -20,5 +20,5 @@ Desktop starts (Docker Desktop -> Settings -> General -> "Start Docker Desktop w
 night, keep the computer awake: Windows -> Settings -> Power -> "When plugged in, put my device to sleep after: Never";
 Mac -> System Settings -> Energy (or Battery -> Options) -> "Prevent automatic sleeping when the display is off".
 
-Your work lives in the "data" folder next to this file. Back it up; deleting it deletes your companies and videos.
+Your work lives in the "data" folder next to this file. Back it up; deleting it deletes your brands and videos.
 To stop 37Studio: Docker Desktop -> Containers -> 37studio -> Stop.

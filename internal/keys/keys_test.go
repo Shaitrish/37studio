@@ -16,7 +16,7 @@ func TestClaudeReadyAndHints(t *testing.T) {
 	t.Setenv("USERPROFILE", home) // the one os.UserHomeDir reads on Windows
 	t.Setenv("ANTHROPIC_API_KEY", "")
 	t.Setenv("CLAUDE_CODE_OAUTH_TOKEN", "")
-	if err := ClaudeReady(); err == nil || !strings.Contains(err.Error(), "Settings → Keys") {
+	if err := ClaudeReady(); err == nil || !strings.Contains(err.Error(), "Settings → AI services") {
 		t.Fatalf("no key: want the Settings hint, got %v", err)
 	}
 	t.Setenv("CLAUDE_CODE_OAUTH_TOKEN", "sk-ant-oat01-x")

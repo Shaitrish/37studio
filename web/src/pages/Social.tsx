@@ -231,7 +231,7 @@ function ConnectPasted({ tenantId, kind, onDone }: { tenantId: number; kind: key
 }
 
 /** The user's own Meta app, which Facebook and Instagram sign in through: in Development mode the admin and anyone with
- *  an app role can connect Pages without App Review. Saved as keys (Settings → Keys), so it applies to every brand. */
+ *  an app role can connect Pages without App Review. Saved as keys (Settings → Social apps), so it applies to every brand. */
 function OwnMetaApp({ current, redirect, onDone }: { current: string; redirect: string; onDone: () => void }) {
   const [f, setF] = useState({ META_APP_ID: current, META_APP_SECRET: "", META_CONFIG_ID: "" });
   const [busy, setBusy] = useState(false);
@@ -355,7 +355,7 @@ export function PublishModal({ p, onClose, onQueued }: { p: Project; onClose: ()
             </button>}
           </span>
           {data && !accounts.length ? (
-            <p className="small muted">No accounts connected for {p.tenant_name}. <a href={`#/clients/${p.tenant_id}/social`}>Connect them on the client's Social tab</a>.</p>
+            <p className="small muted">No accounts connected for {p.tenant_name}. <a href={`#/clients/${p.tenant_id}/social`}>Connect them on the brand's Social tab</a>.</p>
           ) : (
             <div className="choices">
               {accounts.map((a) => (
