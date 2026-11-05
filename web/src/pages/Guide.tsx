@@ -1,18 +1,8 @@
 import { useEffect, useState } from "react";
 import { ArrowLeftIcon, ArrowRightIcon, ArrowSquareOutIcon, BookOpenIcon } from "@phosphor-icons/react";
-import raw from "../../../docs/guide.md?raw";
 import { repoURL } from "../api";
+import { sections } from "../guide";
 import { Empty, Md } from "../ui";
-
-// docs/guide.md is the one copy of this text, so GitHub and the app can't disagree. Each ## is a section, and its id is
-// the anchor GitHub gives that heading, so the file's own [links](#section) work in both places.
-const sections = raw.split(/^## /m).slice(1).map((part) => {
-  const title = part.slice(0, part.indexOf("\n")).trim();
-  const body = part.slice(part.indexOf("\n")).trim()
-    .replace(/^### /gm, "## ") // Md starts at h2; the section title already is one
-    .replace(/\]\(#([\w-]+)\)/g, "](#/guide/$1)");
-  return { title, body, id: title.toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-"), text: `${title}\n${body}`.toLowerCase() };
-});
 
 // The page a section talks about, one click away. Only here: links like these would be dead on GitHub.
 const pages: Record<string, [string, string]> = {

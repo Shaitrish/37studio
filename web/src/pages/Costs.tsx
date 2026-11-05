@@ -1,7 +1,7 @@
 import { ChartPieSliceIcon } from "@phosphor-icons/react";
 import { ReactNode } from "react";
 import { cash, useApi, useTenants } from "../api";
-import { Empty, TenantTag } from "../ui";
+import { Empty, HelpButton, TenantTag } from "../ui";
 
 interface Row { provider: string; item: string; n: number; qty: number; cost: number }
 interface Costs {
@@ -36,6 +36,7 @@ export default function Costs() {
           <h1>Costs</h1>
           <p>What your videos, captions and replies cost in AI usage, and where it goes. Rendering runs on this computer, so it is free.</p>
         </div>
+        <HelpButton to="costs-and-spending" />
       </div>
 
       <div className="grid stats">

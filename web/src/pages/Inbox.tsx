@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowsClockwiseIcon, ArrowSquareOutIcon, ChatCircleTextIcon, ChatsCircleIcon, FacebookLogoIcon, InstagramLogoIcon, PaperPlaneRightIcon, SparkleIcon, WarningIcon, WhatsappLogoIcon } from "@phosphor-icons/react";
 import { ago, api, countReply, fail, toast, useApi, useTenants } from "../api";
-import { Empty, Seg, TenantPicker } from "../ui";
+import { Empty, HelpButton, Seg, TenantPicker } from "../ui";
 
 interface Item {
   id: string; account: number; tenant: number; client: string; platform: "facebook" | "instagram" | "whatsapp"; page: string; kind: "dm" | "comment";
@@ -36,6 +36,7 @@ export default function Inbox() {
           <h1>Inbox</h1>
           <p>Messages and comments from every connected Page, Instagram and WhatsApp number. Claude drafts each reply from the brand's knowledge base; you check it and send.</p>
         </div>
+        <HelpButton to="inbox" />
         <TenantPicker tenants={tenants} value={Number(tenant) || undefined} all="All brands" onChange={(id) => { setTenant(id ? String(id) : ""); setSel(undefined); }} />
         <button className="btn" onClick={refresh} disabled={loading}><ArrowsClockwiseIcon size={15} /> {loading ? "Checking…" : "Refresh"}</button>
       </div>

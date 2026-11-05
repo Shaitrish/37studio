@@ -364,6 +364,15 @@ input[type="color"].input { padding: 3px; height: 36px; cursor: pointer; }
 .guide-doc a { color: var(--primary); }
 .guide-doc code { overflow-wrap: anywhere; } /* long addresses would push the page wider than a phone */
 .guide-doc li + li { margin-top: 4px; }
+.help-panel { position: fixed; top: 0; right: 0; bottom: 0; z-index: 55; width: min(460px, 100vw); display: flex; flex-direction: column; background: var(--card); box-shadow: var(--shadow-lg); outline: none; animation: help-in 0.18s var(--ease); }
+/* Wide windows have room: the page and any modal move over, so nothing hides behind the panel. Narrower ones get it on top. */
+@media (min-width: 1200px) { .app:has(.help-panel) .main { margin-right: 460px; } .app:has(.help-panel) .backdrop { padding-right: 476px; } }
+@keyframes help-in { from { transform: translateX(24px); opacity: 0; } }
+.help-h { display: flex; align-items: flex-start; gap: 12px; padding: 18px 20px 14px; border-bottom: 1px solid var(--border); }
+.help-h h2 { font-size: 18px; margin-top: 2px; }
+.help-b { flex: 1; min-height: 0; overflow-y: auto; padding: 16px 20px; }
+.help-f { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--border); }
+.help-f select { min-width: 0; }
 .guide-pager { margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--border); }
 .msg-agent .table-wrap { margin: 8px 0; border: 1px solid var(--border); border-radius: var(--radius-sm); }
 .code-block { position: relative; margin: 8px 0; background: var(--muted); border-radius: var(--radius-sm); }

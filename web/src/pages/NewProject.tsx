@@ -147,7 +147,7 @@ export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: ()
   }
 
   return (
-    <Modal title="New video or image" sub="A few quick questions, then the agent takes it from there." size="lg" onClose={busy ? () => {} : onClose}>
+    <Modal help="make-a-video" title="New video or image" sub="A few quick questions, then the agent takes it from there." size="lg" onClose={busy ? () => {} : onClose}>
       <div className="wizard">
         {(fixed || history.length > 0) && (
           <div className="wiz-sum">

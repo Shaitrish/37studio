@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { CaretRightIcon, MegaphoneIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
 import { api, Campaign, fail, go, toast, cash, useApi, useTenants } from "../api";
-import { Empty, Field, Modal, TenantPicker, TenantTag } from "../ui";
+import { Empty, HelpButton, Field, Modal, TenantPicker, TenantTag } from "../ui";
 import { ProjectTable } from "./Projects";
 import { NewProjectModal } from "./NewProject";
 
@@ -15,6 +15,7 @@ export default function Campaigns() {
           <h1>Campaigns</h1>
           <p>A launch, offer or product push for one of your brands, with all the videos made for it.</p>
         </div>
+        <HelpButton to="campaigns" />
         <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New campaign</button>
       </div>
       <CampaignGrid campaigns={campaigns} onNew={() => setCreating(true)} />
@@ -67,7 +68,7 @@ export function CampaignModal({ tenantId, onClose }: { tenantId?: number; onClos
     } catch (e) { fail(e); }
   }
   return (
-    <Modal title="New campaign" sub="Its brief goes to the agent on every video in the campaign." onClose={onClose}
+    <Modal help="campaigns" title="New campaign" sub="Its brief goes to the agent on every video in the campaign." onClose={onClose}
       footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={!name.trim() || !tid} onClick={save}>Create campaign</button></>}>
       <div className="stack" style={{ gap: 14 }}>
         {!tenantId && (
@@ -107,6 +108,7 @@ export function CampaignPage({ id }: { id: number }) {
           <h1>{c.name}</h1>
           <p>{c.video_count} video{c.video_count === 1 ? "" : "s"} · cost {cash(c.cost ?? 0)}</p>
         </div>
+        <HelpButton to="campaigns" />
         <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New video</button>
       </div>
 

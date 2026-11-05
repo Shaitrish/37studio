@@ -153,7 +153,7 @@ The Go code builds one binary, `37studio`, that serves the app and runs the agen
 | `internal/mcp` | The MCP server: the API as tools for other agents and the Assistant |
 | `internal/assistant` | The Assistant chat: Claude Code or OpenCode connected only to the MCP server and the web |
 | `internal/update` | Version and the update check |
-| `web/src` | React UI: `pages/Project.tsx` is the editor workspace, `pages/Social.tsx` the Social tab, `pages/Guide.tsx` shows `docs/guide.md` |
+| `web/src` | React UI: `pages/Project.tsx` is the editor workspace, `pages/Social.tsx` the Social tab, `pages/HelpPanel.tsx` is the Help panel beside any page (open it with `HelpButton` or `Modal`'s `help`, using a heading's anchor), `pages/Guide.tsx` shows `docs/guide.md` |
 | `worker/` | Cloudflare Worker: the static product website (`public/`) |
 | `relay/` | Optional WhatsApp webhook relay (Cloudflare Worker + D1) that users deploy themselves |
 | `dist/`, `release.sh` | The launcher bundle people download, and the script that publishes a release |

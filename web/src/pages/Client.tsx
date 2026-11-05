@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { WarningIcon, CaretRightIcon, FilmSlateIcon, GlobeIcon, PencilSimpleIcon, PlusIcon, TrashIcon, UsersThreeIcon } from "@phosphor-icons/react";
 import { api, Campaign, fail, go, Project, Tenant, toast, upload, useApi } from "../api";
-import { AssetEditor, Avatar, DropZone, Empty, FileTile, Md, Progress, Seg } from "../ui";
+import { AssetEditor, Avatar, DropZone, Empty, FileTile, HelpButton, Md, Progress, Seg } from "../ui";
 import { ProjectTable } from "./Projects";
 import { NewProjectModal } from "./NewProject";
 import { ScanModal, TenantModal } from "./Clients";
@@ -23,6 +23,8 @@ const folders = [
 ];
 const contained = new Set(["logo", "graphics"]);
 const extOf = (name: string) => (name.includes(".") ? name.split(".").pop()!.toLowerCase() : "other");
+
+const brandHelp: Record<string, string> = { campaigns: "campaigns", projects: "make-a-video", voices: "generated-media-and-voices", social: "connect-social-accounts", autopilot: "autopilot" };
 
 export default function ClientPage({ id, tab = "library" }: { id: number; tab?: string }) {
   const { data: t, error, reload } = useApi<Tenant>(`/tenants/${id}`);
@@ -59,6 +61,7 @@ export default function ClientPage({ id, tab = "library" }: { id: number; tab?: 
             <h1 className="ellipsis">{t.name}</h1>
             <p>{[t.teacher, t.email, t.phone].filter(Boolean).join(" · ") || "No contact details yet"}</p>
           </div>
+          <HelpButton to={brandHelp[tab] ?? "add-a-brand"} />
           <button className="btn" disabled={scanning} onClick={() => setRescan(true)}><GlobeIcon size={14} /> {t.website || t.source ? "Re-scan" : "Scan website or folder"}</button>
           <button className="btn" onClick={() => setEditing(true)}><PencilSimpleIcon size={14} /> Edit</button>
           <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New video</button>

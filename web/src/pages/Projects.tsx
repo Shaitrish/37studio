@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { BookOpenIcon, ClosedCaptioningIcon, FilmSlateIcon, ImageIcon, MegaphoneIcon, PlusIcon, MagicWandIcon, TrashIcon } from "@phosphor-icons/react";
 import { api, go, Project, cash, fail, toast, useApi, useTenants, ago } from "../api";
-import { Empty, Seg, Status, TenantTag, projectStatus } from "../ui";
+import { Empty, HelpButton, Seg, Status, TenantTag, projectStatus } from "../ui";
 import { NewProjectModal } from "./NewProject";
 
 export const presetIcon: Record<string, typeof FilmSlateIcon> = {
@@ -38,6 +38,7 @@ export default function Projects() {
           <h1>Projects</h1>
           <p>Every edit job: reels, captioned clips, explainers, promos and thumbnails.</p>
         </div>
+        <HelpButton to="make-a-video" />
         <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New video</button>
       </div>
       <div className="row wrap">

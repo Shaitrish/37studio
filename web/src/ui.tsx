@@ -1,9 +1,14 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, DownloadSimpleIcon, FileAudioIcon, FileTextIcon, FilmStripIcon, ImageIcon, PencilSimpleIcon, TrashIcon, TextTIcon, CloudArrowUpIcon, XIcon } from "@phosphor-icons/react";
-import { AssetMeta, bytes, clock, fail, FileInfo, Project, Quality, Tenant, toast } from "./api";
+import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, DownloadSimpleIcon, FileAudioIcon, FileTextIcon, FilmStripIcon, ImageIcon, PencilSimpleIcon, TrashIcon, TextTIcon, CloudArrowUpIcon, QuestionIcon, XIcon } from "@phosphor-icons/react";
+import { AssetMeta, bytes, clock, fail, FileInfo, help, Project, Quality, Tenant, toast } from "./api";
 
-export function Modal({ title, sub, onClose, children, footer, size }: {
-  title: string; sub?: string; onClose: () => void; children: ReactNode; footer?: ReactNode; size?: "lg" | "xl";
+/** Opens the guide section `to` (its heading's anchor in docs/guide.md) beside the page. Every screen has one. */
+export function HelpButton({ to, label = "Help" }: { to: string; label?: string }) {
+  return <button className="btn ghost sm help-btn" onClick={() => help(to)} title="Read how this works, without leaving this page (?)"><QuestionIcon size={15} /> {label}</button>;
+}
+
+export function Modal({ title, sub, onClose, children, footer, size, help: topic }: {
+  title: string; sub?: string; onClose: () => void; children: ReactNode; footer?: ReactNode; size?: "lg" | "xl"; help?: string;
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -18,6 +23,7 @@ export function Modal({ title, sub, onClose, children, footer, size }: {
             <h2>{title}</h2>
             {sub && <p className="small">{sub}</p>}
           </div>
+          {topic && <HelpButton to={topic} />}
           <button className="btn ghost sm icon" onClick={onClose} aria-label="Close"><XIcon size={16} /></button>
         </div>
         <div className="modal-b">{children}</div>

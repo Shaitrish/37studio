@@ -4,7 +4,7 @@ import {
   DownloadSimpleIcon, HardDrivesIcon, RocketLaunchIcon, ShareNetworkIcon, WarningCircleIcon, Icon,
 } from "@phosphor-icons/react";
 import { api, bytes, connectGuideURL, desktop, donateURL, fail, languageName, makerURL, Meta, money, repoURL, setDisplay, toast, useApi, Voice } from "../api";
-import { Field, Seg } from "../ui";
+import { Field, HelpButton, Seg } from "../ui";
 import { Brand, BrandId } from "../brands";
 
 interface KeyInfo { name: string; label: string; hint: string; set: boolean; last4?: string; source: "" | "app" | "env" }
@@ -143,6 +143,8 @@ const tabs: { id: string; label: string; Icon: Icon }[] = [
   { id: "about", label: "About", Icon: InfoIcon },
 ];
 
+const settingsHelp: Record<string, string> = { start: "start-here", ai: "connect-ai-services", social: "connect-social-accounts", spending: "costs-and-spending", storage: "back-up-and-update", agents: "use-from-other-ai-apps", about: "get-more-help" };
+
 /** Each section has its own address (#/settings/social), so other pages can link straight to it. */
 export default function Settings({ tab: tabParam }: { tab?: string }) {
   const { data, setData } = useApi<Record<string, string>>("/settings");
@@ -217,6 +219,7 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
           <h1>Settings</h1>
           <p>Connect your AI services and social apps, and tune how 37Studio works. Everything is stored on this computer.</p>
         </div>
+        <HelpButton to={settingsHelp[tab] ?? "settings"} />
       </div>
 
       <div className="settings">

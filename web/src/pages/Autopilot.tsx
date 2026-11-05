@@ -114,7 +114,7 @@ function PlanModal({ tenant, plan, accounts, onClose, onSaved }: {
   }
 
   return (
-    <Modal title={plan.id ? "Edit content plan" : "New content plan"} sub="Autopilot follows this to make and schedule videos." size="lg" onClose={onClose}
+    <Modal help="autopilot" title={plan.id ? "Edit content plan" : "New content plan"} sub="Autopilot follows this to make and schedule videos." size="lg" onClose={onClose}
       footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={!f.brief.trim() || !days.size} onClick={save}>Save plan</button></>}>
       <div className="form">
         <Field label="Name" hint="optional"><input className="input" value={f.name} onChange={(e) => set("name", e.target.value)} placeholder="Exam tips" /></Field>

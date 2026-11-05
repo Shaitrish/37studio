@@ -1,6 +1,6 @@
 # 37Studio guide
 
-How to set up 37Studio and use every part of it. This same guide is inside the app: click **Guide** in the sidebar.
+How to set up 37Studio and use every part of it. This same guide is inside the app: click **Guide** in the sidebar, or **Help** at the top of any page to read the part about that page beside it.
 
 ## Start here
 
@@ -14,6 +14,13 @@ The whole journey, in order:
 4. [Make a video](#make-a-video) and [refine it](#work-on-a-project) by chatting with the editor agent.
 5. [Connect social accounts](#connect-social-accounts), then [publish](#publish).
 6. Optional: let [Autopilot](#autopilot) make videos on a schedule, and let the [Inbox](#inbox) draft your replies.
+
+### Find help in the app
+
+- **Help**, at the top of every page and in most windows, opens the part of this guide about what's on screen. It opens beside the page, so you don't lose your place. In a project or brand it follows the tab you're on.
+- Press **?** to do the same from the keyboard, and **Esc** to close it.
+- **Learn 37Studio** on the Overview page has the first steps.
+- **Guide** in the sidebar is the whole guide, with search.
 
 ### Words used in the app
 
@@ -439,6 +446,8 @@ docker compose -f docker-compose.cloud.yml pull && docker compose -f docker-comp
 
 | Keys | Where | What it does |
 | --- | --- | --- |
+| ? | Anywhere | Open help for this page |
+| Esc | Help | Close help |
 | Ctrl+B | Anywhere | Collapse or expand the sidebar |
 | Enter | Chats | Send |
 | Shift+Enter | Chats | New line |

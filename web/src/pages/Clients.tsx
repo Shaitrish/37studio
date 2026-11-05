@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { FolderOpenIcon, GlobeIcon, PlusIcon, UsersThreeIcon } from "@phosphor-icons/react";
 import { api, bytes, fail, folderFiles, go, Tenant, toast, cash, upload, useApi } from "../api";
-import { Avatar, Empty, Field, Modal, Progress } from "../ui";
+import { Avatar, Empty, Field, HelpButton, Modal, Progress } from "../ui";
 
 export default function Clients() {
   const { data: tenants } = useApi<Tenant[]>("/tenants");
@@ -14,6 +14,7 @@ export default function Clients() {
           <h1>Brands</h1>
           <p>Your businesses and brands. Each has a brand library, design system, knowledge base and social accounts the agents work from.</p>
         </div>
+        <HelpButton to="add-a-brand" />
         <button className="btn" onClick={() => setCreating(true)}><PlusIcon size={16} /> Add manually</button>
         <button className="btn primary" onClick={() => setScanning(true)}><GlobeIcon size={16} /> Add from website or folder</button>
       </div>
@@ -65,7 +66,7 @@ export function TenantModal({ tenant, onClose, onSaved }: { tenant?: Tenant; onC
     } catch (e) { fail(e); }
   }
   return (
-    <Modal
+    <Modal help="add-a-brand"
       title={tenant ? "Edit brand" : "New brand"}
       sub="Brand details go straight into the agent's instructions."
       size="lg"
@@ -127,7 +128,7 @@ export function ScanModal({ tenant, onClose, onStarted }: { tenant?: Tenant; onC
   }
   const src = tenant?.source;
   return (
-    <Modal
+    <Modal help="add-a-brand"
       title={tenant ? "Re-scan brand" : "Add brand"}
       sub="Reads the website and/or the brand's own project folder, sorts every asset (logos, people, images, SVGs, videos, fonts) into the brand library, extracts the design system (colors, type scale, spacing, radii, shadows, components) and writes a knowledge base. Every project uses all three."
       onClose={onClose}

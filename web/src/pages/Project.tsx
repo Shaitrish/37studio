@@ -3,11 +3,13 @@ import { ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from
 import { ArrowUpIcon, BookmarkSimpleIcon, CheckCircleIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FileTextIcon, FilmStripIcon, GlobeIcon, ListChecksIcon, PencilLineIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MicrophoneSlashIcon, MusicNotesIcon, SpeakerHighIcon, ImageIcon, PlayIcon, PauseIcon, PaperclipIcon, MagnifyingGlassIcon, SlidersHorizontalIcon, SparkleIcon, SquareIcon, TerminalWindowIcon, TrashIcon, MagicWandIcon, WrenchIcon, XIcon } from "@phosphor-icons/react";
 import { Quality } from "../api";
 import { api, bytes, ChatEvent, clock, desktop, fail, FileInfo, go, languageName, Meta, nudge, openExternal, Project, toast, upload, cash, useApi } from "../api";
-import { DropZone, Empty, Md, FileTile, KindIcon, ModelOptions, ModelPicker, Progress, Seg, Status, projectStatus } from "../ui";
+import { DropZone, Empty, HelpButton, Md, FileTile, KindIcon, ModelOptions, ModelPicker, Progress, Seg, Status, projectStatus } from "../ui";
 import { presetIcon } from "./Projects";
 import { PostsCard, PublishModal } from "./Social";
 import { SaveTemplate } from "./Library";
 import { approve, skip } from "./Autopilot";
+
+const tabHelp: Record<string, string> = { videos: "long-recordings", generate: "generated-media-and-voices", posts: "publish", cost: "costs-and-spending" };
 
 export default function ProjectPage({ id }: { id: number }) {
   const { data: p, error, reload } = useApi<Project>(`/projects/${id}`);
@@ -120,6 +122,7 @@ export default function ProjectPage({ id }: { id: number }) {
           </p>
         </div>
         <div className="row wrap" style={{ justifyContent: "flex-end" }}>
+          <HelpButton to={tabHelp[tab] ?? "work-on-a-project"} />
           {!p.running && p.status !== "delivered" && finals.length > 0 && (
             <button className="btn" onClick={() => api(`/projects/${id}`, { method: "PUT", body: { status: "delivered" } }).then(reload, fail)}>
               <CheckCircleIcon size={15} /> Mark delivered
