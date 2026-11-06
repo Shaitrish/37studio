@@ -4,6 +4,8 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-06
+
 ### Added
 - **Guide** in the sidebar: how to set up and use every part of 37Studio, searchable and readable offline, with buttons that open the page it talks about. The same text is in `docs/guide.md`.
 - **Help** at the top of every page and in most windows opens the part of the Guide about that screen, beside the page, so you keep your place. Press **?** for the same thing.
