@@ -1,11 +1,11 @@
-import { lazy as lazyPage, Suspense, useEffect, useRef, useState } from "react";
+import { lazy as lazyPage, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  ChartPieSliceIcon, ChatCircleDotsIcon, ChatsCircleIcon, FilmSlateIcon, FilmStripIcon, GearSixIcon, HeartIcon, IconContext, MegaphoneIcon, MonitorIcon, MoonIcon, SidebarSimpleIcon,
+  BookOpenIcon, ChartPieSliceIcon, ChatCircleDotsIcon, ChatsCircleIcon, FilmSlateIcon, FilmStripIcon, GearSixIcon, HeartIcon, IconContext, MegaphoneIcon, MonitorIcon, MoonIcon, SidebarSimpleIcon,
   SquaresFourIcon, SunIcon, TagIcon,
 } from "@phosphor-icons/react";
 import "./styles.css";
-import { api, desktop, donateURL, makerURL, type Meta, openExternal, repoURL, saveFile, setDesktop, setDisplay, setNudge, setToast, snoozeNudge, useApi } from "./api";
+import { api, desktop, donateURL, go, makerURL, type Meta, openExternal, repoURL, saveFile, setDesktop, setDisplay, setHelp, setNudge, setToast, snoozeNudge, useApi } from "./api";
 import { Mark, Modal } from "./ui";
 // Each page loads when first opened, so the first screen doesn't wait for the project editor and its video player.
 // After an update the old page's files are gone from the server, so a tab left open reloads once to get the new ones.
@@ -28,6 +28,8 @@ const Settings = lazy(() => import("./pages/Settings"));
 const Inbox = lazy(() => import("./pages/Inbox"));
 const Library = lazy(() => import("./pages/Library"));
 const Assistant = lazy(() => import("./pages/Assistant"));
+const Guide = lazy(() => import("./pages/Guide"));
+const HelpPanel = lazy(() => import("./pages/HelpPanel"));
 
 const nav = [
   { group: "Studio", items: [
@@ -37,12 +39,16 @@ const nav = [
     { path: "/library", label: "Library", icon: FilmStripIcon },
     { path: "/campaigns", label: "Campaigns", icon: MegaphoneIcon },
     { path: "/clients", label: "Brands", icon: TagIcon },
+    { path: "/costs", label: "Costs", icon: ChartPieSliceIcon },
   ] },
   { group: "Social", items: [
     { path: "/inbox", label: "Inbox", icon: ChatsCircleIcon },
-    { path: "/costs", label: "Costs", icon: ChartPieSliceIcon },
+  ] },
+  { group: "Help", items: [
+    { path: "/guide", label: "Guide", icon: BookOpenIcon },
   ] },
 ];
+const pageTitles = Object.fromEntries([...nav.flatMap((g) => g.items.map((i) => [i.path, i.label])), ["/settings", "Settings"]]);
 
 // Per-browser UI preferences. Storage can throw (private mode); the defaults still work.
 const pref = (k: string, v?: string) => { try { if (v === undefined) return localStorage.getItem("37studio:" + k); localStorage.setItem("37studio:" + k, v); } catch {} return v ?? null; };
@@ -73,11 +79,15 @@ function App() {
   const [, section, id, sub] = hash.split("/");
   const [toast, setT] = useState<{ msg: string; err?: boolean }>();
   const [why, setWhy] = useState<string>();
+  const [helpAt, setHelpAt] = useState<string>();
   useEffect(() => {
     let timer: number;
     setToast((msg, err) => { setT({ msg, err }); clearTimeout(timer); timer = window.setTimeout(() => setT(undefined), err ? 6000 : 3000); });
     setNudge(setWhy);
+    setHelp(setHelpAt);
   }, []);
+  useEffect(() => { if (section === "guide") setHelpAt(undefined); }, [section]); // the Guide page already shows it
+  const closeHelp = useCallback(() => setHelpAt(undefined), []);
   const closeNudge = () => setWhy(undefined);
 
   const page = (() => {
@@ -91,10 +101,12 @@ function App() {
       case "inbox": return <Inbox />;
       case "settings": return <Settings tab={id} />;
       case "assistant": return <Assistant />;
+      case "guide": return <Guide section={id} />;
       default: return <Overview />;
     }
   })();
   const active = "/" + (section ?? "");
+  useEffect(() => { document.title = pageTitles[active] ? `${pageTitles[active]} · 37Studio` : "37Studio"; }, [active]);
 
   const [collapsed, setCollapsed] = useState(pref("side") === "1");
   const [theme, setTheme] = useState<Theme>((pref("theme") as Theme) || "system");
@@ -102,9 +114,14 @@ function App() {
   useEffect(() => { applyTheme(theme); pref("theme", theme); }, [theme]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b" && !(e.target as HTMLElement).closest("input, textarea, [contenteditable]")) {
+      if ((e.target as HTMLElement).closest("input, textarea, select, [contenteditable]")) return;
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
         e.preventDefault();
         setCollapsed((c) => !c);
+      } else if (e.key === "?") {
+        // An open modal comes later in the page, so the last button is the one for what's on top.
+        const button = [...document.querySelectorAll<HTMLElement>(".modal .help-btn, .page-head .help-btn, .editor-head .help-btn")].pop();
+        if (button) button.click(); else go("/guide");
       }
     };
     addEventListener("keydown", onKey);
@@ -152,6 +169,7 @@ function App() {
           </div>
         </aside>
         <main className="main"><Suspense fallback={null}>{page}</Suspense></main>
+        {helpAt && <Suspense fallback={null}><HelpPanel section={helpAt} onSection={setHelpAt} onClose={closeHelp} /></Suspense>}
         {toast && <div className={`toast ${toast.err ? "err" : ""}`} role="status">{toast.msg}</div>}
         {why && (
           <Modal title="Nice work" onClose={closeNudge} footer={<>

@@ -22,7 +22,7 @@ worker/              Cloudflare Worker: the static product website (public/)
 relay/               optional WhatsApp webhook relay users deploy themselves (Cloudflare Worker + D1)
 dist/                the launcher bundle people download (docker-compose.yml, start.bat/.command/.sh)
 desktop/             desktop build, local install and packaging scripts, Linux (.sh) and Windows (.ps1) (CI: .github/workflows/desktop.yml)
-docs/                platforms.md (per-platform setup), architecture.md
+docs/                guide.md (user guide, shown in the app as Guide), platforms.md (per-platform setup), desktop.md, architecture.md
 ```
 
 ## Commands
@@ -61,7 +61,7 @@ node --check relay/src.js                        # WhatsApp relay syntax
 - Logic that can break quietly gets a small test next to it (`*_test.go`). Platform APIs are tested against an `httptest` server, never the real thing.
 - UI text and error messages say what happened and what to do next, in plain words. Costs are recorded in USD and shown in the user's currency.
 - Keep it local-first: no telemetry, no accounts, and nothing that sends user data anywhere new. Footage and messages stay on the user's machine.
-- When setup or configuration changes, update `README.md`, `docs/platforms.md` or `docs/architecture.md`.
+- When setup, configuration or a screen changes, update `docs/guide.md` (the in-app Guide: one line per list item, `##` for each section), `README.md`, `docs/platforms.md` or `docs/architecture.md`.
 - Add a line to `CHANGELOG.md` under Unreleased for anything a user would notice, in the same plain words as the UI.
 
 ## Product rules

@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpIcon, ChatCircleDotsIcon, MicrophoneIcon, MicrophoneSlashIcon, PlusIcon, SquareIcon } from "@phosphor-icons/react";
 import { api, ChatEvent, fail, Meta, useApi } from "../api";
-import { Empty, ModelOptions } from "../ui";
+import { Empty, HelpButton, ModelOptions } from "../ui";
 import { EventView, modelName, Parsed, ToolGroup, useDictation } from "./Project";
 
 interface AssistantState { events: ChatEvent[]; running: boolean; started: boolean }
@@ -76,6 +76,7 @@ export default function Assistant() {
           <h1>Assistant</h1>
           <p>Ask for anything in plain words: add brands, plan campaigns, start videos, publish, check costs. It uses the same tools as every button here.</p>
         </div>
+        <HelpButton to="assistant" />
         {events.length > 0 && <button className="btn" disabled={running} onClick={reset}><PlusIcon size={15} /> New conversation</button>}
       </div>
       <div className="card chat">

@@ -4,7 +4,7 @@ import {
   DownloadSimpleIcon, HardDrivesIcon, RocketLaunchIcon, ShareNetworkIcon, WarningCircleIcon, Icon,
 } from "@phosphor-icons/react";
 import { api, bytes, connectGuideURL, desktop, donateURL, fail, languageName, makerURL, Meta, money, repoURL, setDisplay, toast, useApi, Voice } from "../api";
-import { Field, Seg } from "../ui";
+import { Field, HelpButton, Seg } from "../ui";
 import { Brand, BrandId } from "../brands";
 
 interface KeyInfo { name: string; label: string; hint: string; set: boolean; last4?: string; source: "" | "app" | "env" }
@@ -23,7 +23,7 @@ const aiProviders: Provider[] = [
     what: "The brain of 37Studio: it edits your videos, writes captions and drafts replies. One of the two below is enough.",
     get: { label: "Get an API key", url: "https://console.anthropic.com/settings/keys" },
     fields: [
-      { key: "CLAUDE_CODE_OAUTH_TOKEN", label: "Claude Pro or Max plan", help: "Uses your Claude subscription. In the 37Studio folder run docker compose exec studio claude setup-token, sign in, and paste the token it prints. (Claude Desktop's sign-in doesn't carry over.)" },
+      { key: "CLAUDE_CODE_OAUTH_TOKEN", label: "Claude Pro or Max plan", help: `Uses your Claude subscription. ${desktop ? "In a terminal run claude setup-token" : "In the 37Studio folder run docker compose exec studio claude setup-token"}, sign in, and paste the token it prints. (Claude Desktop's sign-in doesn't carry over.)` },
       { key: "ANTHROPIC_API_KEY", label: "Or an Anthropic API key", help: "Pay only for what you use. console.anthropic.com → API keys." },
     ],
     ready: (set) => set("ANTHROPIC_API_KEY") || set("CLAUDE_CODE_OAUTH_TOKEN"),
@@ -143,6 +143,8 @@ const tabs: { id: string; label: string; Icon: Icon }[] = [
   { id: "about", label: "About", Icon: InfoIcon },
 ];
 
+const settingsHelp: Record<string, string> = { start: "start-here", ai: "connect-ai-services", social: "connect-social-accounts", spending: "costs-and-spending", storage: "back-up-and-update", agents: "use-from-other-ai-apps", about: "get-more-help" };
+
 /** Each section has its own address (#/settings/social), so other pages can link straight to it. */
 export default function Settings({ tab: tabParam }: { tab?: string }) {
   const { data, setData } = useApi<Record<string, string>>("/settings");
@@ -217,6 +219,7 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
           <h1>Settings</h1>
           <p>Connect your AI services and social apps, and tune how 37Studio works. Everything is stored on this computer.</p>
         </div>
+        <HelpButton to={settingsHelp[tab] ?? "settings"} />
       </div>
 
       <div className="settings">
@@ -245,7 +248,7 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
                     action="Set up" onClick={() => setTab("social")} brands={["facebook", "instagram", "youtube", "tiktok"]} />
                 </div>
               </div>
-              <p className="small faint" style={{ margin: 0 }}>Keys are encrypted on this computer and only ever sent to the service they belong to. 37Studio's makers never see them.</p>
+              <p className="small faint" style={{ margin: 0 }}>Keys are encrypted on this computer and only ever sent to the service they belong to. 37Studio's makers never see them. New here? The <a className="link" href="#/guide">Guide</a> walks through every step.</p>
             </>
           )}
 

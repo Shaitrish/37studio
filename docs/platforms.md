@@ -22,10 +22,10 @@ Each brand's **Social** tab has a **Connect** button per platform. For the OAuth
 
 Every OAuth platform needs a developer app: the platform only lets an app it knows ask for permission to post. 37Studio has no central server, so for every platform you register your own app (free) and give 37Studio its credentials:
 
-- **Launcher app:** Settings → Keys. The launcher bundle has no `.env`.
-- **From source:** Settings → Keys, or the variables in `.env`.
+- **Launcher app:** Settings → Social apps. The launcher bundle has no `.env`.
+- **From source:** Settings → Social apps, or the variables in `.env`.
 
-Credentials entered in Settings → Keys are encrypted at rest (AES-GCM, with a key file in the data folder). A few settings exist only as environment variables (`LINKEDIN_PAGES`, `PINTEREST_API`, `STUDIO37_PUBLIC_URL`, `STUDIO37_RELAY_URL`, `STUDIO37_PASSWORD`): put them under `environment:` in the launcher's `docker-compose.yml`, or in `.env` when running from source, then run the start file again (from source: `docker compose up -d`) so the container is recreated with them. Credentials saved in Settings → Keys apply at once.
+Credentials entered in Settings → Social apps are encrypted at rest (AES-GCM, with a key file in the data folder). A few settings exist only as environment variables (`LINKEDIN_PAGES`, `PINTEREST_API`, `STUDIO37_PUBLIC_URL`, `STUDIO37_RELAY_URL`, `STUDIO37_PASSWORD`): put them under `environment:` in the launcher's `docker-compose.yml`, or in `.env` when running from source, then run the start file again (from source: `docker compose up -d`) so the container is recreated with them. Credentials saved in Settings → Social apps apply at once.
 
 ### Redirect URIs
 
@@ -56,7 +56,7 @@ The **Posts** tab shows each upload's status, a link to the live post, and the p
 2. In each use case, click **Customize** and add `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `business_management`, `instagram_basic` and `instagram_content_publish` (plus the [inbox permissions](#inbox-messenger-instagram-and-comments) if you want the Inbox).
 3. **Facebook Login for Business → Configurations → Create**: *User access token*, your Pages and Instagram accounts, the same permissions. Copy its ID; Instagram's video upload needs it.
 4. **App settings → Basic**: copy the App ID and App secret. If Meta asks for a redirect URI, use the one above.
-5. Enter the App ID, App secret and Login configuration ID in **Set up your Meta app** or Settings → Keys, or as `META_APP_ID`, `META_APP_SECRET` and `META_CONFIG_ID` in `.env`. The ID only takes effect together with its secret, and agents never get the secret.
+5. Enter the App ID, App secret and Login configuration ID in **Set up your Meta app** or Settings → Social apps, or as `META_APP_ID`, `META_APP_SECRET` and `META_CONFIG_ID` in `.env`. The ID only takes effect together with its secret, and agents never get the secret.
 6. Leave the app in **Development** mode and give your team a role on it under **App roles** (Admin, Developer or Tester): no App Review is needed for people with a role. Each brand gives your business portfolio access to its Page (or makes you a Page admin). Its Instagram must be a Business or Creator account linked to that Page.
 
 Vertical videos of 3–90 seconds post as Reels; anything else posts as a regular Page video. Meta allows 30 API-published Reels per Page per 24 hours.
@@ -65,7 +65,7 @@ Vertical videos of 3–90 seconds post as Reels; anything else posts as a regula
 
 1. In [console.cloud.google.com](https://console.cloud.google.com) create a project and enable **YouTube Data API v3**.
 2. OAuth consent screen: External, with the `youtube.upload` and `youtube.readonly` scopes. Set it to **In production**: in Testing, Google expires the login after 7 days. Unverified apps show a warning screen during sign-in; continue past it.
-3. Credentials → OAuth client ID → *Web application*, with the redirect URI above. Put the ID and secret in `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (Settings → Keys or `.env`).
+3. Credentials → OAuth client ID → *Web application*, with the redirect URI above. Put the ID and secret in `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (Settings → Social apps or `.env`).
 4. Brand → Social → **Connect YouTube** and pick the channel.
 
 Until the project passes YouTube's free API audit, YouTube keeps every upload **private**. Apply through the *YouTube API Services audit and quota extension* form. The default daily quota also allows only a handful of uploads.
@@ -73,7 +73,7 @@ Until the project passes YouTube's free API audit, YouTube keeps every upload **
 ## TikTok
 
 1. At [developers.tiktok.com](https://developers.tiktok.com) create an app with the **Desktop** platform (the only kind TikTok lets redirect to `http://localhost`; 37Studio uses PKCE for it) and the redirect URI above. On a server with a real HTTPS domain, use the **Web** platform with the `https://` redirect instead.
-2. Add **Login Kit** and **Content Posting API** (turn on Direct Post) with the scopes `user.info.basic`, `video.publish`, `video.upload`. Put the client key and secret in `TIKTOK_CLIENT_KEY` and `TIKTOK_CLIENT_SECRET` (Settings → Keys or `.env`).
+2. Add **Login Kit** and **Content Posting API** (turn on Direct Post) with the scopes `user.info.basic`, `video.publish`, `video.upload`. Put the client key and secret in `TIKTOK_CLIENT_KEY` and `TIKTOK_CLIENT_SECRET` (Settings → Social apps or `.env`).
 3. Brand → Social → **Connect TikTok**.
 
 Until TikTok reviews the app, use its Sandbox and add each brand's TikTok account as a target user. Until TikTok audits the app, direct posts must be **Only me**; or choose **Send to TikTok drafts** in the Publish dialog and the account owner taps Post in the TikTok app. Each brand signs in with its own TikTok account, since TikTok has no agency access.
@@ -84,7 +84,7 @@ Posts videos to the profile of the member who signs in, and, with LinkedIn's app
 
 1. At [linkedin.com/developers](https://www.linkedin.com/developers/apps) create an app. LinkedIn asks for a LinkedIn Page to associate it with.
 2. Under **Products**, add **Sign In with LinkedIn using OpenID Connect** and **Share on LinkedIn**. Together they grant the scopes 37Studio asks for: `openid profile w_member_social`.
-3. Under **Auth**, add the redirect URI above, and copy the Client ID and Client Secret into `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` (Settings → Keys or `.env`).
+3. Under **Auth**, add the redirect URI above, and copy the Client ID and Client Secret into `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` (Settings → Social apps or `.env`).
 4. Brand → Social → **Connect LinkedIn**.
 
 **Company Pages** need LinkedIn's **Community Management API**, which LinkedIn approves per app. Once it's approved, set the environment variable `LINKEDIN_PAGES=1`, restart, and connect again: the Pages you administer appear next to your profile.
@@ -95,7 +95,7 @@ LinkedIn tokens last 60 days. After that, posts to the account fail with a sign-
 
 1. At [developer.x.com](https://developer.x.com) create a project and an app inside it.
 2. In the app's **User authentication settings**, turn on **OAuth 2.0**, choose the type **Web App, Automated App or Bot** (a confidential client), set the app permissions to **Read and write**, and add the redirect URI above as a callback URI. X also asks for a website URL; any page about you works.
-3. Under **Keys and tokens**, copy the OAuth 2.0 **Client ID** and **Client Secret** into `X_CLIENT_ID` and `X_CLIENT_SECRET` (Settings → Keys or `.env`).
+3. Under **Keys and tokens**, copy the OAuth 2.0 **Client ID** and **Client Secret** into `X_CLIENT_ID` and `X_CLIENT_SECRET` (Settings → Social apps or `.env`).
 4. Brand → Social → **Connect X**. 37Studio signs in with OAuth 2.0 and PKCE and asks for `tweet.read tweet.write users.read media.write offline.access`.
 
 Posting needs an X API access level that allows creating posts and uploading media; check what your developer account's plan includes before connecting.
@@ -107,7 +107,7 @@ Posting needs an X API access level that allows creating posts and uploading med
 Posts video Pins to the boards you choose. Each board is an account in 37Studio, so a brand can post to one board or several.
 
 1. At [developers.pinterest.com](https://developers.pinterest.com) create an app (Pinterest asks for a business account) and add the redirect URI above.
-2. Copy the app ID and secret into `PINTEREST_APP_ID` and `PINTEREST_APP_SECRET` (Settings → Keys or `.env`). 37Studio asks for `boards:read pins:read pins:write user_accounts:read`.
+2. Copy the app ID and secret into `PINTEREST_APP_ID` and `PINTEREST_APP_SECRET` (Settings → Social apps or `.env`). 37Studio asks for `boards:read pins:read pins:write user_accounts:read`.
 3. New apps get **Trial** access, which only allows creating Pins through Pinterest's sandbox API. Until Pinterest grants **Standard** access, set the environment variable `PINTEREST_API=https://api-sandbox.pinterest.com` and restart. Remove it once Standard access is granted.
 4. Brand → Social → **Connect Pinterest**, then tick the boards that belong to this brand.
 
@@ -159,7 +159,7 @@ Replies go straight to the Graph API either way. Connect a number to one copy on
 
 You need a domain on Cloudflare (the free plan is enough).
 
-1. In Settings → Keys, set **WhatsApp webhook verify token** (`META_VERIFY_TOKEN`) to any long random text, and make sure your Meta app's ID and secret are there.
+1. In Settings → Social apps, set **WhatsApp webhook verify token** (`META_VERIFY_TOKEN`) to any long random text, and make sure your Meta app's ID and secret are there.
 2. Cloudflare dashboard → **Zero Trust → Networks → Tunnels → Create a tunnel** → *Cloudflared*. Name it, and run the connector command it shows on the computer that runs 37Studio (it installs `cloudflared` as a service and keeps it running).
 3. Add a published route (public hostname) to the tunnel: a subdomain such as `wa.yourdomain.com`, **path `^/webhooks/meta$`**, and the service `HTTP` → `localhost:8080`. The path rule matters: it keeps the rest of 37Studio off the internet.
 4. In your Meta app, add the **Connect with customers through WhatsApp** use case and set its webhook to `https://wa.yourdomain.com/webhooks/meta` with the same verify token, subscribed to the `messages` field.

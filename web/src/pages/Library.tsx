@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ArrowSquareOutIcon, BookmarkSimpleIcon, DownloadSimpleIcon, FilmStripIcon, LayoutIcon, TrashIcon } from "@phosphor-icons/react";
 import { api, bytes, clock, date, fail, LibraryItem, Template, toast, useApi, useTenants } from "../api";
-import { Empty, Field, FileTile, Modal, Seg, TenantPicker } from "../ui";
+import { Empty, HelpButton, Field, FileTile, Modal, Seg, TenantPicker } from "../ui";
 
 /** Every finished video and image from every project: the ten videos cut from one class sit together here. */
 export default function Library() {
@@ -39,6 +39,7 @@ export default function Library() {
           <h1>Library</h1>
           <p>Every finished video and image, from every project. Drafts stay in their projects.</p>
         </div>
+        <HelpButton to="library-and-templates" />
       </div>
       <div className="row wrap">
         <Seg value={kind} onChange={setKind} options={[{ value: "all", label: "All" }, { value: "video", label: "Videos" }, { value: "image", label: "Images" },
@@ -138,7 +139,7 @@ export function SaveTemplate({ projectId, title, onClose, onSaved }: { projectId
       .then(() => { toast("Template saved. Pick it when you start a new project"); onSaved?.(); onClose(); }, (e) => { fail(e); setBusy(false); });
   };
   return (
-    <Modal title="Save as template" sub="New projects can start from this video's look: layout, fonts, colors, motion, caption style, intro and outro. The agent swaps in the new content."
+    <Modal help="library-and-templates" title="Save as template" sub="New projects can start from this video's look: layout, fonts, colors, motion, caption style, intro and outro. The agent swaps in the new content."
       onClose={onClose} footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={busy || !name.trim()} onClick={save}>{busy ? "Saving…" : "Save template"}</button></>}>
       <div className="stack">
         <Field label="Name"><input className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus /></Field>

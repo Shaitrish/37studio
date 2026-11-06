@@ -189,7 +189,7 @@ function ConnectWhatsApp({ tenantId, onDone }: { tenantId: number; onDone: () =>
     api(`/tenants/${tenantId}/whatsapp`, { body: f }).then(() => { toast("WhatsApp connected: its messages show up in the Inbox"); onDone(); }, (e) => { fail(e); setBusy(false); });
   };
   return (
-    <Modal title="Connect WhatsApp" sub="Customers' WhatsApp messages show up in the Inbox, where Claude drafts the replies." onClose={onDone}
+    <Modal help="connect-social-accounts" title="Connect WhatsApp" sub="Customers' WhatsApp messages show up in the Inbox, where Claude drafts the replies." onClose={onDone}
       footer={<><button className="btn" onClick={onDone}>Cancel</button><button className="btn primary" disabled={busy || !f.phone_id || !f.waba_id || !f.token} onClick={save}>{busy ? "Checking…" : "Connect"}</button></>}>
       <div className="stack">
         <p className="small muted" style={{ margin: 0 }}>
@@ -215,7 +215,7 @@ function ConnectPasted({ tenantId, kind, onDone }: { tenantId: number; kind: key
   };
   const ready = c.fields.every((x) => "hint" in x || f[x.k]?.trim());
   return (
-    <Modal title={`Connect ${platforms[kind].label}`} sub={c.sub} onClose={onDone}
+    <Modal help="connect-social-accounts" title={`Connect ${platforms[kind].label}`} sub={c.sub} onClose={onDone}
       footer={<><button className="btn" onClick={onDone}>Cancel</button><button className="btn primary" disabled={busy || !ready} onClick={save}>{busy ? "Checking…" : "Connect"}</button></>}>
       <div className="stack">
         <p className="small muted" style={{ margin: 0 }}>{c.help}</p>
@@ -231,7 +231,7 @@ function ConnectPasted({ tenantId, kind, onDone }: { tenantId: number; kind: key
 }
 
 /** The user's own Meta app, which Facebook and Instagram sign in through: in Development mode the admin and anyone with
- *  an app role can connect Pages without App Review. Saved as keys (Settings → Keys), so it applies to every brand. */
+ *  an app role can connect Pages without App Review. Saved as keys (Settings → Social apps), so it applies to every brand. */
 function OwnMetaApp({ current, redirect, onDone }: { current: string; redirect: string; onDone: () => void }) {
   const [f, setF] = useState({ META_APP_ID: current, META_APP_SECRET: "", META_CONFIG_ID: "" });
   const [busy, setBusy] = useState(false);
@@ -242,7 +242,7 @@ function OwnMetaApp({ current, redirect, onDone }: { current: string; redirect: 
     api("/keys", { method: "PUT", body: keys }).then(() => { toast(msg); onDone(); }, (e) => { fail(e); setBusy(false); });
   };
   return (
-    <Modal title="Set up your Meta app" size="lg" onClose={onDone}
+    <Modal help="connect-social-accounts" title="Set up your Meta app" size="lg" onClose={onDone}
       sub="Facebook and Instagram sign in through a free Meta app of your own. You're its admin, so your Pages and Instagram work without waiting for Meta's review, and the login stays on this computer."
       footer={<>
         {current && <button className="btn ghost danger" disabled={busy} onClick={() => save({ META_APP_ID: "", META_APP_SECRET: "", META_CONFIG_ID: "" }, "Meta app removed")}>Remove</button>}
@@ -284,7 +284,7 @@ function PickAccounts({ k, onDone }: { k: string; onDone: () => void }) {
   const save = () => api<{ connected: number }>(`/social/pending/${k}`, { body: { accounts: picked.map(id) } })
     .then((r) => { toast(`Connected ${r.connected} account${r.connected === 1 ? "" : "s"}`); onDone(); }, fail);
   return (
-    <Modal title="Which accounts belong to this brand?" sub="Untick any that belong to your other brands." onClose={onDone}
+    <Modal help="connect-social-accounts" title="Which accounts belong to this brand?" sub="Untick any that belong to your other brands." onClose={onDone}
       footer={<><button className="btn" onClick={onDone}>Cancel</button><button className="btn primary" disabled={!picked.length} onClick={save}>Connect {picked.length}</button></>}>
       <div className="stack" style={{ gap: 4 }}>
         {data.accounts.map((a) => (
@@ -332,7 +332,7 @@ export function PublishModal({ p, onClose, onQueued }: { p: Project; onClose: ()
   }
 
   return (
-    <Modal title="Publish" sub="Uploads straight from this machine to each platform." size="lg" onClose={onClose}
+    <Modal help="publish" title="Publish" sub="Uploads straight from this machine to each platform." size="lg" onClose={onClose}
       footer={<>
         <span className="small faint spacer">{when === "later" ? "37Studio must be running at that time." : ""}</span>
         <button className="btn" onClick={onClose}>Cancel</button>
@@ -355,7 +355,7 @@ export function PublishModal({ p, onClose, onQueued }: { p: Project; onClose: ()
             </button>}
           </span>
           {data && !accounts.length ? (
-            <p className="small muted">No accounts connected for {p.tenant_name}. <a href={`#/clients/${p.tenant_id}/social`}>Connect them on the client's Social tab</a>.</p>
+            <p className="small muted">No accounts connected for {p.tenant_name}. <a href={`#/clients/${p.tenant_id}/social`}>Connect them on the brand's Social tab</a>.</p>
           ) : (
             <div className="choices">
               {accounts.map((a) => (

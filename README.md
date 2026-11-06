@@ -16,6 +16,7 @@ Videos made, posted and answered, with your own keys and no monthly bill.</p>
 <p align="center">
   <a href="https://studio.shaitrish.com/#intro"><b>▶ Watch the 2-minute intro</b></a> (English · বাংলা) ·
   <a href="https://studio.shaitrish.com/setup">Setup guide</a> ·
+  <a href="docs/guide.md">User guide</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href="https://github.com/Shaitrish/37studio/issues">Issues</a> ·
   <a href="https://studio.shaitrish.com/donate">Donate</a>
@@ -39,9 +40,9 @@ You bring your own keys (a Claude plan or an Anthropic API key; optionally OpenA
 - **Publishing and Autopilot.** Post to any mix of a brand's accounts on nine platforms now or on a schedule, or let a content plan make a fresh video before every slot and wait for one-click approval.
 - **One inbox.** Messenger, Instagram and WhatsApp messages and Facebook and Instagram comments, with replies drafted in the customer's language, following the brand's own rules. Off, drafts to approve, or fully automatic, per brand.
 - **Assistant and MCP.** Run everything by chatting with the Assistant in the sidebar, or from your own AI agent (Claude Code, Claude Desktop, Cursor) through 37Studio's MCP server: brands, campaigns, videos, publishing, Autopilot, settings and connections.
-- **Real costs.** Every project, campaign and brand shows its AI spend in your currency. No markup: you pay Anthropic, Google and ElevenLabs directly.
+- **Real costs.** Every project, campaign and brand shows its AI spend in your currency. No markup: you pay the AI providers directly.
 
-Everything runs in one Docker container, on your computer or your own server. Footage, brands and messages stay there; API keys and platform credentials are encrypted on disk.
+Everything runs in one Docker container on your computer or your own server, or as a desktop app on Linux and Windows. Footage, brands and messages stay there; API keys and platform credentials are encrypted on disk.
 
 ## Platforms
 
@@ -76,7 +77,7 @@ The launcher starts Docker, pulls the latest image (about 3 GB the first time) a
 
 ```bash
 git clone https://github.com/Shaitrish/37studio.git && cd 37studio
-cp .env.example .env      # optional: keys can also be added later in Settings → Keys
+cp .env.example .env      # optional: keys can also be added later in Settings
 docker compose up --build
 # open http://localhost:8080
 ```
@@ -126,7 +127,7 @@ Run it on a server when a team shares it, or when Autopilot and auto-replies sho
    docker compose -f docker-compose.cloud.yml up -d
    ```
 
-5. Open `https://studio.example.com` and sign in with any username and the password. Add your Claude key in **Settings → Keys** (for a subscription token, run `docker compose -f docker-compose.cloud.yml exec studio claude setup-token`).
+5. Open `https://studio.example.com` and sign in with any username and the password. Add your Claude key in **Settings → AI services** (for a subscription token, run `docker compose -f docker-compose.cloud.yml exec studio claude setup-token`).
 
 What is different on a server:
 
@@ -151,9 +152,11 @@ To build the image from your own checkout on the server, clone the repo and repl
 
 ## First steps
 
-1. **Add keys.** Settings → Keys: an Anthropic API key, or a Claude subscription token (run `docker compose exec studio claude setup-token` in the launcher's folder; from source the service is `37studio`). Gemini and ElevenLabs are optional. Keys are encrypted at rest and sent only to the provider they belong to. Anthropic's terms govern using a Claude subscription in other apps; an API key is the fully supported route.
+This is the short version. **[The full guide](docs/guide.md)** covers setup and every part of the app, and it is also inside the app: **Guide** in the sidebar.
+
+1. **Add keys.** Settings → AI services: an Anthropic API key, or a Claude subscription token (run `docker compose exec studio claude setup-token` in the launcher's folder; from source the service is `37studio`). Gemini and ElevenLabs are optional. Keys are encrypted at rest and sent only to the provider they belong to. Anthropic's terms govern using a Claude subscription in other apps; an API key is the fully supported route.
 2. **Add a brand.** Brands → **Add from website or folder**. In 5 to 10 minutes the brand library, design system and knowledge base are ready. Read the **Knowledge** tab and fix anything wrong: every video and reply uses it.
-3. **Make a video.** **New project** asks a few questions: what to make, the language, where it runs, how long, what it's about, and optional footage or a YouTube or Drive link. The agent narrates as it works. Ask for changes in the chat, or click **Edit timeline** to change things by hand, then **Export**.
+3. **Make a video.** **New video** asks a few questions: what to make, the language, where it runs, how long, what it's about, and optional footage or a YouTube or Drive link. The agent narrates as it works. Ask for changes in the chat, or click **Edit timeline** to change things by hand, then **Export**.
 4. **Connect accounts.** On the brand's **Social** tab, click **Connect** for each platform. Most platforms need a developer app of your own first: see [Social publishing](#social-publishing).
 5. **Publish.** On the project, **Publish** → pick accounts → **Write with AI** for the captions (or write your own) → post now or schedule it. The **Posts** tab shows each upload's status and a link to the live post.
 6. **Autopilot and the inbox.** On the brand's **Autopilot** tab, write a content plan ("3 reels a week with one product tip each, 8 pm, to our Page and Instagram"). Each video is made three hours before its slot and waits for your approval, or posts on its own if you allow it. On the **Social** tab, choose how inbox replies go out and write the brand's reply rules; the **Inbox** in the sidebar has every message and comment.
@@ -164,7 +167,7 @@ Autopilot, scheduled posts and auto-replies work while 37Studio runs. Keep the c
 
 Each brand's **Social** tab connects its accounts: sign in once per platform, then tick which of the returned accounts belong to that brand. **Publish** sends one final video to any mix of them, now or at a scheduled time. Claude writes a caption for each platform (X and Bluesky stay short, LinkedIn professional, YouTube and Pinterest get a title and description), and you can edit every one. Scheduled posts go out only while 37Studio is running; a post more than 12 hours overdue is marked missed instead of going out late.
 
-Every OAuth platform needs a developer app, and that is your own (free) app: 37Studio has no built-in one. Put its credentials in **Settings → Keys** (encrypted at rest; the only way in the launcher, which has no `.env`), or in `.env` when running from source. Register the redirect URI with the platform: `STUDIO37_PUBLIC_URL` (default `http://localhost:8080`) followed by the path below.
+Every OAuth platform needs a developer app, and that is your own (free) app: 37Studio has no built-in one. Put its credentials in **Settings → Social apps** (encrypted at rest; the only way in the launcher, which has no `.env`), or in `.env` when running from source. Register the redirect URI with the platform: `STUDIO37_PUBLIC_URL` (default `http://localhost:8080`) followed by the path below.
 
 | Platform | Connect button | Credentials | Redirect path |
 | --- | --- | --- | --- |
@@ -188,7 +191,7 @@ Every OAuth platform needs a developer app, and that is your own (free) app: 37S
 - **Bluesky.** bsky.app → Settings → Privacy and security → App passwords. For a self-hosted account, also give its PDS host. No developer app.
 - **Mastodon.** Your server → Preferences → Development → New application with `read:accounts write:media write:statuses`, then paste its access token. No developer app.
 
-Environment-only settings (`LINKEDIN_PAGES`, `PINTEREST_API`, `STUDIO37_PUBLIC_URL`, `STUDIO37_RELAY_URL`, `STUDIO37_PASSWORD`) go in `.env` when running from source, or under `environment:` in the launcher's `docker-compose.yml`. Then run the start file again (from source: `docker compose up -d`), which recreates the container with the new settings; a plain restart doesn't pick them up. Keys saved in Settings → Keys apply at once.
+Environment-only settings (`LINKEDIN_PAGES`, `PINTEREST_API`, `STUDIO37_PUBLIC_URL`, `STUDIO37_RELAY_URL`, `STUDIO37_PASSWORD`) go in `.env` when running from source, or under `environment:` in the launcher's `docker-compose.yml`. Then run the start file again (from source: `docker compose up -d`), which recreates the container with the new settings; a plain restart doesn't pick them up. Keys saved in Settings apply at once.
 
 ```yaml
     environment:
@@ -208,7 +211,7 @@ The inbox needs extra Meta permissions on top of publishing, and WhatsApp needs 
 
 **Assistant** in the sidebar runs the studio by chatting: "add this brand from its website", "plan three reels a week for Dhaka Bites at 8 pm with my approval", "publish yesterday's video to all its Pages", "what did we spend this month?". It is Claude Code (or OpenCode, for any other model in its menu) connected to 37Studio's own MCP server and the web, and nothing else (no shell, no file edits), so it can only do what the app's buttons do. The per-turn budget in Settings caps every reply (on OpenCode, the reply stops after the step that passes it), and OpenCode's free models can't be used here because they refuse a locked-down setup. It asks before it deletes anything, publishes, approves an Autopilot video or replies to a customer. Each reply's cost shows in the chat and on the Costs page, under "Assistant".
 
-**MCP server.** Any MCP client on the same computer can manage 37Studio from its own chat, through the same tools. That includes Claude Code, Claude Desktop and Cursor. There are 65 tools:
+**MCP server.** Any MCP client on the same computer can manage 37Studio from its own chat, through the same tools. That includes Claude Code, Claude Desktop and Cursor. There are 76 tools:
 - brands, their brand library and knowledge base
 - campaigns, and videos made by the editor agent
 - generated media and templates
@@ -236,11 +239,11 @@ Cursor (`.cursor/mcp.json`):
 { "mcpServers": { "37studio": { "url": "http://localhost:8080/mcp" } } }
 ```
 
-Settings → **Connect other AI agents** shows the address for your copy. The server refuses requests from other websites' pages (Origin check), and with `STUDIO37_PASSWORD` set it needs the password like the rest of the app. Agents connected to it can spend on your AI keys and post to your accounts, so connect only agents you trust.
+Settings → **Other AI apps** shows the address for your copy. The server refuses requests from other websites' pages (Origin check), and with `STUDIO37_PASSWORD` set it needs the password like the rest of the app. Agents connected to it can spend on your AI keys and post to your accounts, so connect only agents you trust.
 
 ## Configuration
 
-Settings are environment variables: in `.env` when running from source, under `environment:` in the launcher's `docker-compose.yml`, or in `.env` next to `docker-compose.cloud.yml`. Variables marked **Keys** can also be entered in the app under Settings → Keys, where they are encrypted at rest. AI model IDs and unit prices, the per-turn budget, the voice, and the display currency (USD by default) and its exchange rate are under Settings too.
+Settings are environment variables: in `.env` when running from source, under `environment:` in the launcher's `docker-compose.yml`, or in `.env` next to `docker-compose.cloud.yml`. Variables marked **Keys** can also be entered in the app under Settings → AI services or Settings → Social apps, where they are encrypted at rest. AI model IDs and unit prices, the per-turn budget, the voice, and the display currency (USD by default) and its exchange rate are under Settings too.
 
 | Variable | Default | Keys | What |
 | --- | --- | --- | --- |
@@ -299,9 +302,9 @@ Browser ──► 37studio (Go, one binary) ──► SQLite + data/ (brands, pr
 
 **Linux: the app restarts and the logs say permission denied on `/data`.** With Docker Engine, Docker creates a missing `data` folder as root, and the app runs as uid 1000. Run `sudo chown -R 1000:1000 data` in the 37Studio folder and start it again.
 
-**The agent says there's no Claude key.** Add one in Settings → Keys. A subscription token that stopped working can be replaced with a new one from `claude setup-token`.
+**The agent says there's no Claude key.** Add one in Settings → AI services. A subscription token that stopped working can be replaced with a new one from `claude setup-token`.
 
-**Connect says a platform "is not configured".** Its credentials are missing. Add them in Settings → Keys (or `.env`, then restart).
+**Connect says a platform "is not configured".** Its credentials are missing. Add them in Settings → Social apps (or `.env`, then restart).
 
 **The platform says the redirect URI doesn't match.** The URI registered with the platform must match `STUDIO37_PUBLIC_URL` + the path exactly: protocol, host, port, no trailing slash. On your own computer, X's is `http://127.0.0.1:8080/api/oauth/x/callback`, because X refuses `localhost`.
 
@@ -326,8 +329,7 @@ More questions: [open an issue](https://github.com/Shaitrish/37studio/issues).
 ## Roadmap
 
 - **Image posts.** Publishing sends videos only; Instagram needs a public URL for images, which a local-first app doesn't have.
-- **More video models.** Kling, Seedance, Wan, Veo and others through one fal.ai key, chosen in Settings. The agent's `37studio gen video` command stays the same.
-- **A spending cap on generated media** per project, alongside the per-turn cap on Claude.
+- **A hard spending cap on generated media.** Today the agent asks first when a project goes past the limit in Settings → Spending.
 - **WhatsApp on existing business numbers** (Embedded Signup, coexistence with the phone app), which needs Meta Tech Provider approval.
 - **Object storage.** Footage stays on local disk; R2 or S3 behind `projectDir` when it outgrows one disk.
 

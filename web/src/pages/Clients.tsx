@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { FolderOpenIcon, GlobeIcon, PlusIcon, UsersThreeIcon } from "@phosphor-icons/react";
 import { api, bytes, fail, folderFiles, go, Tenant, toast, cash, upload, useApi } from "../api";
-import { Avatar, Empty, Field, Modal, Progress } from "../ui";
+import { Avatar, Empty, Field, HelpButton, Modal, Progress } from "../ui";
 
 export default function Clients() {
   const { data: tenants } = useApi<Tenant[]>("/tenants");
@@ -14,6 +14,7 @@ export default function Clients() {
           <h1>Brands</h1>
           <p>Your businesses and brands. Each has a brand library, design system, knowledge base and social accounts the agents work from.</p>
         </div>
+        <HelpButton to="add-a-brand" />
         <button className="btn" onClick={() => setCreating(true)}><PlusIcon size={16} /> Add manually</button>
         <button className="btn primary" onClick={() => setScanning(true)}><GlobeIcon size={16} /> Add from website or folder</button>
       </div>
@@ -65,7 +66,7 @@ export function TenantModal({ tenant, onClose, onSaved }: { tenant?: Tenant; onC
     } catch (e) { fail(e); }
   }
   return (
-    <Modal
+    <Modal help="add-a-brand"
       title={tenant ? "Edit brand" : "New brand"}
       sub="Brand details go straight into the agent's instructions."
       size="lg"
@@ -78,7 +79,7 @@ export function TenantModal({ tenant, onClose, onSaved }: { tenant?: Tenant; onC
         <Field label="Contact person"><input className="input" value={f.contact ?? ""} onChange={set("contact")} /></Field>
         <Field label="Email"><input className="input" type="email" value={f.email ?? ""} onChange={set("email")} /></Field>
         <Field label="Phone"><input className="input" value={f.phone ?? ""} onChange={set("phone")} /></Field>
-        <Field label="Website / course link"><input className="input" value={f.website ?? ""} onChange={set("website")} /></Field>
+        <Field label="Website"><input className="input" value={f.website ?? ""} onChange={set("website")} /></Field>
         <Field label="Spoken language" hint="drives transcription">
           <select className="select" value={f.language} onChange={set("language")}>
             {languages.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -93,7 +94,7 @@ export function TenantModal({ tenant, onClose, onSaved }: { tenant?: Tenant; onC
         <Field label="Accent color">
           <div className="row"><input className="input" type="color" value={f.accent_color} onChange={set("accent_color")} style={{ width: 56 }} /><input className="input mono" value={f.accent_color ?? ""} onChange={set("accent_color")} /></div>
         </Field>
-        <Field label="Profile" hint="who they are, what they teach, tone" full>
+        <Field label="Profile" hint="who they are, what they do, tone" full>
           <textarea className="textarea" value={f.bio ?? ""} onChange={set("bio")} placeholder="What they do, who they serve, how they sound. e.g. Bootstrapped SaaS for clinics; friendly, no jargon." />
         </Field>
         <Field label="Notes for the editor" hint="do's and don'ts" full>
@@ -127,7 +128,7 @@ export function ScanModal({ tenant, onClose, onStarted }: { tenant?: Tenant; onC
   }
   const src = tenant?.source;
   return (
-    <Modal
+    <Modal help="add-a-brand"
       title={tenant ? "Re-scan brand" : "Add brand"}
       sub="Reads the website and/or the brand's own project folder, sorts every asset (logos, people, images, SVGs, videos, fonts) into the brand library, extracts the design system (colors, type scale, spacing, radii, shadows, components) and writes a knowledge base. Every project uses all three."
       onClose={onClose}

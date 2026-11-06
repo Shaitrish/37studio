@@ -103,7 +103,7 @@ function VoiceModal({ tenant, mode, onClose, onSaved }: { tenant: Tenant; mode: 
   const sub = editing ? undefined : mode === "pick" ? "Any voice in your ElevenLabs account: premade, from their voice library, or cloned there."
     : "ElevenLabs makes a copy of the voice from a recording. It's made once and reused in every video.";
   return (
-    <Modal title={title} sub={sub} onClose={onClose}
+    <Modal help="generated-media-and-voices" title={title} sub={sub} onClose={onClose}
       footer={<><button className="btn" onClick={onClose}>Cancel</button>
         <button className="btn primary" disabled={!ready || pct !== undefined} onClick={save}>{pct !== undefined ? "Cloning…" : editing ? "Save" : mode === "pick" ? "Add voice" : "Clone voice"}</button></>}>
       <div className="stack" style={{ gap: 14 }}>

@@ -168,6 +168,10 @@ type ToastFn = (msg: string, err?: boolean) => void;
 let toastFn: ToastFn = () => {};
 export const setToast = (fn: ToastFn) => { toastFn = fn; };
 export const toast: ToastFn = (msg, err) => toastFn(msg, err);
+// The help panel lives in the app shell, so any page or modal can open it at a section of docs/guide.md.
+let helpFn: (section: string) => void = () => {};
+export const setHelp = (fn: typeof helpFn) => { helpFn = fn; };
+export const help = (section: string) => helpFn(section);
 export const fail = (e: unknown) => toast(e instanceof Error ? e.message : String(e), true);
 
 // The desktop app's window opens no tabs and saves no downloads by itself: links go to the system browser and

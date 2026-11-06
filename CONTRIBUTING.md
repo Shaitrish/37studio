@@ -4,7 +4,7 @@ Thanks for helping. Bug reports, ideas, docs fixes and pull requests are all wel
 
 ## Reporting bugs and asking for features
 
-Open an [issue](https://github.com/Shaitrish/37studio/issues). For a bug, include your OS, how you run 37Studio (the launcher, from source, or on a server), the version (Settings → Updates), what you did, what you expected, and what happened. A screenshot or the server log (`docker compose logs`) helps a lot. Leave out API keys, tokens, passwords and customer data.
+Open an [issue](https://github.com/Shaitrish/37studio/issues). For a bug, include your OS, how you run 37Studio (the launcher, from source, or on a server), the version (Settings → About), what you did, what you expected, and what happened. A screenshot or the server log (`docker compose logs`) helps a lot. Leave out API keys, tokens, passwords and customer data.
 
 Found a security problem, for example a way to read another brand's files or a leaked token? Don't open a public issue. Email jahangir@shaitrish.com instead.
 
@@ -14,7 +14,7 @@ The quickest way is the whole thing in Docker:
 
 ```bash
 git clone https://github.com/Shaitrish/37studio.git && cd 37studio
-cp .env.example .env      # optional: keys can also go in Settings → Keys
+cp .env.example .env      # optional: keys can also go in Settings
 docker compose up --build # http://localhost:8080
 ```
 
@@ -67,7 +67,7 @@ Fork the repo, make your change on a branch, and open a pull request against `ma
 
 Each platform follows the same pattern; LinkedIn, X and Pinterest (OAuth) and Bluesky and Mastodon (app password or token) in `internal/social/platforms.go` are good ones to copy.
 
-1. **Credentials.** Add the platform's env names to `Names` in `internal/keys/keys.go`, so they can be entered in Settings → Keys (encrypted at rest), and to `.env.example`. Name the secret `…_SECRET`: `agent.Env` keeps every `*_SECRET` variable away from agents.
+1. **Credentials.** Add the platform's env names to `Names` in `internal/keys/keys.go`, so they can be entered in Settings → Social apps (encrypted at rest), and to `.env.example`. Name the secret `…_SECRET`: `agent.Env` keeps every `*_SECRET` variable away from agents.
 2. **Connecting (OAuth).** In `internal/social/social.go`, add the credential pair to `ProviderReady`, a `case` in `OAuthStart` that builds the platform's authorize URL with `redirectURI(prov)` and the state key (`st.pkc` is the PKCE verifier if the platform needs one), and a `case` in `OAuthCallback` that calls your `xxxAccounts(code)`. That function trades the code for tokens and returns `[]socialAccount`: one per account the person can post to, with `token` and `refresh` filled in (they never reach the browser). The redirect path is `/api/oauth/<provider>/callback`.
    **Connecting (no OAuth).** A `connectXxx` handler that checks the credentials with one API call and saves the account, plus its route in `internal/server/server.go`, like `ConnectBluesky`.
 3. **Tokens.** If the platform's tokens expire, add a `case` to `accessToken` that refreshes them and stores the new ones.

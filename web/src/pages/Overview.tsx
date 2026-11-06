@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { ArrowRightIcon, CheckCircleIcon, PlusIcon, SparkleIcon, WarningIcon } from "@phosphor-icons/react";
-import { Meta, Project, cash, go, ago, repoURL, toast, useApi } from "../api";
-import { Empty, Status, projectStatus } from "../ui";
+import { ArrowRightIcon, BookOpenIcon, CheckCircleIcon, PlusIcon, SparkleIcon, WarningIcon } from "@phosphor-icons/react";
+import { Meta, Project, cash, go, ago, help, repoURL, toast, useApi } from "../api";
+import { Empty, HelpButton, Status, projectStatus } from "../ui";
 import { ProjectTable, presetIcon } from "./Projects";
 import { NewProjectModal } from "./NewProject";
 import { approve } from "./Autopilot";
@@ -32,6 +32,14 @@ const pipeline = [
   { value: "review", label: "In review" },
   { value: "draft", label: "Draft" },
   { value: "delivered", label: "Delivered" },
+];
+
+const learn = [
+  ["start-here", "How 37Studio works"],
+  ["connect-ai-services", "Connect your AI services"],
+  ["make-a-video", "Make your first video"],
+  ["publish", "Publish to social accounts"],
+  ["troubleshooting", "Fix a problem"],
 ];
 
 const greeting = () => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; };
@@ -71,6 +79,7 @@ export default function Overview() {
           <h1>{greeting()}</h1>
           <p>{active.length} project{active.length === 1 ? "" : "s"} in motion, {review.length} waiting for your review.</p>
         </div>
+        <HelpButton to="start-here" />
         <a className="btn" href="#/clients">Brands</a>
         <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New video</button>
       </div>
@@ -78,19 +87,19 @@ export default function Overview() {
       <div className="card kpis">
         <Kpi label="Active projects" value={String(active.length)} sub={`${count("running")} with the agent now`} />
         <Kpi label="Delivered" value={String(count("delivered"))} sub={`of ${all.length} project${all.length === 1 ? "" : "s"}`} />
-        <Kpi label="Spent this month" value={cash(costs?.this_month ?? 0)} sub="Claude, Gemini and ElevenLabs" />
+        <Kpi label="Spent this month" value={cash(costs?.this_month ?? 0)} sub="all your AI services" />
         <Kpi label="Spent in total" value={cash(costs?.total ?? 0)} sub="see Costs for the breakdown" />
       </div>
 
       {checks.some((c) => !c.ok) && (
         <div className="card">
-          <div className="card-h"><WarningIcon size={16} color="var(--warn)" /><h2>Finish setup</h2></div>
+          <div className="card-h"><WarningIcon size={16} color="var(--warn)" /><h2 className="spacer">Finish setup</h2><HelpButton to="install-37studio" label="Setup guide" /></div>
           <div className="filelist">
             {checks.map((c) => (
               <div className="item" key={c.label}>
                 {c.ok ? <CheckCircleIcon size={16} color="var(--success)" /> : <WarningIcon size={16} color="var(--warn)" />}
                 <span className="spacer">{c.label}</span>
-                {!c.ok && <span className="small muted mono">{c.fix}</span>}
+                {!c.ok && (c.fix.startsWith("Settings") ? <a className="btn sm" href="#/settings/ai">Open AI services</a> : <span className="small muted mono">{c.fix}</span>)}
               </div>
             ))}
           </div>
@@ -161,6 +170,18 @@ export default function Overview() {
         </div>
 
         <div className="stack">
+          <div className="card">
+            <div className="card-h"><h2 className="spacer">Learn 37Studio</h2><a className="btn ghost sm" href="#/guide">Full guide</a></div>
+            <div className="filelist">
+              {learn.map(([id, label]) => (
+                <button className="item link-row" key={id} onClick={() => help(id)}>
+                  <BookOpenIcon size={16} />
+                  <span className="spacer ellipsis">{label}</span>
+                  <ArrowRightIcon size={14} />
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="card">
             <div className="card-h"><h2>Pipeline</h2></div>
             <div className="card-b bars">

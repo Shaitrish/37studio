@@ -52,7 +52,7 @@ func elevenSend(req *http.Request) ([]byte, error) {
 
 func Voice(pid, tenant int64, text, voice, out string) error {
 	if voice == "" {
-		return errors.New("no voice configured: pick one in Settings → Voice")
+		return errors.New("no voice configured: pick one in Settings → AI services")
 	}
 	audio, err := eleven("POST", "/v1/text-to-speech/"+voice+"?output_format=mp3_44100_128",
 		map[string]any{"text": text, "model_id": store.Setting("voice_model")})

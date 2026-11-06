@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowsClockwiseIcon, ArrowSquareOutIcon, ChatCircleTextIcon, ChatsCircleIcon, FacebookLogoIcon, InstagramLogoIcon, PaperPlaneRightIcon, SparkleIcon, WarningIcon, WhatsappLogoIcon } from "@phosphor-icons/react";
 import { ago, api, countReply, fail, toast, useApi, useTenants } from "../api";
-import { Empty, Seg, TenantPicker } from "../ui";
+import { Empty, HelpButton, Seg, TenantPicker } from "../ui";
 
 interface Item {
   id: string; account: number; tenant: number; client: string; platform: "facebook" | "instagram" | "whatsapp"; page: string; kind: "dm" | "comment";
@@ -36,6 +36,7 @@ export default function Inbox() {
           <h1>Inbox</h1>
           <p>Messages and comments from every connected Page, Instagram and WhatsApp number. Claude drafts each reply from the brand's knowledge base; you check it and send.</p>
         </div>
+        <HelpButton to="inbox" />
         <TenantPicker tenants={tenants} value={Number(tenant) || undefined} all="All brands" onChange={(id) => { setTenant(id ? String(id) : ""); setSel(undefined); }} />
         <button className="btn" onClick={refresh} disabled={loading}><ArrowsClockwiseIcon size={15} /> {loading ? "Checking…" : "Refresh"}</button>
       </div>
@@ -82,7 +83,7 @@ function AccessProblems({ errors }: { errors: InboxData["errors"] }) {
   return (
     <div className="card card-b stack small" style={{ gap: 6, background: "var(--warn-soft)" }}>
       <strong className="row" style={{ gap: 6 }}><WarningIcon size={15} /> Some accounts can't be read yet</strong>
-      {perms && <span>The Meta app needs the inbox permissions, then reconnect each brand on its Social tab. See README → Social inbox.</span>}
+      {perms && <span>The Meta app needs the inbox permissions, then reconnect each brand on its Social tab. See <a className="link" href="#/guide/inbox">Guide → Inbox</a>.</span>}
       {igOff && <span>Instagram: in the Instagram app, Settings → Messages and story replies → Message controls → Connected tools, turn on <b>Allow access to messages</b>.</span>}
       <details><summary className="muted" style={{ cursor: "pointer" }}>Details ({errors.length})</summary>
         <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>

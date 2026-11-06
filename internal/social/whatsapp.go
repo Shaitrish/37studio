@@ -33,7 +33,7 @@ func ConnectWhatsApp(r *http.Request) (any, error) {
 	}
 	phone, waba, tok := strings.TrimSpace(store.Str(b["phone_id"])), strings.TrimSpace(store.Str(b["waba_id"])), strings.TrimSpace(store.Str(b["token"]))
 	if config.RelayURL == "" && (os.Getenv("META_VERIFY_TOKEN") == "" || !ownMetaApp()) {
-		return nil, httpapi.Bad("WhatsApp delivers messages only to a public web address. Expose this copy's /webhooks/meta with a Cloudflare Tunnel (then add your Meta app and a webhook verify token in Settings → Keys), or deploy your own relay and set STUDIO37_RELAY_URL. The connect guide shows both: https://studio.shaitrish.com/connect#whatsapp-steps")
+		return nil, httpapi.Bad("WhatsApp delivers messages only to a public web address. Expose this copy's /webhooks/meta with a Cloudflare Tunnel (then add your Meta app and a webhook verify token in Settings → Social apps), or deploy your own relay and set STUDIO37_RELAY_URL. The connect guide shows both: https://studio.shaitrish.com/connect#whatsapp-steps")
 	}
 	if !digitsOnly.MatchString(phone) || !digitsOnly.MatchString(waba) || tok == "" {
 		return nil, httpapi.Bad("fill in all three from Meta's WhatsApp → API Setup page")

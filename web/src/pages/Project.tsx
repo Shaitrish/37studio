@@ -3,11 +3,13 @@ import { ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from
 import { ArrowUpIcon, BookmarkSimpleIcon, CheckCircleIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FileTextIcon, FilmStripIcon, GlobeIcon, ListChecksIcon, PencilLineIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MicrophoneSlashIcon, MusicNotesIcon, SpeakerHighIcon, ImageIcon, PlayIcon, PauseIcon, PaperclipIcon, MagnifyingGlassIcon, SlidersHorizontalIcon, SparkleIcon, SquareIcon, TerminalWindowIcon, TrashIcon, MagicWandIcon, WrenchIcon, XIcon } from "@phosphor-icons/react";
 import { Quality } from "../api";
 import { api, bytes, ChatEvent, clock, desktop, fail, FileInfo, go, languageName, Meta, nudge, openExternal, Project, toast, upload, cash, useApi } from "../api";
-import { DropZone, Empty, Md, FileTile, KindIcon, ModelOptions, ModelPicker, Progress, Seg, Status, projectStatus } from "../ui";
+import { DropZone, Empty, HelpButton, Md, FileTile, KindIcon, ModelOptions, ModelPicker, Progress, Seg, Status, projectStatus } from "../ui";
 import { presetIcon } from "./Projects";
 import { PostsCard, PublishModal } from "./Social";
 import { SaveTemplate } from "./Library";
 import { approve, skip } from "./Autopilot";
+
+const tabHelp: Record<string, string> = { videos: "long-recordings", generate: "generated-media-and-voices", posts: "publish", cost: "costs-and-spending" };
 
 export default function ProjectPage({ id }: { id: number }) {
   const { data: p, error, reload } = useApi<Project>(`/projects/${id}`);
@@ -120,6 +122,7 @@ export default function ProjectPage({ id }: { id: number }) {
           </p>
         </div>
         <div className="row wrap" style={{ justifyContent: "flex-end" }}>
+          <HelpButton to={tabHelp[tab] ?? "work-on-a-project"} />
           {!p.running && p.status !== "delivered" && finals.length > 0 && (
             <button className="btn" onClick={() => api(`/projects/${id}`, { method: "PUT", body: { status: "delivered" } }).then(reload, fail)}>
               <CheckCircleIcon size={15} /> Mark delivered
@@ -356,7 +359,7 @@ function Generate({ p, meta }: { p: Project; meta?: Meta }) {
   }
   return (
     <div className="card">
-      <div className="card-h"><h2>Generate media</h2><span className="small faint">Gemini & ElevenLabs · counted in this project's cost</span></div>
+      <div className="card-h"><h2>Generate media</h2><span className="small faint">images, clips, voice and music · counted in this project's cost</span></div>
       <div className="card-b stack" style={{ gap: 12 }}>
         <Seg value={kind} options={genKinds.map(({ value, label }) => ({ value, label }))} onChange={(v) => { setKind(v); setSeconds(v === "music" ? p.seconds || 30 : 2); }} />
         <textarea className="textarea" rows={3} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={k.hint} />
@@ -367,7 +370,7 @@ function Generate({ p, meta }: { p: Project; meta?: Meta }) {
           )}
           {kind === "voice" && <span className="small muted">Voice for {languageName(p.language || "en")} from Settings</span>}
           <span className="spacer" />
-          {!ready && <span className="small muted">Set {k.provider === "gemini" ? "GEMINI_API_KEY" : "ELEVENLABS_API_KEY"} to enable</span>}
+          {!ready && <span className="small muted">Add a {k.provider === "gemini" ? "Gemini" : "ElevenLabs"} key in Settings → AI services to enable</span>}
           <button className="btn" disabled={!ready || !prompt.trim()} onClick={submit}><SparkleIcon size={15} /> Generate</button>
         </div>
       </div>
