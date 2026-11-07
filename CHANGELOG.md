@@ -4,6 +4,25 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-07
+
+### Added
+- **Connected folder** on a brand: a folder on your computer the agent reads live and can't change, with nothing copied. It can't read `.env` files, keys or raw databases there.
+- **Databases the agent may query**: read-only queries on the SQLite files you list in that folder, through the new `37studio sql` command.
+- **Performance** in the sidebar: views, how much of each video people watched, average watch time, likes, comments, shares, saves and engagement for every video on your Facebook Pages, Instagram, YouTube and TikTok, sortable, with the most and least viewed on top. 37Studio reads them every 6 hours, or when you click **Refresh**. Each needs one more permission; see the Guide.
+- The editor agent now starts each video knowing how the brand's published videos did, and can list them with `37studio stats`. Other AI apps get the same numbers through the `video_stats` tool.
+- **Make it the brand icon**: the pin button on a library file puts it first; the first logo is the brand's icon everywhere in the app.
+- **Published** in the Library: every video you posted from 37Studio, with its views on each platform. Open one to compare all its numbers side by side and see where it did best. The project's Posts tab shows the same numbers.
+- **By platform** on the Performance page compares views per video, how much was watched and engagement across platforms.
+- **Strategy** for each brand on the Performance page: Claude turns the numbers into lessons on request, you can edit it, and the editor agent follows it in every new video and adds notes with `37studio strategy add`.
+
+### Changed
+- TikTok's **Send to TikTok drafts** is now **Send to the TikTok app**: the video arrives as a notification in the TikTok phone app's Inbox (it never showed under Drafts in TikTok Studio on the web).
+
+### Fixed
+- **Inbox**: a Facebook or Instagram message older than 24 hours now says so above Send, and if Facebook refuses it you get a plain explanation instead of its error code: answer it from Meta Business Suite (7 days), or from 37Studio once Meta approves your app's Human Agent permission.
+- When Instagram's API refuses a Reel (since October 2026 it does this to many longer than about 40 seconds), the post now says so and what to do: post that one from the Instagram app, or cut it under 40 seconds.
+
 ## [0.10.0] - 2026-11-06
 
 ### Added
