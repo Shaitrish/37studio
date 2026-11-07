@@ -40,7 +40,8 @@ const graphVer = "v26.0"
 const tiktokAPI = "https://open.tiktokapis.com"
 
 const metaScopes = "pages_show_list,pages_read_engagement,pages_manage_posts,business_management,instagram_basic,instagram_content_publish," +
-	"pages_messaging,pages_manage_metadata,pages_read_user_content,pages_manage_engagement,instagram_manage_messages,instagram_manage_comments" // the last six: Inbox
+	"pages_messaging,pages_manage_metadata,pages_read_user_content,pages_manage_engagement,instagram_manage_messages,instagram_manage_comments," + // Inbox
+	"read_insights,instagram_manage_insights" // Performance (stats.go)
 
 // Facebook and Instagram use the user's own Meta app (Settings → Social apps, or Social → Set up your Meta app), kept in
 // Development mode, so their Pages work without App Review and the login never leaves this copy.
@@ -143,12 +144,12 @@ func OAuthStart(w http.ResponseWriter, r *http.Request) {
 	case "google":
 		u = "https://accounts.google.com/o/oauth2/v2/auth?" + url.Values{"client_id": {os.Getenv("GOOGLE_CLIENT_ID")}, "redirect_uri": {redirectURI(prov)},
 			"response_type": {"code"}, "state": {key}, "access_type": {"offline"}, "prompt": {"consent select_account"},
-			"scope": {"https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly"}}.Encode()
+			"scope": {"https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/yt-analytics.readonly"}}.Encode()
 	case "tiktok":
 		// TikTok only allows http://localhost redirects for apps registered as Desktop, which must use PKCE (hex-encoded, per their docs).
 		sum := sha256.Sum256([]byte(st.pkc))
 		u = "https://www.tiktok.com/v2/auth/authorize/?" + url.Values{"client_key": {os.Getenv("TIKTOK_CLIENT_KEY")}, "redirect_uri": {redirectURI(prov)},
-			"response_type": {"code"}, "state": {key}, "scope": {"user.info.basic,video.publish,video.upload"},
+			"response_type": {"code"}, "state": {key}, "scope": {"user.info.basic,video.publish,video.upload,video.list"},
 			"code_challenge": {hex.EncodeToString(sum[:])}, "code_challenge_method": {"S256"}}.Encode()
 	case "linkedin":
 		u = "https://www.linkedin.com/oauth/v2/authorization?" + url.Values{"client_id": {os.Getenv("LINKEDIN_CLIENT_ID")}, "redirect_uri": {redirectURI(prov)},
@@ -549,8 +550,9 @@ func languageName(code string) string {
 	return code
 }
 
+// ListPosts is a project's posts, each with the platform's latest numbers for it once stats.go has read them.
 func ListPosts(id int64) []map[string]any {
-	ps, _ := store.Rows("select * from posts where project_id=? order by id desc", id)
+	ps, _ := store.Rows(`select p.*, `+postStatsCols+` from posts p `+postStatsJoin+` where p.project_id=? order by p.id desc`, id)
 	return ps
 }
 
@@ -810,8 +812,11 @@ func postInstagram(ig, tok, file, caption string) (string, string, error) {
 	if err := remote.Call(remote.Form("POST", graph("/"+ig+"/media", nil), url.Values{"media_type": {"REELS"}, "upload_type": {"resumable"}, "caption": {caption}}, "Bearer "+tok), &c); err != nil {
 		return "", "", err
 	}
-	if err := rupload(c.URI, tok, file); err != nil {
-		return "", "", err
+	// Since October 2026 Instagram's upload host answers a non-retriable ProcessingFailedError for many Reels longer than
+	// about 40 s, sometimes after keeping the file. The container's own status decides; the error only stands if it fails.
+	upErr := rupload(c.URI, tok, file)
+	if upErr != nil && !strings.Contains(upErr.Error(), "ProcessingFailedError") {
+		return "", "", upErr
 	}
 	for i := 0; ; i++ { // Instagram transcodes before it lets you publish
 		var s struct {
@@ -824,7 +829,10 @@ func postInstagram(ig, tok, file, caption string) (string, string, error) {
 		if s.Code == "FINISHED" {
 			break
 		}
-		if s.Code == "ERROR" || s.Code == "EXPIRED" || i > 120 {
+		if s.Code == "ERROR" || s.Code == "EXPIRED" || i > 120 || (upErr != nil && i > 24) {
+			if upErr != nil {
+				return "", "", errors.New("Instagram's API refused this Reel. Since October 2026 it does this to many Reels longer than about 40 seconds; post this one from the Instagram app, or cut it under 40 seconds")
+			}
 			return "", "", fmt.Errorf("instagram could not process the video: %s", cmp.Or(s.Status, s.Code))
 		}
 		time.Sleep(5 * time.Second)
@@ -874,7 +882,8 @@ func postYouTube(tok, file, title, desc, privacy string) (string, string, error)
 	return v.ID, "https://youtu.be/" + v.ID, err
 }
 
-// postTikTok direct-posts (or, with privacy INBOX, sends to the creator's TikTok drafts). Until TikTok audits the app,
+// postTikTok direct-posts (or, with privacy INBOX, sends it to the creator's TikTok phone app as an inbox notification,
+// which is not the Drafts tab of TikTok Studio on the web). Until TikTok audits the app,
 // only SELF_ONLY (private) direct posts are allowed.
 func postTikTok(tok, file, caption, privacy string) (string, string, error) {
 	st, err := os.Stat(file)
@@ -901,7 +910,7 @@ func postTikTok(tok, file, caption, privacy string) (string, string, error) {
 			return "", "", err
 		}
 		if !slices.Contains(ci.Data.Options, privacy) {
-			return "", "", fmt.Errorf("TikTok allows only %s for this account right now (unaudited apps can post private only; or send it to drafts)", strings.Join(ci.Data.Options, ", "))
+			return "", "", fmt.Errorf("TikTok allows only %s for this account right now (unaudited apps can post private only; or send it to the TikTok app)", strings.Join(ci.Data.Options, ", "))
 		}
 		user = ci.Data.Username
 		endpoint, body = "/v2/post/publish/video/init/", map[string]any{"source_info": src, "post_info": map[string]any{"title": caption, "privacy_level": privacy}}

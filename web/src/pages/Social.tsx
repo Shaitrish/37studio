@@ -3,10 +3,10 @@ import {
   ArrowClockwiseIcon, ArrowSquareOutIcon, ButterflyIcon, FacebookLogoIcon, Icon, InstagramLogoIcon, LinkBreakIcon, LinkedinLogoIcon, MastodonLogoIcon,
   PinterestLogoIcon, ShareNetworkIcon, SparkleIcon, TiktokLogoIcon, TrashIcon, WhatsappLogoIcon, XLogoIcon, YoutubeLogoIcon,
 } from "@phosphor-icons/react";
-import { ago, api, Captions, connectGuideURL, date, desktop, fail, openExternal, parseTime, Platform, Post, Project, SocialAccount, toast, useApi } from "../api";
+import { ago, api, Captions, compact, views, connectGuideURL, date, desktop, fail, openExternal, parseTime, pct, Platform, Post, Project, SocialAccount, toast, useApi } from "../api";
 import { Empty, Field, Modal, Seg, Status } from "../ui";
 
-const platforms: Record<Platform, { label: string; Icon: Icon; limit: number }> = {
+export const platforms: Record<Platform, { label: string; Icon: Icon; limit: number }> = {
   facebook: { label: "Facebook", Icon: FacebookLogoIcon, limit: 5000 },
   instagram: { label: "Instagram", Icon: InstagramLogoIcon, limit: 2200 },
   tiktok: { label: "TikTok", Icon: TiktokLogoIcon, limit: 2200 },
@@ -48,7 +48,7 @@ const pasted = {
 };
 const tiktokPrivacy = [
   ["", "Choose who can see it"], ["PUBLIC_TO_EVERYONE", "Everyone"], ["FOLLOWER_OF_CREATOR", "Followers"],
-  ["MUTUAL_FOLLOW_FRIENDS", "Friends"], ["SELF_ONLY", "Only me"], ["INBOX", "Send to TikTok drafts"],
+  ["MUTUAL_FOLLOW_FRIENDS", "Friends"], ["SELF_ONLY", "Only me"], ["INBOX", "Send to the TikTok app"],
 ];
 interface SocialInfo { accounts: SocialAccount[]; ready: Record<string, boolean>; inbox_mode: string; replies: string; redirect: string; meta_app: string }
 type Candidate = Pick<SocialAccount, "platform" | "account_id" | "name" | "picture">;
@@ -254,7 +254,7 @@ function OwnMetaApp({ current, redirect, onDone }: { current: string; redirect: 
       <div className="stack">
         <ol className="small muted" style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 6 }}>
           <li>At <a href="https://developers.facebook.com/apps" target="_blank" rel="noreferrer">developers.facebook.com/apps</a>, click <b>Create app</b>. Pick the use cases <b>Manage everything on your Page</b> and <b>Manage messaging &amp; content on Instagram</b>, plus <b>Engage with customers on Messenger</b> for the Inbox. Connect your business portfolio; it doesn't need to be verified.</li>
-          <li>In each use case, click <b>Customize</b> and add pages_show_list, pages_read_engagement, pages_manage_posts, business_management, instagram_basic and instagram_content_publish. For the Inbox, also add pages_read_user_content, pages_manage_engagement, pages_manage_metadata, pages_messaging, instagram_manage_comments and instagram_manage_messages.</li>
+          <li>In each use case, click <b>Customize</b> and add pages_show_list, pages_read_engagement, pages_manage_posts, business_management, instagram_basic and instagram_content_publish. For the Inbox, also add pages_read_user_content, pages_manage_engagement, pages_manage_metadata, pages_messaging, instagram_manage_comments and instagram_manage_messages. For Performance, add read_insights and instagram_manage_insights.</li>
           <li><b>Facebook Login for Business → Configurations → Create</b>: User access token, your Pages and Instagram accounts, the same permissions. Copy its ID; Instagram video uploads need it.</li>
           <li><b>App settings → Basic</b>: copy the App ID and App secret. If Meta asks for a redirect URI, use <code style={{ overflowWrap: "anywhere" }}>{redirect}</code>.</li>
           <li>Leave the app in <b>Development</b> mode. Anyone else who connects Pages needs a role under <b>App roles</b>.</li>
@@ -396,7 +396,7 @@ export function PublishModal({ p, onClose, onQueued }: { p: Project; onClose: ()
                   <textarea className="textarea" rows={3} maxLength={platforms[pl].limit} {...cap(pl)} />
                 </Field>
                 {pl === "tiktok" && (
-                  <Field label="TikTok visibility" hint="until TikTok audits the app, only “Only me” or drafts work">
+                  <Field label="TikTok visibility" hint="until TikTok audits the app, only “Only me” works, or send it to the TikTok app and post it from the phone">
                     <select className="select" value={privacy.tiktok} onChange={(e) => setPrivacy({ ...privacy, tiktok: e.target.value })}>
                       {tiktokPrivacy.map(([v, l]) => <option key={v} value={v} disabled={!v}>{l}</option>)}
                     </select>
@@ -439,10 +439,13 @@ export function PostsCard({ p, reload, onPublish }: { p: Project; reload: () => 
       </Empty>
     );
   }
+  const read = posts.filter((x) => x.views != null);
+  const best = read.length > 1 ? read.reduce((a, b) => ((b.views ?? 0) > (a.views ?? 0) ? b : a)) : undefined;
   return (
     <div className="table-wrap">
+      {best && <p className="small muted" style={{ margin: "10px 18px 0" }}>Doing best on <b>{platforms[best.platform].label}</b>: {views(best.views)}, {pct(best.engagement_rate)} engagement. Numbers update every 6 hours; see Performance for every video.</p>}
       <table className="table">
-        <thead><tr><th>Account</th><th>Status</th><th>When</th><th /></tr></thead>
+        <thead><tr><th>Account</th><th>Status</th><th>When</th><th className="num">Views</th><th className="num" title="Average share of the video people watched">Watched</th><th className="num" title="Likes, comments, shares and saves per 100 views">Engagement</th><th /></tr></thead>
         <tbody>
           {posts.map((x) => (
             <tr key={x.id}>
@@ -455,6 +458,11 @@ export function PostsCard({ p, reload, onPublish }: { p: Project; reload: () => 
                 {x.error && <div className="small" style={{ color: "var(--danger)", marginTop: 4 }}>{x.error}</div>}
               </td>
               <td className="small muted nowrap">{x.status === "scheduled" ? parseTime(x.publish_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : ago(x.publish_at)}</td>
+              {x.status === "posted" && x.views == null ? <td colSpan={3} className="small faint">Numbers come within 6 hours</td> : <>
+                <td className="num"><strong>{compact(x.views)}</strong></td>
+                <td className="num" title={x.skip_rate != null ? `${x.skip_rate.toFixed(0)}% of views left in the first 3 seconds` : undefined}>{x.retention != null ? pct(x.retention) : x.skip_rate != null ? `${(100 - x.skip_rate).toFixed(0)}% past 3s` : "—"}</td>
+                <td className="num">{pct(x.engagement_rate)}</td>
+              </>}
               <td className="num">
                 <span className="row" style={{ gap: 2, justifyContent: "flex-end" }}>
                   {x.url && <a className="btn ghost sm icon" href={x.url} target="_blank" rel="noreferrer" title="Open post" aria-label="Open post"><ArrowSquareOutIcon size={14} /></a>}

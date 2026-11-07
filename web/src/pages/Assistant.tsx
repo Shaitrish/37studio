@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpIcon, ChatCircleDotsIcon, MicrophoneIcon, MicrophoneSlashIcon, PlusIcon, SquareIcon } from "@phosphor-icons/react";
 import { api, ChatEvent, fail, Meta, useApi } from "../api";
 import { Empty, HelpButton, ModelOptions } from "../ui";
-import { EventView, modelName, Parsed, ToolGroup, useDictation } from "./Project";
+import { Feed, liveStatus, modelName, parse, Parsed, useDictation } from "../chat";
 
 interface AssistantState { events: ChatEvent[]; running: boolean; started: boolean }
 
@@ -16,7 +16,7 @@ const ideas = [
 
 /** Sidebar → Assistant: run the studio by chatting. Claude drives the same tools other agents get over MCP (internal/mcp). */
 export default function Assistant() {
-  const [events, setEvents] = useState<ChatEvent[]>([]);
+  const [events, setEvents] = useState<Parsed[]>([]);
   const [running, setRunning] = useState(false);
   const [text, setText] = useState("");
   // The video chat's models: Claude through Claude Code, the rest through OpenCode (assistant.go). Sonnet is plenty.
@@ -29,7 +29,8 @@ export default function Assistant() {
 
   const [loaded, setLoaded] = useState(false);
   const load = (after = 0) => api<AssistantState>(`/assistant?after=${after}`).then((s) => {
-    setEvents((ev) => (after ? [...ev, ...s.events] : s.events));
+    const got = s.events.map(parse);
+    setEvents((ev) => (after ? [...ev, ...got] : got));
     setRunning(s.running);
     setLoaded(true);
   }, (e) => { if (after) fail(e); });
@@ -48,17 +49,8 @@ export default function Assistant() {
     return () => clearInterval(t);
   }, [running, last]);
 
-  const items = useMemo(() => {
-    const out: (Parsed | Parsed[])[] = [];
-    for (const e of events) {
-      const ev = { id: e.id, kind: e.kind, b: JSON.parse(e.body) };
-      const prev = out[out.length - 1];
-      if (ev.kind === "tool" || ev.kind === "tool_error") Array.isArray(prev) ? prev.push(ev) : out.push([ev]);
-      else out.push(ev);
-    }
-    return out;
-  }, [events]);
-  useLayoutEffect(() => { feed.current?.scrollTo({ top: feed.current.scrollHeight }); }, [items.length, running]);
+  const live = useMemo(() => (running ? liveStatus(events) : undefined), [events, running]);
+  useLayoutEffect(() => { feed.current?.scrollTo({ top: feed.current.scrollHeight }); }, [events.length, running]);
 
   const send = async (t = text) => {
     if (!t.trim() || running) return;
@@ -89,10 +81,8 @@ export default function Assistant() {
               </div>
             </Empty>
           )}
-          {items.map((it, i) =>
-            Array.isArray(it) ? <ToolGroup key={it[0].id} tools={it} open={running && i === items.length - 1} /> : <EventView key={it.id} e={it} pid={0} />
-          )}
-          {running && <div className="typing"><i /><i /><i /> <span>Working…</span></div>}
+          <Feed events={events} running={running} pid={0} />
+          {live && <div className="typing"><i /><i /><i /> <span className="ellipsis">{[live.agents && `${live.agents} subagent${live.agents === 1 ? "" : "s"} working`, live.step].filter(Boolean).join(" · ") || "Working…"}</span></div>}
         </div>
         <div className="composer">
           <div className={`composer-box ${mic.listening ? "listening" : ""}`}>

@@ -14,6 +14,7 @@ The whole journey, in order:
 4. [Make a video](#make-a-video) and [refine it](#work-on-a-project) by chatting with the editor agent.
 5. [Connect social accounts](#connect-social-accounts), then [publish](#publish).
 6. Optional: let [Autopilot](#autopilot) make videos on a schedule, and let the [Inbox](#inbox) draft your replies.
+7. Watch [Performance](#performance) to see which videos worked, so the next ones do too.
 
 ### Find help in the app
 
@@ -146,11 +147,20 @@ The folder is copied into 37Studio, without dependencies, build output, hidden f
 
 **Re-scan** later to refresh a brand. It only fills fields that are still empty, so your edits are kept.
 
+### Connect a live folder
+
+For a project too big to copy, or one that keeps changing, connect it instead. Click **Edit** on the brand and fill in:
+
+- **Connected folder:** the folder's full path. Nothing is copied. The agent reads the real files, so it sees new work at once, and it can't change them.
+- **Databases the agent may query:** SQLite files inside that folder, by their path in it. The agent can only run read-only queries, and only on the files you list, so leave out anything with customer data.
+
+The agent can't read `.env` files, keys or raw database files in that folder. Tell it where things are in the **Knowledge** tab. In the Docker version, the folder must be mounted into the container.
+
 ### Brand tabs
 
 | Tab | What it's for |
 | --- | --- |
-| Brand library | Logos, people, images, icons, videos, fonts, audio and design references. Click a file to describe it, so the agent picks it well |
+| Brand library | Logos, people, images, icons, videos, fonts, audio and design references. Click a file to describe it, so the agent picks it well. The pin button puts a file first, and the first logo is the brand's icon |
 | Campaigns | This brand's campaigns |
 | Projects | This brand's projects |
 | Voices | Voices for voiceovers. See [Generated media and voices](#generated-media-and-voices) |
@@ -298,7 +308,7 @@ Connecting takes two steps: make a free developer app once in **Settings → Soc
 | Facebook Pages | Reels and Page videos | Messenger, comments | Your own Meta app |
 | Instagram (Business or Creator) | Reels | Messages, comments | The same sign-in as Facebook |
 | YouTube | Videos | No | Your own Google OAuth client |
-| TikTok | Videos, or the creator's drafts | No | Your own TikTok app |
+| TikTok | Videos, or sent to the creator's TikTok app | No | Your own TikTok app |
 | LinkedIn | Videos to your profile | No | Your own LinkedIn app |
 | X | Video posts | No | Your own X app |
 | Pinterest | Video Pins on boards you pick | No | Your own Pinterest app |
@@ -315,7 +325,9 @@ Follow the [step-by-step platform guide](https://studio.shaitrish.com/connect). 
 
 When you register a redirect address with a platform, use `http://localhost:8080/api/oauth/<platform>/callback`. It must match exactly. X refuses `localhost`, so use `http://127.0.0.1:8080/api/oauth/x/callback` there.
 
-Unaudited apps are restricted by the platforms: YouTube uploads stay private and TikTok posts stay **Only me** or go to drafts until those platforms approve your app. LinkedIn sign-ins last 60 days, then connect again.
+Facebook, Instagram, YouTube and TikTok also report how each video did. See [Performance](#performance).
+
+Unaudited apps are restricted by the platforms: YouTube uploads stay private and TikTok posts stay **Only me** or go to the creator's TikTok phone app (a notification in its Inbox) until those platforms approve your app. LinkedIn sign-ins last 60 days, then connect again.
 
 ## Publish
 
@@ -353,7 +365,7 @@ Autopilot only runs while 37Studio is running. Keep the computer awake, or run i
 2. Click **Draft with AI**. Claude writes a reply from the brand's knowledge base, in the customer's language.
 3. Edit it and click **Send**, or press **Ctrl+Enter**.
 
-Comment replies are public. Messages can only be answered within 24 hours of the customer's last message.
+Comment replies are public. Messages can only be answered within 24 hours of the customer's last message; for older ones the reply box says so: answer them from the Page's inbox in Meta Business Suite (7 days), or from 37Studio once Meta approves your app's Human Agent permission.
 
 ### Auto-replies
 
@@ -368,6 +380,38 @@ Set this on the brand's **Social** tab, under **Inbox replies**:
 The app checks every 2 minutes while it's running. It catches up on what arrived while it was off if the platform still allows a reply (24 hours for messages, 2 days for comments).
 
 The inbox needs extra Meta permissions on top of publishing, and until Meta grants your app Advanced Access, only messages from people with a role on the app or Page appear. WhatsApp also needs a public address for Meta's webhook. See the [inbox setup](https://github.com/Shaitrish/37studio/blob/main/docs/platforms.md#inbox-messenger-instagram-and-comments).
+
+## Performance
+
+**Performance** in the sidebar shows how each published video did on Facebook, Instagram, YouTube and TikTok, including videos posted outside 37Studio.
+
+- **Views, likes, comments, shares and saves**, as each platform counts them.
+- **Watched:** the average share of the video people watched. Facebook and YouTube report it. Instagram reports how many people left in the first 3 seconds instead; hover the number to see it.
+- **Avg watch:** how long each view lasted.
+- **Engagement:** likes, comments, shares and saves per 100 views.
+
+Click a column to sort by it, and click again for the lowest first. **Most viewed** and **Least viewed** sit above the list; the least viewed only counts videos more than 3 days old. A video made in 37Studio links back to its project.
+
+**By platform** puts the platforms side by side: views per video, how much was watched and engagement, with a star on the best of each.
+
+Every video you post from 37Studio is remembered on every platform it went to:
+
+- **Library → Published** lists them, with each platform's views under the video. Open one to compare all its numbers side by side, with the best platform marked.
+- The project's **Posts** tab shows each post's views, how much was watched and engagement, and where it did best.
+
+### Strategy
+
+Pick a brand on the Performance page to see its **Strategy**: what the numbers taught you, kept in the brand's `strategy.md`.
+
+- **Update from the numbers** has Claude read every video's numbers and rewrite the "What the numbers say" part, about $0.05. Your own parts are kept.
+- **Edit** lets you write your own plan or fix a lesson.
+- The editor agent follows the strategy in every new video, and adds a dated note when it learns something.
+
+37Studio reads the numbers every 6 hours while it's running; click **Refresh** to read them now. Platforms take up to 2 days to settle their numbers. TikTok reports no watch time.
+
+The editor agent sees the same numbers. Every new video starts with a summary of what worked for the brand, and the agent can look up the full list.
+
+The numbers need one more permission per platform. Meta needs `read_insights` and `instagram_manage_insights`, YouTube needs the YouTube Analytics API, and TikTok needs `video.list`. After adding it, connect the account again on the brand's **Social** tab. See the [platform guide](https://github.com/Shaitrish/37studio/blob/main/docs/platforms.md#performance).
 
 ## Assistant
 

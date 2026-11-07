@@ -1,8 +1,11 @@
 package company
 
 import (
+	"fmt"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/Shaitrish/37studio/internal/config"
@@ -41,5 +44,34 @@ func TestDeleteCascades(t *testing.T) {
 	}
 	if _, err := os.Stat(files.ProjectDir(2)); err != nil {
 		t.Fatal("another brand's project was touched")
+	}
+}
+
+// Sending only the folder or only the databases keeps the other, and a wrong value changes nothing.
+func TestConnectedFolderUpdate(t *testing.T) {
+	config.DataDir = t.TempDir()
+	store.Open()
+	t.Cleanup(store.Close)
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "a.db"), nil, 0o644)
+	store.DB.Exec("insert into tenants(id,name) values(1,'Shop')")
+	put := func(body string) error {
+		r := httptest.NewRequest("PUT", "/api/tenants/1", strings.NewReader(body))
+		r.SetPathValue("id", "1")
+		_, err := Save(r)
+		return err
+	}
+	if err := put(fmt.Sprintf(`{"source_path":%q,"source_dbs":"a.db"}`, dir)); err != nil {
+		t.Fatal(err)
+	}
+	if err := put(fmt.Sprintf(`{"source_path":%q}`, dir)); err != nil {
+		t.Fatal(err)
+	}
+	if put(`{"source_dbs":"none.db"}`) == nil {
+		t.Fatal("a missing database was accepted")
+	}
+	row, _ := store.Row("select source_path,source_dbs from tenants where id=1")
+	if row["source_path"] != dir || row["source_dbs"] != "a.db" {
+		t.Fatal(row)
 	}
 }

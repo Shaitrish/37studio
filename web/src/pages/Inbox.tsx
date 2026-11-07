@@ -100,6 +100,9 @@ function Thread({ item, onSent }: { item: Item; onSent: () => void }) {
   const [text, setText] = useState(item.draft ?? "");
   const [busy, setBusy] = useState("");
   const target = { account: item.account, kind: item.kind, id: item.id };
+  // Messenger and Instagram take app replies only within 24 hours of the customer's last message (WhatsApp is checked by its own API).
+  const theirs = msgs?.filter((m) => !m.mine && m.time).at(-1);
+  const late = item.kind === "dm" && item.platform !== "whatsapp" && !!theirs && Date.now() - new Date(theirs.time).getTime() > 24 * 3600e3;
 
   async function draft() {
     setBusy("draft");
@@ -130,7 +133,7 @@ function Thread({ item, onSent }: { item: Item; onSent: () => void }) {
         {item.url && <a className="btn ghost sm icon" href={item.url} target="_blank" rel="noreferrer" title="Open on the platform" aria-label="Open on the platform"><ArrowSquareOutIcon size={14} /></a>}
       </div>
       <div className="thread-msgs">
-        {item.context && <p className="small muted thread-post"><b>Post:</b> {item.context}</p>}
+        {item.context && <PostContext key={item.id} text={item.context} />}
         {error && <p className="msg-error">{error}</p>}
         {msgs?.map((m, n) => (
           <div key={n} className={m.mine ? "msg-user" : "msg-them"} title={m.time ? new Date(m.time).toLocaleString() : ""}>
@@ -144,13 +147,27 @@ function Thread({ item, onSent }: { item: Item; onSent: () => void }) {
           placeholder={item.kind === "dm" ? "Write a reply, or let Claude draft one" : "Write a public reply, or let Claude draft one"}
           onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && text.trim()) { e.preventDefault(); send(); } }} />
         <div className="row">
-          <span className="small faint spacer">{item.kind === "dm" ? "Messages can only be answered within 24 hours of the customer's last message." : "Comment replies are public."}</span>
+          {late
+            ? <span className="small spacer" style={{ color: "var(--danger)" }}>Their last message is over 24 hours old, so {item.platform === "instagram" ? "Instagram" : "Facebook"} may refuse this. Reply from the Page's inbox in Meta Business Suite instead (people can answer there for 7 days){item.url ? <>: <a href={item.url} target="_blank" rel="noreferrer">open it</a></> : ""}.</span>
+            : <span className="small faint spacer">{item.kind === "dm" ? "Messages can only be answered within 24 hours of the customer's last message." : "Comment replies are public."}</span>}
           <button className="btn" disabled={!!busy} onClick={draft}><SparkleIcon size={15} /> {busy === "draft" ? "Drafting…" : "Draft with AI"}</button>
           <button className="btn primary" disabled={!!busy || !text.trim()} onClick={send} title="Ctrl+Enter">
             <PaperPlaneRightIcon size={15} /> {busy === "send" ? "Sending…" : "Send"}
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** The post a comment is on: three whole lines, the rest on request, so a long caption never crowds out the thread. */
+function PostContext({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  const long = text.length > 160 || text.split("\n").length > 3;
+  return (
+    <div className={`small muted thread-post ${open ? "open" : ""}`}>
+      <p><b>Post:</b> {text}</p>
+      {long && <button onClick={() => setOpen(!open)} aria-expanded={open}>{open ? "Show less" : "Show more"}</button>}
     </div>
   );
 }

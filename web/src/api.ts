@@ -4,6 +4,8 @@ export interface FileInfo { path: string; name: string; url: string; kind: "vide
 export interface QuoteLine { label: string; detail: string; cost: number }
 export interface Quote { lines: QuoteLine[]; cost: number }
 export interface Tenant {
+  source_path?: string;
+  source_dbs?: string;
   id: number; name: string; contact: string; email: string; phone: string; website: string; teacher: string; bio: string;
   language: string; brand_color: string; accent_color: string; font: string; notes: string;
   project_count?: number; cost_usd?: number; logo?: string; assets?: FileInfo[]; projects?: Project[];
@@ -35,10 +37,27 @@ export interface Template {
 export interface LibraryItem { file: FileInfo; project_id: number; title: string; tenant_id: number; tenant_name: string }
 export type Platform = "facebook" | "instagram" | "youtube" | "tiktok" | "linkedin" | "x" | "pinterest" | "bluesky" | "mastodon" | "whatsapp";
 export interface SocialAccount { id: number; tenant_id: number; platform: Platform; account_id: string; name: string; picture: string; created_at: string }
-export interface Post {
+/** A post's numbers from its platform (stats.go). null: not read yet, or the platform doesn't report it. */
+export interface PostStats {
+  views?: number | null; reach?: number | null; retention?: number | null; watch_avg?: number | null; likes?: number | null; comments?: number | null;
+  shares?: number | null; saves?: number | null; skip_rate?: number | null; engagement?: number | null; engagement_rate?: number | null;
+}
+export interface Post extends PostStats {
   id: number; project_id: number; account_id: number; platform: Platform; account_name: string; file: string; title: string; caption: string;
   privacy: string; status: "approval" | "scheduled" | "posting" | "posted" | "failed"; publish_at: string; url: string; error: string; created_at: string;
 }
+/** One video 37Studio posted, with its numbers on every platform it went to (GET /stats/videos). */
+export interface PublishedVideo {
+  project_id: number; project: string; tenant_id: number; brand: string; file: string; url: string; posted_at: string;
+  posts: (PostStats & { platform: Platform; account: string; url: string; publish_at: string })[];
+  views: number; engagement: number; engagement_rate: number | null; best: Platform | null;
+}
+const compactFmt = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
+/** 12.3K; a dash when the platform doesn't say. */
+export const compact = (v: number | null | undefined) => (v == null ? "—" : compactFmt.format(v));
+/** "1 view", "12.3K views". */
+export const views = (v: number | null | undefined) => `${compact(v)} ${v === 1 ? "view" : "views"}`;
+export const pct = (v: number | null | undefined) => (v == null ? "—" : `${v.toFixed(v < 10 ? 1 : 0)}%`);
 export type Captions = Partial<Record<Platform | "youtube_title" | "pinterest_title", string>>;
 export interface AssetMeta { caption?: string; section?: string; context?: string; source?: string; use?: string }
 export interface Campaign {
@@ -103,13 +122,17 @@ export function folderFiles(list: FileList) {
   return { name: list[0]?.webkitRelativePath.split("/")[0] ?? "", keep, skipped, bytes: keep.reduce((n, f) => n + f.size, 0) };
 }
 
+// The last answer for each path, so a page opened again shows at once while it refreshes, instead of going blank.
+// ponytail: one entry per path visited, never evicted; a few hundred KB at most for a studio's worth of pages.
+const answers = new Map<string, unknown>();
+
 /** Fetches `path` on mount and whenever it changes; `reload` refetches without flashing empty state. */
 export function useApi<T>(path: string | null) {
-  const [data, setData] = useState<T>();
+  const [data, setData] = useState<T | undefined>(() => (path ? (answers.get(path) as T) : undefined));
   const [error, setError] = useState<string>();
   const reload = useCallback(() => {
     if (!path) return Promise.resolve();
-    return api<T>(path).then((d) => { setData(d); setError(undefined); }, (e) => setError(e.message));
+    return api<T>(path).then((d) => { answers.set(path, d); setData(d); setError(undefined); }, (e) => setError(e.message));
   }, [path]);
   useEffect(() => { reload(); }, [reload]);
   return { data, error, reload, setData };
@@ -163,6 +186,9 @@ export function ago(t: string) {
 export const date = (t: string) => (t ? parseTime(t).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "");
 
 export const go = (path: string) => { location.hash = path; };
+
+/** This browser's UI preferences (sidebar, theme, chat width). Storage can throw (private mode); the defaults still work. */
+export const pref = (k: string, v?: string) => { try { if (v === undefined) return localStorage.getItem("37studio:" + k); localStorage.setItem("37studio:" + k, v); } catch {} return v ?? null; };
 
 type ToastFn = (msg: string, err?: boolean) => void;
 let toastFn: ToastFn = () => {};

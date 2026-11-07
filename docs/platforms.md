@@ -12,6 +12,7 @@ How to set up each platform 37Studio posts to, plus the inbox (Messenger, Instag
 - [Bluesky](#bluesky)
 - [Mastodon](#mastodon)
 - [Inbox: Messenger, Instagram and comments](#inbox-messenger-instagram-and-comments)
+- [Performance](#performance)
 - [WhatsApp](#whatsapp)
 - [Run your own relay (WhatsApp)](#run-your-own-relay-whatsapp)
 - [What can't be posted to](#what-cant-be-posted-to)
@@ -53,7 +54,7 @@ The **Posts** tab shows each upload's status, a link to the live post, and the p
 **Connect Facebook & Instagram** signs in with Facebook Login for Business through your own Meta app and lists the Pages you manage, plus the Instagram Business or Creator account linked to each. 37Studio has no built-in Meta app: until you enter yours, the Connect button asks you to set one up. It takes about 15 minutes, and Brand → Social → **Set up your Meta app** walks through the same steps inside the app:
 
 1. At [developers.facebook.com/apps](https://developers.facebook.com/apps), click **Create app**. Pick the use cases **Manage everything on your Page** and **Manage messaging & content on Instagram**, plus **Engage with customers on Messenger** for the Inbox. Connect your business portfolio; it doesn't need to be verified.
-2. In each use case, click **Customize** and add `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `business_management`, `instagram_basic` and `instagram_content_publish` (plus the [inbox permissions](#inbox-messenger-instagram-and-comments) if you want the Inbox).
+2. In each use case, click **Customize** and add `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `business_management`, `instagram_basic` and `instagram_content_publish` (plus the [inbox permissions](#inbox-messenger-instagram-and-comments) if you want the Inbox, and `read_insights` and `instagram_manage_insights` for [Performance](#performance)).
 3. **Facebook Login for Business → Configurations → Create**: *User access token*, your Pages and Instagram accounts, the same permissions. Copy its ID; Instagram's video upload needs it.
 4. **App settings → Basic**: copy the App ID and App secret. If Meta asks for a redirect URI, use the one above.
 5. Enter the App ID, App secret and Login configuration ID in **Set up your Meta app** or Settings → Social apps, or as `META_APP_ID`, `META_APP_SECRET` and `META_CONFIG_ID` in `.env`. The ID only takes effect together with its secret, and agents never get the secret.
@@ -63,8 +64,8 @@ Vertical videos of 3–90 seconds post as Reels; anything else posts as a regula
 
 ## YouTube
 
-1. In [console.cloud.google.com](https://console.cloud.google.com) create a project and enable **YouTube Data API v3**.
-2. OAuth consent screen: External, with the `youtube.upload` and `youtube.readonly` scopes. Set it to **In production**: in Testing, Google expires the login after 7 days. Unverified apps show a warning screen during sign-in; continue past it.
+1. In [console.cloud.google.com](https://console.cloud.google.com) create a project and enable **YouTube Data API v3** and **YouTube Analytics API** (for [Performance](#performance)).
+2. OAuth consent screen: External, with the `youtube.upload`, `youtube.readonly` and `yt-analytics.readonly` scopes. Set it to **In production**: in Testing, Google expires the login after 7 days. Unverified apps show a warning screen during sign-in; continue past it.
 3. Credentials → OAuth client ID → *Web application*, with the redirect URI above. Put the ID and secret in `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (Settings → Social apps or `.env`).
 4. Brand → Social → **Connect YouTube** and pick the channel.
 
@@ -73,10 +74,10 @@ Until the project passes YouTube's free API audit, YouTube keeps every upload **
 ## TikTok
 
 1. At [developers.tiktok.com](https://developers.tiktok.com) create an app with the **Desktop** platform (the only kind TikTok lets redirect to `http://localhost`; 37Studio uses PKCE for it) and the redirect URI above. On a server with a real HTTPS domain, use the **Web** platform with the `https://` redirect instead.
-2. Add **Login Kit** and **Content Posting API** (turn on Direct Post) with the scopes `user.info.basic`, `video.publish`, `video.upload`. Put the client key and secret in `TIKTOK_CLIENT_KEY` and `TIKTOK_CLIENT_SECRET` (Settings → Social apps or `.env`).
+2. Add **Login Kit** and **Content Posting API** (turn on Direct Post) with the scopes `user.info.basic`, `video.publish`, `video.upload`, plus `video.list` (Display API) for [Performance](#performance). Put the client key and secret in `TIKTOK_CLIENT_KEY` and `TIKTOK_CLIENT_SECRET` (Settings → Social apps or `.env`).
 3. Brand → Social → **Connect TikTok**.
 
-Until TikTok reviews the app, use its Sandbox and add each brand's TikTok account as a target user. Until TikTok audits the app, direct posts must be **Only me**; or choose **Send to TikTok drafts** in the Publish dialog and the account owner taps Post in the TikTok app. Each brand signs in with its own TikTok account, since TikTok has no agency access.
+Until TikTok reviews the app, use its Sandbox and add each brand's TikTok account as a target user. Until TikTok audits the app, direct posts must be **Only me**; or choose **Send to the TikTok app** in the Publish dialog: a notification arrives in the TikTok phone app's Inbox, and the account owner opens it, edits and taps Post. It doesn't appear under Drafts in TikTok Studio on the web. Each brand signs in with its own TikTok account, since TikTok has no agency access.
 
 ## LinkedIn
 
@@ -142,7 +143,20 @@ Meta setup, on top of the Facebook + Instagram steps:
 3. In the Instagram app: Settings → Messages and story replies → Message controls → Connected tools → **Allow access to messages**.
 4. Until Meta grants your app Advanced Access through App Review and Business Verification, the inbox only shows messages from people with a role on the app or the Page. Test with a team account; real customers appear after approval. Comments work without it.
 
-Messenger and Instagram allow free-form replies within 24 hours of the customer's last message; comment replies have no time limit.
+Messenger and Instagram allow free-form replies within 24 hours of the customer's last message; comment replies have no time limit. Past 24 hours, a reply you send yourself goes out with Meta's Human Agent tag, which allows 7 days, but only once Meta has approved your app's **Human Agent** permission (App Review → Permissions and features). Until then, answer those from the Page's inbox in Meta Business Suite; the Inbox says so above the Send button.
+
+## Performance
+
+**Performance** in the sidebar, the MCP tools `video_stats` and `published_videos` and the editor agent's `37studio stats` command show how each video did. A post made from 37Studio is matched to its video on the platform by the ID the upload returned, so Library → Published compares one video across platforms. Every 6 hours while 37Studio runs (or on **Refresh**), it reads the latest 50 videos on each connected Facebook Page, Instagram, YouTube and TikTok account, including ones posted outside 37Studio, into the `video_stats` table. A number a platform doesn't report stays empty.
+
+| Platform | Needs | Reports |
+| --- | --- | --- |
+| Facebook | `read_insights` | Views, reach, reactions, comments, shares, average watch time, retention curve |
+| Instagram | `instagram_manage_insights` | Views, reach, likes, comments, shares, saves, average watch time, 3-second skip rate |
+| YouTube | YouTube Analytics API, `yt-analytics.readonly` | Views, likes, comments, shares, average view duration and percentage |
+| TikTok | `video.list` | Views, likes, comments, shares |
+
+Add the permission to your app (for Meta, to the use case and to the Login configuration too), then connect the account again on the brand's Social tab. A YouTube login from before keeps its views, likes and comments, but needs a reconnect for retention.
 
 ## WhatsApp
 

@@ -14,7 +14,7 @@ Videos made, posted and answered, with your own keys and no monthly bill.</p>
 </p>
 
 <p align="center">
-  <a href="https://studio.shaitrish.com/#intro"><b>▶ Watch the 2-minute intro</b></a> (English · বাংলা) ·
+  <a href="https://studio.shaitrish.com/#intro"><b>▶ Watch the 3-minute film</b></a> ·
   <a href="https://studio.shaitrish.com/setup">Setup guide</a> ·
   <a href="docs/guide.md">User guide</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
@@ -22,7 +22,9 @@ Videos made, posted and answered, with your own keys and no monthly bill.</p>
   <a href="https://studio.shaitrish.com/donate">Donate</a>
 </p>
 
-[![37Studio writes a caption for each platform and posts the video to all nine at once](https://studio.shaitrish.com/intro.gif)](https://studio.shaitrish.com/#intro)
+[![BCS Mate's real Instagram count, 143,647 views, rolls up inside the Reel itself: made with AI in 37Studio](https://studio.shaitrish.com/intro.gif)](https://studio.shaitrish.com/#intro)
+
+<p align="center"><b>Made in 37Studio:</b> BCS Mate, an exam-prep brand, posted 14 Reels on Instagram from 1 to 6 November 2026. They got 413,406 views, and the account reached 1,819 followers by 7 November. <a href="https://studio.shaitrish.com/#intro">The film</a> walks through that week on the real screens.</p>
 
 ![The project page: the editor agent's chat beside a live preview of a reel](worker/public/shots/project.webp)
 
@@ -39,6 +41,7 @@ You bring your own keys (a Claude plan or an Anthropic API key; optionally OpenA
 - **Generated media.** Gemini images; video clips from Gemini or, through fal.ai, Seedance, Kling, Veo, Wan and others; ElevenLabs voiceover, sound effects and music. Each brand can keep its own voices, cloned from a short recording of the founder or presenter, with a default per language; ask the agent for a voice by name, or to switch a finished video to it. The agent asks before media on one project costs more than the limit in Settings → Spending, and keeps a person or product consistent by reusing one reference image across shots. The agent uses them only when the footage and brand library can't do the job, and says what it made.
 - **Publishing and Autopilot.** Post to any mix of a brand's accounts on nine platforms now or on a schedule, or let a content plan make a fresh video before every slot and wait for one-click approval.
 - **One inbox.** Messenger, Instagram and WhatsApp messages and Facebook and Instagram comments, with replies drafted in the customer's language, following the brand's own rules. Off, drafts to approve, or fully automatic, per brand.
+- **Performance.** Views, how much of each video people watched, likes, comments, shares, saves and engagement for every video on the brand's Facebook, Instagram, YouTube and TikTok, best and worst on top. The editor agent reads the same numbers before it plans the next video.
 - **Assistant and MCP.** Run everything by chatting with the Assistant in the sidebar, or from your own AI agent (Claude Code, Claude Desktop, Cursor) through 37Studio's MCP server: brands, campaigns, videos, publishing, Autopilot, settings and connections.
 - **Real costs.** Every project, campaign and brand shows its AI spend in your currency. No markup: you pay the AI providers directly.
 
@@ -206,6 +209,10 @@ Environment-only settings (`LINKEDIN_PAGES`, `PINTEREST_API`, `STUDIO37_PUBLIC_U
 **Auto-replies** (Brand → Social → Inbox replies): *Off*, *Claude drafts, you approve*, or *Claude replies on its own*, plus the brand's own rules for how Claude replies (tone, sign-off, what never to promise, when to hand over to a person). Facts only come from the knowledge base; when the answer isn't there, Claude says a team member will reply. A background loop checks every 2 minutes while 37Studio runs, and catches up on what arrived while it was off if the platform still allows a reply (messages within 24 hours, comments up to 2 days old).
 
 The inbox needs extra Meta permissions on top of publishing, and WhatsApp needs a number on the WhatsApp Business API and a public address for Meta's webhook: a Cloudflare Tunnel that publishes only `/webhooks/meta` of your copy, or a small relay on your own Cloudflare account. See [docs/platforms.md](docs/platforms.md#whatsapp). Until Meta grants your app Advanced Access, only messages from people with a role on the app or Page appear.
+
+## Performance
+
+**Performance** in the sidebar shows how each video did on the brand's Facebook Pages, Instagram, YouTube and TikTok, including videos posted outside 37Studio: views, the average share watched, average watch time, likes, comments, shares, saves and engagement per 100 views, sortable, with the most and least viewed on top. 37Studio reads the numbers every 6 hours while it runs, or on **Refresh**. Videos posted from 37Studio are remembered per platform: **Library → Published** and each project's Posts tab compare one video's numbers across every platform it went to. Each brand keeps a **Strategy** (`strategy.md`) that Claude rewrites from the numbers on request and the team can edit. The editor agent starts every video with a summary of what worked and the strategy, lists the details with `37studio stats` (`--videos` for each video across platforms) and records lessons with `37studio strategy add`; other AI apps use the `video_stats`, `published_videos` and `review_strategy` MCP tools. Each platform needs one more permission (`read_insights` and `instagram_manage_insights`, the YouTube Analytics API, TikTok's `video.list`); see [docs/platforms.md](docs/platforms.md#performance).
 
 ## Assistant and MCP
 

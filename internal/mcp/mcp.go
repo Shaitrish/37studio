@@ -65,7 +65,10 @@ var companyDoc = map[string]any{
 	"brand_color": pStr("Main brand colour, #rrggbb"), "accent_color": pStr("Accent colour, #rrggbb"), "font": pStr("Brand font family"),
 	"notes": pStr("Notes for the editor agent"), "knowledge": pStr("The whole knowledge.md: what the business does, offers, tone, facts"),
 	"design": pStr("The whole design.md: the brand's design system"), "replies": pStr("The whole replies.md: rules for inbox replies"),
-	"inbox_mode": pEnum("How inbox replies go out", "off", "draft", "send"),
+	"strategy":    pStr("The whole strategy.md: the brand's content strategy and lessons from its numbers, which every video's agent follows"),
+	"inbox_mode":  pEnum("How inbox replies go out", "off", "draft", "send"),
+	"source_path": pStr("Connected folder: a full path on this computer the editor agent reads live and can't change. Empty removes it"),
+	"source_dbs":  pStr("SQLite files in the connected folder the agent may query read-only, by their path inside it, comma separated"),
 }
 
 var autopilotDoc = map[string]any{
@@ -81,12 +84,12 @@ var Tools = []mcpTool{
 
 	// brands
 	{Name: "list_companies", Desc: "All brands with their project count and AI spend in USD.", Method: "GET", Path: "/api/tenants"},
-	{Name: "get_company", Desc: "One brand: profile, knowledge base, design system, reply rules, brand library files with captions, and its projects.",
+	{Name: "get_company", Desc: "One brand: profile, knowledge base, design system, reply rules, content strategy, brand library files with captions, and its projects.",
 		Method: "GET", Path: "/api/tenants/{company_id}", Props: map[string]any{"company_id": brand}, Required: []string{"company_id"}},
 	{Name: "create_company_from_website", Desc: "Add a brand by scanning its website: the brand library, design system and knowledge base fill in over 5-10 minutes (watch scan_status with get_company).",
 		Method: "POST", Path: "/api/tenants/scan", Props: map[string]any{"url": pStr("The brand's website"), "notes": pStr("Anything the scan should know")}, Required: []string{"url"}},
 	{Name: "create_company", Desc: "Add a brand by hand.", Method: "POST", Path: "/api/tenants", Props: companyDoc, Required: []string{"name"}},
-	{Name: "update_company", Desc: "Change a brand's profile, knowledge base (knowledge), design system (design), reply rules (replies) or inbox mode. Only the fields you pass change; text documents are replaced whole.",
+	{Name: "update_company", Desc: "Change a brand's profile, knowledge base (knowledge), design system (design), reply rules (replies), content strategy (strategy) or inbox mode. Only the fields you pass change; text documents are replaced whole.",
 		Method: "PUT", Path: "/api/tenants/{company_id}", Props: merge(companyDoc, map[string]any{"company_id": brand}), Required: []string{"company_id"}},
 	{Name: "rescan_company", Desc: "Scan the brand's website again to refresh its brand library and knowledge base.",
 		Method: "POST", Path: "/api/tenants/{company_id}/scan", Props: map[string]any{"company_id": brand, "url": pStr("Website, if different"), "notes": pStr("Notes for the scan")}, Required: []string{"company_id"}},
@@ -96,10 +99,11 @@ var Tools = []mcpTool{
 		Props: map[string]any{"company_id": brand, "folder": pEnum("Library folder", files.AssetDirs...), "filename": pStr("File name with extension"),
 			"url": pStr("Download the file from here"), "content_base64": pStr("Or the file itself, base64-encoded (small files)")},
 		Required: []string{"company_id", "folder", "filename"}, Do: addCompanyAsset},
-	{Name: "update_company_asset", Desc: "Describe a brand library file so the editor agent picks it well (caption, use, context, section, source), or move it to another folder.",
+	{Name: "update_company_asset", Desc: "Describe a brand library file so the editor agent picks it well (caption, use, context, section, source), move it to another folder, or put it first (the first logo is the brand's icon).",
 		Method: "PUT", Path: "/api/tenants/{company_id}/assets", Props: map[string]any{"company_id": brand, "path": pStr("Library path, like people/jane.png"),
 			"caption": pStr("What is on screen: who, which product or feature"), "use": pStr("Good for: hero shot, testimonial, background…"), "context": pStr("Nearby heading or text"),
-			"section": pStr("Where on the site it appeared"), "source": pStr("Page URL"), "folder": pEnum("Move it to this folder", files.AssetDirs...)}, Required: []string{"company_id", "path"}},
+			"section": pStr("Where on the site it appeared"), "source": pStr("Page URL"), "folder": pEnum("Move it to this folder", files.AssetDirs...),
+			"first": pBool("Put it first in its folder. The first image in logo/ is the brand's icon across the app")}, Required: []string{"company_id", "path"}},
 	{Name: "delete_company_asset", Desc: "Remove a file from a brand's library.", Method: "DELETE", Path: "/api/tenants/{company_id}/assets",
 		Query: map[string]string{"path": "path"}, Props: map[string]any{"company_id": brand, "path": pStr("Library path, like logo/mark.svg")}, Required: []string{"company_id", "path"}},
 
@@ -213,6 +217,18 @@ var Tools = []mcpTool{
 	{Name: "send_reply", Desc: "Send a reply to a customer. Only with text the user has approved.", Method: "POST", Path: "/api/inbox/reply",
 		Props: map[string]any{"account": pInt("Account id"), "kind": pEnum("Item kind", "dm", "comment"), "id": pStr("Item id"), "to": pStr("Recipient id, for messages"), "text": pStr("The reply")}, Required: []string{"account", "kind", "id", "text"}},
 	{Name: "get_costs", Desc: "AI spend in USD by provider, brand and month.", Method: "GET", Path: "/api/costs"},
+
+	// performance
+	{Name: "video_stats", Desc: "How published videos performed on Facebook, Instagram, YouTube and TikTok: views, reach, likes, comments, shares, saves, engagement (their sum) and engagement rate (per 100 views), average watch time in seconds, retention (average % of the video watched), Instagram's 3-second skip rate and Facebook's retention curve, plus the 37Studio project each came from. Sort to find the best or, with order asc, the weakest. Includes totals and averages; null means the platform doesn't report it.",
+		Method: "GET", Path: "/api/stats", Query: map[string]string{"company_id": "tenant", "platform": "platform", "sort": "sort", "order": "order", "limit": "limit"},
+		Props: map[string]any{"company_id": brand, "platform": pEnum("Only one platform", "facebook", "instagram", "youtube", "tiktok"),
+			"sort": pEnum("What to rank by (default views)", "views", "retention", "engagement", "rate", "watch", "reach", "recent"), "order": pEnum("desc (default) or asc", "desc", "asc"), "limit": pInt("How many videos (default 200)")}},
+	{Name: "published_videos", Desc: "Each video 37Studio posted, newest first, with its numbers on every platform it went to side by side (views, % watched, watch time, likes, comments, shares, saves, engagement), totals, and the platform where it got the most views.",
+		Method: "GET", Path: "/api/stats/videos", Query: byTenant, Props: map[string]any{"company_id": brand}},
+	{Name: "review_strategy", Desc: "Have Claude rewrite the \"What the numbers say\" section of a brand's strategy.md from its video numbers (about $0.05, runs in the background; video_stats with company_id shows reviewing until done). Read the result with get_company (strategy).",
+		Method: "POST", Path: "/api/stats/review", Rename: toTenant, Props: map[string]any{"company_id": brand}, Required: []string{"company_id"}},
+	{Name: "refresh_video_stats", Desc: "Read fresh numbers from the platforms now instead of waiting for the 6-hourly refresh. Runs in the background for a minute or two; video_stats shows running until it's done.",
+		Method: "POST", Path: "/api/stats/refresh", Rename: toTenant, Props: map[string]any{"company_id": brand}},
 
 	// setup: settings, keys and account connections
 	{Name: "get_settings", Desc: "App settings: AI models and unit prices, per-turn budget, voices, rendering, display currency and exchange rate.", Method: "GET", Path: "/api/settings"},

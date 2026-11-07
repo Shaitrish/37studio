@@ -169,10 +169,24 @@ func clipStep(id int64) {
 // ListLibrary is every finished video and image (each project's out/, not drafts) across brands, newest first.
 func ListLibrary(r *http.Request) (any, error) {
 	ps, err := store.Rows("select p.id, p.title, p.tenant_id, t.name as tenant_name, p.parent_id from projects p join tenants t on t.id=p.tenant_id")
+	// Each video's length is an ffprobe run: read the projects side by side, or a first open waits on them one by one.
+	lists := make([][]files.Info, len(ps))
+	var wg sync.WaitGroup
+	slots := make(chan struct{}, 8)
+	for i, p := range ps {
+		wg.Add(1)
+		slots <- struct{}{}
+		go func() {
+			defer func() { <-slots; wg.Done() }()
+			id := p["id"].(int64)
+			lists[i] = files.List(filepath.Join(files.ProjectDir(id), "out"), fmt.Sprintf("/files/projects/%d/out", id), false)
+		}()
+	}
+	wg.Wait()
 	out := []map[string]any{}
-	for _, p := range ps {
+	for i, p := range ps {
 		id := p["id"].(int64)
-		for _, f := range files.List(filepath.Join(files.ProjectDir(id), "out"), fmt.Sprintf("/files/projects/%d/out", id), false) {
+		for _, f := range lists[i] {
 			if f.Kind == "video" || f.Kind == "image" {
 				out = append(out, map[string]any{"file": f, "project_id": id, "title": p["title"], "tenant_id": p["tenant_id"], "tenant_name": p["tenant_name"]})
 			}

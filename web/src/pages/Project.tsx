@@ -1,8 +1,9 @@
 import "@hyperframes/player";
-import { ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpIcon, BookmarkSimpleIcon, CheckCircleIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FileTextIcon, FilmStripIcon, GlobeIcon, ListChecksIcon, PencilLineIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MicrophoneSlashIcon, MusicNotesIcon, SpeakerHighIcon, ImageIcon, PlayIcon, PauseIcon, PaperclipIcon, MagnifyingGlassIcon, SlidersHorizontalIcon, SparkleIcon, SquareIcon, TerminalWindowIcon, TrashIcon, MagicWandIcon, WrenchIcon, XIcon } from "@phosphor-icons/react";
+import { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode, RefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { ArrowsInLineHorizontalIcon, ArrowsOutLineHorizontalIcon, ArrowUpIcon, BookmarkSimpleIcon, CheckCircleIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FilmStripIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MicrophoneSlashIcon, MusicNotesIcon, SpeakerHighIcon, ImageIcon, PlayIcon, PauseIcon, PaperclipIcon, SlidersHorizontalIcon, SparkleIcon, SquareIcon, TrashIcon, MagicWandIcon, XIcon } from "@phosphor-icons/react";
 import { Quality } from "../api";
-import { api, bytes, ChatEvent, clock, desktop, fail, FileInfo, go, languageName, Meta, nudge, openExternal, Project, toast, upload, cash, useApi } from "../api";
+import { api, bytes, ChatEvent, clock, desktop, fail, FileInfo, go, languageName, Meta, nudge, openExternal, pref, Project, toast, upload, cash, useApi } from "../api";
+import { Feed, liveStatus, modelName, parse, Parsed, useDictation } from "../chat";
 import { DropZone, Empty, HelpButton, Md, FileTile, KindIcon, ModelOptions, ModelPicker, Progress, Seg, Status, projectStatus } from "../ui";
 import { presetIcon } from "./Projects";
 import { PostsCard, PublishModal } from "./Social";
@@ -14,7 +15,13 @@ const tabHelp: Record<string, string> = { videos: "long-recordings", generate: "
 export default function ProjectPage({ id }: { id: number }) {
   const { data: p, error, reload } = useApi<Project>(`/projects/${id}`);
   const { data: meta } = useApi<Meta>("/meta");
-  const [events, setEvents] = useState<ChatEvent[]>([]);
+  const [events, setEvents] = useState<Parsed[]>([]);
+  // Chat width and full-width mode are this browser's choice, kept for every project.
+  const ws = useRef<HTMLDivElement>(null);
+  const [chatW, setChatW] = useState(() => Number(pref("chat-w")) || defaultChatW);
+  const [chatFull, setChatFull] = useState(() => pref("chat-full") === "1");
+  useEffect(() => { pref("chat-w", String(chatW)); }, [chatW]);
+  useEffect(() => { pref("chat-full", chatFull ? "1" : "0"); }, [chatFull]);
   const [view, setView] = useState<FileInfo | "comp">();
   const [tab, setTab] = useState("brief");
   const [publishing, setPublishing] = useState(false);
@@ -33,29 +40,41 @@ export default function ProjectPage({ id }: { id: number }) {
     return () => removeEventListener("keydown", onKey);
   }, []);
 
-  // ponytail: polling, not SSE. 1.5s is plenty for a chat that waits on minutes-long agent turns.
+  // ponytail: polling, not SSE. Every 1.5 s while the agent works (its turns take minutes), every 5 s while it waits,
+  // and not at all while the window is hidden. Sending a message polls at once.
+  const working = useRef(false);
+  working.current = !!p?.running;
+  const poll = useRef(() => {});
   useEffect(() => {
-    let last = 0, alive = true, timer = 0;
+    let last = 0, alive = true, timer = 0, inFlight = false;
     const tick = async () => {
+      clearTimeout(timer);
+      if (inFlight || !alive || document.hidden) return; // the request in flight schedules the next; showing the window restarts it
+      inFlight = true;
+      let more = false;
       try {
         const evs = await api<ChatEvent[]>(`/projects/${id}/events?after=${last}`);
-        if (evs.length) {
+        if (alive && evs.length) {
           last = evs[evs.length - 1].id;
-          setEvents((e) => [...e, ...evs]);
-          if (evs.some((e) => e.kind !== "text" && e.kind !== "tool")) reload();
+          more = evs.length >= 500; // a long chat comes in pages of 500: fetch the rest straight away
+          setEvents((e) => [...e, ...evs.map(parse)]);
+          if (evs.some((e) => !chatOnly.has(e.kind))) reload();
         }
       } catch { /* server restarting; keep polling */ }
-      if (alive) timer = window.setTimeout(tick, 1500);
+      inFlight = false;
+      if (alive) timer = window.setTimeout(tick, more ? 0 : working.current ? 1500 : 5000);
     };
+    poll.current = tick;
+    document.addEventListener("visibilitychange", tick);
     tick();
-    return () => { alive = false; clearTimeout(timer); };
+    return () => { alive = false; clearTimeout(timer); document.removeEventListener("visibilitychange", tick); };
   }, [id, reload]);
 
   // A transcription carries on after the agent's turn, and a download runs before it starts: poll for those too.
   const busy = !!p?.running || p?.transcript?.state === "running" || (!!p?.import && !p.import.done);
   useEffect(() => {
     if (!busy) return;
-    const t = setInterval(reload, p?.render ? 1500 : 4000); // faster while a render reports progress
+    const t = setInterval(() => document.hidden || reload(), p?.render ? 1500 : 4000); // faster while a render reports progress
     return () => clearInterval(t);
   }, [busy, !!p?.render, reload]);
 
@@ -73,7 +92,7 @@ export default function ProjectPage({ id }: { id: number }) {
   }, [finalVideos]);
 
   if (error) return <div className="page"><Empty icon={<FilmSlateIcon size={28} />} title="Project not found"><a className="btn" href="#/projects">Back to projects</a></Empty></div>;
-  if (!p) return null;
+  if (!p) return <EditorSkeleton chatW={chatW} chatFull={chatFull} />;
 
   const media = (f: FileInfo) => f.kind === "video" || f.kind === "image" || f.kind === "audio";
   const finals = (p.outputs ?? []).filter(media);
@@ -162,7 +181,7 @@ export default function ProjectPage({ id }: { id: number }) {
         </div>
       )}
 
-      <div className="workspace">
+      <div className={`workspace ${chatFull ? "chat-full" : ""}`} ref={ws} style={{ "--chat-w": `${chatW}px` } as CSSProperties}>
         <div className="stack editor-main" style={{ minWidth: 0, gap: 14 }}>
           <div className="card">
             <div className="stage" ref={stage}>
@@ -230,7 +249,86 @@ export default function ProjectPage({ id }: { id: number }) {
           {publishing && <PublishModal p={p} onClose={() => setPublishing(false)} onQueued={() => { setPublishing(false); setTab("posts"); reload(); }} />}
         </div>
 
-        <Chat p={p} events={events} qualities={meta?.qualities ?? []} onSend={(text, quality) => act("messages", { text, quality })} onStop={() => act("stop")} />
+        {!chatFull && <ChatResizer box={ws} width={chatW} onWidth={setChatW} />}
+        <Chat p={p} events={events} qualities={meta?.qualities ?? []} full={chatFull} onFull={() => setChatFull(!chatFull)}
+          onSend={(text, quality) => act("messages", { text, quality }).then(() => poll.current())} onStop={() => act("stop")} />
+      </div>
+    </div>
+  );
+}
+
+// Events that only add to the chat; anything else (a reply, a render, an error) can change the project too.
+const chatOnly = new Set(["text", "tool", "tool_error", "agent", "agent_done"]);
+
+const defaultChatW = 420;
+
+/** Drag the gap between the preview and the chat to size the chat; arrow keys work too, and a double-click resets it.
+ *  While dragging, the width goes straight to the CSS variable (one layout per frame), and to React when you let go. */
+function ChatResizer({ box, width, onWidth }: { box: RefObject<HTMLDivElement | null>; width: number; onWidth: (w: number) => void }) {
+  // The preview keeps at least 360px (styles.css caps the column the same way when the window shrinks).
+  const clamp = (w: number) => Math.round(Math.max(320, Math.min(w, (box.current?.clientWidth ?? 1400) - 380)));
+  const down = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const ws = box.current;
+    if (!ws || e.button !== 0) return;
+    const handle = e.currentTarget, right = ws.getBoundingClientRect().right;
+    handle.setPointerCapture(e.pointerId);
+    document.body.classList.add("resizing");
+    let w = width, frame = 0;
+    const move = (ev: PointerEvent) => {
+      w = clamp(right - ev.clientX - 10);
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => ws.style.setProperty("--chat-w", `${w}px`));
+    };
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("lostpointercapture", () => {
+      handle.removeEventListener("pointermove", move);
+      cancelAnimationFrame(frame);
+      ws.style.setProperty("--chat-w", `${w}px`);
+      document.body.classList.remove("resizing");
+      onWidth(w);
+    }, { once: true });
+  };
+  return (
+    <div className="chat-resize" role="separator" aria-orientation="vertical" aria-label="Chat width" aria-valuenow={width} tabIndex={0}
+      title="Drag to resize the chat. Double-click to reset."
+      onPointerDown={down} onDoubleClick={() => onWidth(defaultChatW)}
+      onKeyDown={(e) => {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+        e.preventDefault();
+        onWidth(clamp(width + (e.key === "ArrowLeft" ? 32 : -32)));
+      }} />
+  );
+}
+
+/** The editor's own shape while the project loads, so opening one never shows a blank page. */
+function EditorSkeleton({ chatW, chatFull }: { chatW: number; chatFull: boolean }) {
+  const bar = (width: number | string, height: number, style?: CSSProperties) => <span className="sk" style={{ width, height, ...style }} />;
+  return (
+    <div className="page wide editor" aria-busy="true" aria-label="Opening the project">
+      <div className="editor-head">
+        <div className="editor-title">
+          {bar(150, 12)}
+          {bar("min(360px, 80%)", 22, { margin: "12px 0 9px" })}
+          {bar(230, 12)}
+        </div>
+        <div className="row">{[92, 118, 86].map((w) => <span key={w}>{bar(w, 36)}</span>)}</div>
+      </div>
+      <div className={`workspace ${chatFull ? "chat-full" : ""}`} style={{ "--chat-w": `${chatW}px` } as CSSProperties}>
+        <div className="stack editor-main" style={{ minWidth: 0, gap: 14 }}>
+          <div className="card">
+            <div className="stage"><div className="typing stage-wait"><i /><i /><i /> <span>Opening the project…</span></div></div>
+            <div className="versions">{[0, 1, 2].map((i) => <span key={i}>{bar(112, 64)}</span>)}</div>
+          </div>
+          <div className="card"><div className="card-b stack" style={{ gap: 10 }}>{["35%", "90%", "70%"].map((w) => <span key={w}>{bar(w, 12)}</span>)}</div></div>
+        </div>
+        <div className="card chat">
+          <div className="card-h"><SparkleIcon size={16} color="var(--primary)" /><h2 className="spacer">Editor agent</h2></div>
+          <div className="feed">
+            {bar("62%", 36, { alignSelf: "flex-end" })}
+            {bar("90%", 12)}{bar("80%", 12)}{bar("55%", 12)}
+            {bar("100%", 30)}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -408,24 +506,9 @@ function BriefCard({ p, meta, reload, onDelete }: { p: Project; meta?: Meta; rel
 
 const quickReplies = ["Looks good, render the final", "Make the hook punchier", "Make it shorter", "Try a different hook moment", "Bigger, bolder captions"];
 
-const toolLabel = (name: string) => name.replace(/^mcp__37studio__/, "").replaceAll("_", " ");
-
-const toolIcon = (name: string) =>
-  name === "Bash" ? TerminalWindowIcon :
-  ["Edit", "Write", "MultiEdit", "NotebookEdit"].includes(name) ? PencilLineIcon :
-  name === "Read" ? FileTextIcon :
-  ["Glob", "Grep"].includes(name) ? MagnifyingGlassIcon :
-  name === "Skill" ? SparkleIcon :
-  name.startsWith("Web") ? GlobeIcon :
-  name === "TodoWrite" ? ListChecksIcon : WrenchIcon;
-
-export type Parsed = { id: number; kind: string; b: any };
-
-// Absolute project paths are noise for an editor: show "comp/index.html", not "/home/…/projects/1/comp/index.html".
-const tidy = (s = "") => s.replace(/\/\S*?\/(projects|tenants)\/\d+\//g, "");
-
-function Chat({ p, events, qualities, onSend, onStop }: {
-  p: Project; events: ChatEvent[]; qualities: Quality[]; onSend: (text: string, quality?: string) => Promise<void>; onStop: () => void;
+function Chat({ p, events, qualities, onSend, onStop, full, onFull }: {
+  p: Project; events: Parsed[]; qualities: Quality[]; onSend: (text: string, quality?: string) => Promise<void>; onStop: () => void;
+  full: boolean; onFull: () => void;
 }) {
   // Model for the next message: cheap Haiku for small fixes, Opus for heavy edits. Defaults to the project's quality.
   const [quality, setQuality] = useState(p.quality);
@@ -434,26 +517,14 @@ function Chat({ p, events, qualities, onSend, onStop }: {
   const feed = useRef<HTMLDivElement>(null);
   const started = !!p.session_id;
 
-  // Collapse runs of tool calls into one expandable group so the conversation stays readable.
-  const items = useMemo(() => {
-    const out: (Parsed | Parsed[])[] = [];
-    for (const e of events) {
-      const ev = { id: e.id, kind: e.kind, b: JSON.parse(e.body) };
-      const last = out[out.length - 1];
-      if (ev.kind === "tool" || ev.kind === "tool_error") Array.isArray(last) ? last.push(ev) : out.push([ev]);
-      else out.push(ev);
-    }
-    return out;
-  }, [events]);
-
   // Opening a project lands on the latest message; after that, follow new messages only if you're already at the bottom.
   const opened = useRef(false);
   useLayoutEffect(() => {
     const el = feed.current;
-    if (!el || !items.length) return;
+    if (!el || !events.length) return;
     if (!opened.current || el.scrollHeight - el.scrollTop - el.clientHeight < 240) el.scrollTop = el.scrollHeight;
     opened.current = true;
-  }, [items.length, p.running]);
+  }, [events.length, p.running]);
 
   // While the agent works, sending queues the message server-side; it goes out when the turn ends.
   // Images ride along as [image: chat/<file>] lines; the agent views them with Read, the feed shows thumbnails.
@@ -469,14 +540,7 @@ function Chat({ p, events, qualities, onSend, onStop }: {
     if (!files.length) return;
     try { await upload(`/projects/${p.id}/attachments`, files); setImgs((v) => [...v, ...files.map((f) => "chat/" + f.name)]); } catch (e) { fail(e); }
   };
-  // The current turn's latest step: stop at the last user message or finished turn, so an old step never shows.
-  const liveStep = (() => {
-    for (let i = events.length - 1; i >= 0; i--) {
-      const e = events[i];
-      if (e.kind === "tool") return JSON.parse(e.body).summary as string;
-      if (e.kind === "user" || e.kind === "result") return undefined;
-    }
-  })();
+  const live = useMemo(() => (p.running ? liveStatus(events) : undefined), [events, p.running]);
   const mic = useDictation(p.language || "en", (said) => setText((t) => (t ? t.trimEnd() + " " : "") + said));
 
   return (
@@ -485,6 +549,10 @@ function Chat({ p, events, qualities, onSend, onStop }: {
         <SparkleIcon size={16} color="var(--primary)" />
         <h2 className="spacer">Editor agent</h2>
         <span className="small faint">{p.running ? "working" : started ? "waiting for you" : "not started"}</span>
+        <button className="btn ghost sm icon" onClick={onFull} aria-pressed={full}
+          title={full ? "Show the preview again" : "Widen the chat to the whole page"} aria-label={full ? "Show the preview" : "Widen the chat"}>
+          {full ? <ArrowsInLineHorizontalIcon size={15} /> : <ArrowsOutLineHorizontalIcon size={15} />}
+        </button>
       </div>
       <div className="feed" ref={feed}>
         {!started && !p.running && (
@@ -493,11 +561,10 @@ function Chat({ p, events, qualities, onSend, onStop }: {
             <button className="btn primary" onClick={() => onSend("")}><SparkleIcon size={15} /> Start agent</button>
           </Empty>
         )}
-        {items.map((it, i) =>
-          Array.isArray(it) ? <ToolGroup key={it[0].id} tools={it} open={p.running && i === items.length - 1} /> : <EventView key={it.id} e={it} pid={p.id} />
-        )}
-        {p.running && (
-          <div className="typing"><i /><i /><i /> <span className="ellipsis">{p.render ? `Rendering · ${p.render.pct}% · ${p.render.stage}` : liveStep ? tidy(liveStep) : "Working…"}</span></div>
+        <Feed events={events} running={p.running} pid={p.id} />
+        {live && (
+          <div className="typing"><i /><i /><i /> <span className="ellipsis">{p.render ? `Rendering · ${p.render.pct}% · ${p.render.stage}` :
+            [live.agents && `${live.agents} subagent${live.agents === 1 ? "" : "s"} working`, live.step].filter(Boolean).join(" · ") || "Working…"}</span></div>
         )}
       </div>
       {started && (
@@ -567,100 +634,6 @@ function Chat({ p, events, qualities, onSend, onStop }: {
     </div>
   );
 }
-
-export function ToolGroup({ tools, open }: { tools: Parsed[]; open: boolean }) {
-  const last = [...tools].reverse().find((t) => t.kind === "tool") ?? tools[tools.length - 1];
-  const steps = tools.filter((t) => t.kind === "tool").length;
-  return (
-    <details open={open || undefined}>
-      <summary className="msg-tool" style={{ cursor: "pointer", listStyle: "none" }}>
-        <WrenchIcon size={13} />
-        <b>{steps} step{steps === 1 ? "" : "s"}</b>
-        <span className="ellipsis">{last.b.name?.startsWith("mcp__") ? toolLabel(last.b.name) : tidy(last.b.summary ?? last.b.text)}</span>
-      </summary>
-      <div className="stack" style={{ gap: 4, marginTop: 6 }}>
-        {tools.map((t) => {
-          if (t.kind === "tool_error") return <div key={t.id} className="msg-tool err" title="The agent saw this and retried"><span className="mono">{tidy(t.b.text)}</span></div>;
-          const I = toolIcon(t.b.name);
-          return (
-            <div key={t.id} className="msg-tool"><I size={13} /><b>{toolLabel(t.b.name)}</b><span className="mono ellipsis" title={t.b.summary}>{tidy(t.b.summary)}</span></div>
-          );
-        })}
-      </div>
-    </details>
-  );
-}
-
-const imageLine = /^\[image: (chat\/[^\]]+)\]$/;
-
-export function EventView({ e, pid }: { e: Parsed; pid: number }) {
-  switch (e.kind) {
-    case "user": {
-      const lines: string[] = e.b.text.split("\n");
-      const shots = lines.map((l) => l.match(imageLine)?.[1]).filter(Boolean);
-      return (
-        <div className="msg-user">
-          {lines.filter((l) => !imageLine.test(l)).join("\n")}
-          {shots.map((s) => <a key={s} href={`/files/projects/${pid}/${s}`} target="_blank" rel="noreferrer"><img className="msg-img" src={`/files/projects/${pid}/${s}`} alt="Attached screenshot" /></a>)}
-          {e.b.queued && <span className="queued-tag">sent while working</span>}
-        </div>
-      );
-    }
-    case "text": return <Md text={e.b.text} />;
-    case "result":
-      return <div className="msg-done">{e.b.error ? "Turn ended with an error" : "Turn finished"}{e.b.model ? ` · ${modelName(e.b.model)}` : ""} · {cash(e.b.cost)} · {clock(e.b.ms / 1000)}</div>;
-    case "render": return <div className="msg-render"><CheckCircleIcon size={15} /> {e.b.text}</div>;
-    case "image":
-      return (
-        <a className="msg-image" href={e.b.url} target="_blank" rel="noreferrer" title={`The agent checked ${e.b.path}. Click for full size.`}>
-          <img src={e.b.url} alt={`Frame the agent checked: ${e.b.path}`} />
-          <span><MagnifyingGlassIcon size={12} /> Checked {e.b.path}</span>
-        </a>
-      );
-    case "error": return <div className="msg-error">{e.b.text}</div>;
-    default: return <div className="msg-info">{e.b.text}</div>;
-  }
-}
-
-/**
- * Dictation with the browser's built-in speech recognition (Chrome, Edge, Safari). No key, no cost.
- * ponytail: Chrome sends the audio to Google's recognizer; switch to ElevenLabs Scribe if that matters.
- */
-export function useDictation(videoLang: string, onFinal: (text: string) => void) {
-  const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-  const [lang, setLang] = useState(videoLang === "bn" ? "bn-BD" : "en-US");
-  const [listening, setListening] = useState(false);
-  const [interim, setInterim] = useState("");
-  const rec = useRef<any>(null);
-  const final = useRef(onFinal);
-  final.current = onFinal;
-  const stop = () => rec.current?.stop();
-  const start = () => {
-    if (!SR || rec.current) return;
-    const r = new SR();
-    r.lang = lang;
-    r.continuous = true;
-    r.interimResults = true;
-    r.onresult = (e: any) => {
-      let partial = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) final.current(t.trim()); else partial += t;
-      }
-      setInterim(partial.trim());
-    };
-    r.onerror = (e: any) => { if (e.error !== "no-speech" && e.error !== "aborted") fail(new Error(`Dictation: ${e.error}`)); };
-    r.onend = () => { rec.current = null; setListening(false); setInterim(""); };
-    rec.current = r;
-    r.start();
-    setListening(true);
-  };
-  useEffect(() => () => rec.current?.abort(), []);
-  return { supported: !!SR, listening, interim, lang, setLang, start, stop };
-}
-
-/** "claude-opus-5-5" -> "Opus 5.5" */
-export const modelName = (id: string) => id.replace(/^.*\//, "").replace(/^claude-/, "").replace(/-(\d+)-(\d+)$/, " $1.$2").replace(/^\w/, (c) => c.toUpperCase());
 
 /** Inline-playable media list: audio gets a player, images and video a thumbnail. */
 type MediaFile = FileInfo & { item?: string; cost?: number };

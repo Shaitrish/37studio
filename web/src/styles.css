@@ -110,9 +110,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .who { display: flex; align-items: center; gap: 10px; padding: 8px 10px 2px; white-space: nowrap; font-size: 12px; color: var(--faint-fg); }
 
 .main { padding: 32px 40px 64px; min-width: 0; }
-.page { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; animation: rise 0.32s var(--ease); }
+.page { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; animation: rise 0.2s var(--ease); }
 .page.wide { max-width: 1480px; }
-@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+@keyframes rise { from { opacity: 0; transform: translateY(4px); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 .page-head { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; padding-bottom: 4px; }
 .page-head p { color: var(--muted-fg); margin-top: 4px; }
@@ -216,7 +216,7 @@ input[type="color"].input { padding: 3px; height: 36px; cursor: pointer; }
 .empty strong { color: var(--fg); font-weight: 600; }
 
 /* ---- modal */
-.backdrop { position: fixed; inset: 0; background: rgb(9 9 11 / 0.5); backdrop-filter: blur(3px); display: grid; place-items: center; padding: 16px; z-index: 50; animation: fade 0.12s; }
+.backdrop { position: fixed; inset: 0; background: rgb(9 9 11 / 0.55); display: grid; place-items: center; padding: 16px; z-index: 50; animation: fade 0.12s; }
 .modal { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow-lg); width: min(640px, 100%); max-height: calc(100vh - 32px); display: flex; flex-direction: column; }
 .modal.lg { width: min(820px, 100%); }
 .modal-h { padding: 18px 22px 0; display: flex; align-items: flex-start; gap: 12px; }
@@ -332,7 +332,8 @@ input[type="color"].input { padding: 3px; height: 36px; cursor: pointer; }
 @media (max-width: 640px) { .bar-row { grid-template-columns: 1fr auto; } .bar-track { grid-column: 1 / -1; grid-row: 2; } }
 
 /* ---- project workspace */
-.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 20px; align-items: start; }
+/* --chat-w comes from the drag handle (Project.tsx ChatResizer); the preview always keeps 360px. */
+.workspace { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) min(var(--chat-w, 420px), calc(100% - 380px)); gap: 20px; align-items: start; }
 @media (max-width: 1100px) { .workspace { grid-template-columns: minmax(0, 1fr); } }
 .stage { background: var(--stage); border-radius: var(--radius) var(--radius) 0 0; display: grid; place-items: center; padding: 18px; min-height: 320px; }
 .stage .frame { width: 100%; max-height: 62vh; display: grid; place-items: center; }
@@ -599,7 +600,13 @@ label.cbtn { cursor: pointer; }
 .inbox-thread { position: sticky; top: 20px; }
 .thread { display: flex; flex-direction: column; height: calc(100vh - 220px); min-height: 420px; }
 .thread-msgs { flex: 1; overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
-.thread-post { padding: 8px 10px; background: var(--muted); border-radius: var(--radius-sm); white-space: pre-wrap; max-height: 90px; overflow: hidden; }
+/* flex: none, or the column squeezes the post box and clips it mid-line; the clamp cuts at a whole line. */
+.thread-post { flex: none; padding: 8px 10px; background: var(--muted); border-radius: var(--radius-sm); }
+.thread-post p { white-space: pre-wrap; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.thread-post.open p { display: block; max-height: 260px; overflow-y: auto; }
+.thread-post button { all: unset; cursor: pointer; margin-top: 4px; font-size: 12px; font-weight: 500; color: var(--primary); }
+.thread-post button:hover { text-decoration: underline; }
+.thread-post button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 2px; }
 .msg-them { align-self: flex-start; background: var(--muted); padding: 8px 12px; border-radius: 6px 6px 6px 2px; max-width: 88%; white-space: pre-wrap; display: flex; flex-direction: column; gap: 2px; }
 .thread-reply { padding: 12px 18px 16px; border-top: 1px solid var(--border); }
 @media (max-width: 900px) { .inbox { grid-template-columns: 1fr; } .inbox-list { max-height: 50vh; } .inbox-thread { position: static; } }
@@ -648,3 +655,60 @@ label.cbtn { cursor: pointer; }
 .fmt .hint { font-size: 12px; color: var(--faint-fg); margin-left: 8px; }
 .wizard .opt strong .avatar { margin: -2px 0; }
 @media (max-width: 640px) { .fmt { margin-left: 0; grid-template-columns: 1fr; gap: 4px; } .fmt .seg { margin-bottom: 8px; } }
+
+/* Performance (pages/Performance.tsx) */
+.sort-th { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
+.sort-th:hover, .sort-th.on { color: var(--fg); }
+.sort-th:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.perf-thumb { flex: none; width: 40px; height: 56px; border-radius: 4px; object-fit: cover; background: var(--muted); display: grid; place-items: center; color: var(--faint-fg); }
+.perf-title { all: unset; cursor: pointer; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 500; line-height: 1.35; overflow-wrap: anywhere; }
+a.perf-title:hover { color: var(--primary); }
+.perf-ret { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.perf-ret .bar-track { width: 48px; display: inline-block; }
+.perf-ret .bar-fill { display: block; }
+
+/* ---- chat width: drag the gap beside the chat, or widen it to the whole page */
+.chat-resize { position: absolute; top: 0; bottom: 0; right: calc(min(var(--chat-w, 420px), 100% - 380px) + 4px); width: 12px; z-index: 3; cursor: col-resize; touch-action: none; }
+.chat-resize::after { content: ""; position: absolute; left: 5px; top: 12px; bottom: 12px; width: 2px; border-radius: 1px; background: transparent; transition: background 0.12s; }
+.chat-resize:hover::after, .chat-resize:focus-visible::after, .resizing .chat-resize::after { background: var(--primary); }
+.chat-resize:focus-visible { outline: none; }
+.resizing, .resizing * { cursor: col-resize !important; user-select: none; }
+.resizing iframe, .resizing hyperframes-player, .resizing video { pointer-events: none; } /* the preview would swallow the drag */
+.workspace.chat-full { grid-template-columns: minmax(0, 1fr); }
+.workspace.chat-full > .editor-main { display: none; }
+/* Full width, the messages keep a readable column in the middle, the way chat apps do. */
+.chat-full .chat .feed, .chat-full .chat .composer { padding-left: max(16px, calc((100% - 880px) / 2)); padding-right: max(16px, calc((100% - 880px) / 2)); }
+@media (max-width: 1100px) { .chat-resize { display: none; } }
+
+/* ---- loading: a page's own shape while its data comes in, and a thin bar while a page's code loads */
+.sk { display: block; flex: none; max-width: 100%; border-radius: var(--radius-sm); background: linear-gradient(90deg, var(--muted) 30%, color-mix(in srgb, var(--muted), var(--fg) 6%) 50%, var(--muted) 70%) 0 0 / 300% 100%; animation: shimmer 1.4s ease-in-out infinite; }
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+.stage .stage-wait { color: #9c99a6; }
+.stage .stage-wait span { color: #9c99a6; }
+.page-loading { position: fixed; top: 0; left: var(--side-w); right: 0; z-index: 40; height: 2px; overflow: hidden; pointer-events: none; animation: fade 0.2s 0.15s both; }
+.page-loading span { position: absolute; top: 0; bottom: 0; width: 35%; background: var(--primary); animation: sweep 1s var(--ease) infinite; }
+@keyframes sweep { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+@media (max-width: 860px) { .page-loading { left: 0; } }
+
+/* ---- subagents: the helpers an agent runs side by side, one row each with a live status */
+.agents { flex: none; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); overflow: hidden; }
+.agents-h { display: flex; align-items: center; gap: 8px; padding: 7px 10px; font-size: 12.5px; color: var(--muted-fg); background: var(--muted); }
+.agents-h b { font-weight: 500; color: var(--fg); }
+.agent { border-top: 1px solid var(--border); }
+.agent > summary { display: flex; align-items: center; gap: 10px; padding: 8px 10px; cursor: pointer; list-style: none; min-width: 0; }
+.agent > summary::-webkit-details-marker { display: none; }
+.agent > summary:hover { background: var(--hover); }
+.agent.running > summary { box-shadow: inset 2px 0 var(--primary); }
+.agent-icon { flex: none; }
+.agent.running .agent-icon { color: var(--primary); animation: spin 0.9s linear infinite; }
+.agent.done .agent-icon { color: var(--success); }
+.agent.failed .agent-icon { color: var(--danger); }
+.agent.stopped .agent-icon { color: var(--faint-fg); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.agent-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.agent-main b { font-weight: 500; font-size: 13px; }
+.agent-line { font-size: 12px; color: var(--muted-fg); }
+.agent-line.mono { font-size: 11.5px; }
+.agent-type { flex: none; font-size: 10.5px; padding: 1px 5px; border-radius: 2px; background: var(--muted); color: var(--muted-fg); white-space: nowrap; }
+.agent-steps { display: flex; flex-direction: column; gap: 4px; padding: 0 10px 10px 36px; }
+.msg-agent.sub-text { font-size: 12.5px; color: var(--muted-fg); }

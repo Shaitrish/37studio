@@ -37,7 +37,7 @@ import (
 	"github.com/Shaitrish/37studio/internal/update"
 )
 
-// CLI runs the agent's helper commands (gen, clip, transcribe) when args name one. The agent calls them as
+// CLI runs the agent's helper commands (gen, clip, transcribe, sql, stats, strategy) when args name one. The agent calls them as
 // `37studio …`, so every build of the app, desktop included, has to answer to them.
 func CLI(args []string) (code int, ok bool) {
 	if len(args) == 0 {
@@ -50,6 +50,12 @@ func CLI(args []string) (code int, ok bool) {
 		return project.ClipCLI(args[1:]), true
 	case "transcribe":
 		return transcribe.CLI(args[1:]), true
+	case "sql":
+		return source.SQLCLI(args[1:]), true
+	case "stats":
+		return social.StatsCLI(args[1:]), true
+	case "strategy":
+		return social.StrategyCLI(args[1:]), true
 	}
 	return 0, false
 }
@@ -76,6 +82,7 @@ func Init() error {
 	go autopilot.Loop()
 	go project.ClipLoop()
 	go social.InboxLoop()
+	go social.StatsLoop()
 	return nil
 }
 
@@ -194,6 +201,10 @@ func Routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/inbox/thread", httpapi.JSON(social.GetThread))
 	mux.HandleFunc("POST /api/inbox/draft", httpapi.JSON(social.DraftReply))
 	mux.HandleFunc("POST /api/inbox/reply", httpapi.JSON(social.SendReply))
+	mux.HandleFunc("GET /api/stats", httpapi.JSON(social.ListStats))
+	mux.HandleFunc("POST /api/stats/refresh", httpapi.JSON(social.RefreshStats))
+	mux.HandleFunc("GET /api/stats/videos", httpapi.JSON(social.ListPublished))
+	mux.HandleFunc("POST /api/stats/review", httpapi.JSON(social.ReviewStrategy))
 	mux.HandleFunc("GET /webhooks/meta", social.WhatsAppWebhook) // WhatsApp straight to this copy through a tunnel
 	mux.HandleFunc("POST /webhooks/meta", social.WhatsAppWebhook)
 

@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, DownloadSimpleIcon, FileAudioIcon, FileTextIcon, FilmStripIcon, ImageIcon, PencilSimpleIcon, TrashIcon, TextTIcon, CloudArrowUpIcon, QuestionIcon, XIcon } from "@phosphor-icons/react";
+import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, DownloadSimpleIcon, FileAudioIcon, FileTextIcon, FilmStripIcon, ImageIcon, PencilSimpleIcon, PushPinIcon, TrashIcon, TextTIcon, CloudArrowUpIcon, QuestionIcon, XIcon } from "@phosphor-icons/react";
 import { AssetMeta, bytes, clock, fail, FileInfo, help, Project, Quality, Tenant, toast } from "./api";
 
 /** Opens the guide section `to` (its heading's anchor in docs/guide.md) beside the page. Every screen has one. */
@@ -175,9 +175,10 @@ export function AssetEditor({ f, meta, pos, onSave, onStep, onClose }: {
   );
 }
 
-export function FileTile({ f, onOpen, onDelete, selected, contain, meta, onEdit, moveTo }: {
+export function FileTile({ f, onOpen, onDelete, selected, contain, meta, onEdit, moveTo, first }: {
   f: FileInfo; onOpen?: () => void; onDelete?: () => void; selected?: boolean; contain?: boolean;
   meta?: AssetMeta; onEdit?: () => void; moveTo?: { options: { id: string; label: string }[]; onMove: (folder: string) => void };
+  first?: { label: string; onClick: () => void }; // puts the file first in its folder
 }) {
   const thumb =
     f.kind === "image" ? <img src={f.url} alt="" loading="lazy" /> :
@@ -203,6 +204,7 @@ export function FileTile({ f, onOpen, onDelete, selected, contain, meta, onEdit,
             {moveTo.options.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
           </select>
         )}
+        {first && <button className="btn sm icon" aria-label={`${first.label}: ${f.name}`} title={first.label} onClick={first.onClick}><PushPinIcon size={14} /></button>}
         {onEdit && <button className="btn sm icon" aria-label={`Edit ${f.name}`} title="Edit caption" onClick={onEdit}><PencilSimpleIcon size={14} /></button>}
         <a className="btn sm icon" href={f.url} download={f.name} aria-label={`Download ${f.name}`} title="Download"><DownloadSimpleIcon size={14} /></a>
         {onDelete && <button className="btn sm icon danger" onClick={onDelete} aria-label={`Delete ${f.name}`} title="Delete"><TrashIcon size={14} /></button>}

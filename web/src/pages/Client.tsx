@@ -204,7 +204,11 @@ function Folder({ tenant, folder, reload, ext }: { tenant: Tenant; folder: (type
             {files.map((f, i) => (
               <FileTile key={f.path} f={short(f)} contain={contained.has(folder.id)} onDelete={() => del(f.path)}
                 meta={tenant.asset_meta?.[f.path]} onOpen={() => setAt(i)} onEdit={() => setAt(i)}
-                moveTo={{ options: folders.filter((x) => x.id !== folder.id), onMove: (to) => edit({ path: f.path, folder: to }) }} />
+                moveTo={{ options: folders.filter((x) => x.id !== folder.id), onMove: (to) => edit({ path: f.path, folder: to }) }}
+                first={i === 0 || ext !== "all" ? undefined : folder.id === "logo" && f.kind === "image"
+                  ? { label: "Make it the brand icon", onClick: () => api(`/tenants/${tenant.id}/assets`, { method: "PUT", body: { path: f.path, first: true } })
+                    .then(() => { reload(); toast(`${short(f).name} is now ${tenant.name}'s icon`); }, fail) }
+                  : { label: "Move to the front", onClick: () => edit({ path: f.path, first: true }) }} />
             ))}
           </div>
         )}

@@ -388,9 +388,6 @@ pre.cmd { background: var(--ink); color: #f4f3f6; border-radius: 12px; padding: 
 
 /* intro video */
 .intro-video { max-width: 1040px; margin: 0 auto; }
-.lang-switch { display: flex; justify-content: center; gap: 6px; margin: -12px auto 18px; }
-.lang-switch button { font: inherit; font-size: 14px; font-weight: 500; padding: 7px 16px; border-radius: 99px; border: 1px solid var(--line); background: var(--card); color: var(--muted); cursor: pointer; }
-.lang-switch button[aria-pressed="true"] { background: var(--ink); color: var(--card); border-color: var(--ink); }
 .intro-video video { display: block; width: 100%; height: auto; background: #111; }
 
 /* desktop app downloads */

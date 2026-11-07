@@ -20,6 +20,7 @@ import (
 	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/httpapi"
 	"github.com/Shaitrish/37studio/internal/proc"
+	"github.com/Shaitrish/37studio/internal/source"
 	"github.com/Shaitrish/37studio/internal/store"
 	"github.com/Shaitrish/37studio/internal/textutil"
 )
@@ -70,6 +71,9 @@ func startCodex(id int64, p map[string]any, q Quality, text string, announce boo
 		return err
 	}
 	args := []string{"exec", "--json", "--skip-git-repo-check", "-c", "model_reasoning_effort=" + q.Effort, "--add-dir", files.TenantRoot(p["tenant_id"].(int64))}
+	if d := source.Connected(p["tenant_id"].(int64)); d != "" {
+		args = append(args, "--add-dir", d)
+	}
 	if config.Env("STUDIO37_AGENT_PERMISSIONS", "") == "bypass" {
 		args = append(args, "--dangerously-bypass-approvals-and-sandbox") // the container is the sandbox, as for Claude Code
 	} else {

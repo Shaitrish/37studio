@@ -12,6 +12,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -42,7 +43,7 @@ func Copy(from, to string) error {
 
 var AssetDirs = []string{"logo", "people", "images", "graphics", "videos", "fonts", "audio", "design", "other"}
 
-var TenantDocs = map[string]string{"knowledge": "knowledge.md", "design": "design.md", "replies": "replies.md"}
+var TenantDocs = map[string]string{"knowledge": "knowledge.md", "design": "design.md", "replies": "replies.md", "strategy": "strategy.md"}
 
 func TenantDir(id int64) string {
 	return filepath.Join(config.DataDir, "tenants", fmt.Sprint(id), "assets")
@@ -105,16 +106,29 @@ func List(root, urlBase string, recursive bool) []Info {
 		info, _ := d.Info()
 		rel, _ := filepath.Rel(root, p)
 		rel = filepath.ToSlash(rel)
-		f := Info{Path: rel, Name: d.Name(), URL: urlBase + "/" + rel, Kind: Kind(p), Size: info.Size(), Mod: info.ModTime()}
-		if f.Kind == "video" || f.Kind == "audio" {
-			f.Seconds = MediaSeconds(p)
-		}
-		out = append(out, f)
+		out = append(out, Info{Path: rel, Name: d.Name(), URL: urlBase + "/" + rel, Kind: Kind(p), Size: info.Size(), Mod: info.ModTime()})
 		return nil
 	})
+	// Durations come from one ffprobe per file. Run one after another, a project with a hundred voice and sound
+	// files took 8 seconds to open the first time after a restart, before durCache was warm.
+	var wg sync.WaitGroup
+	slots := make(chan struct{}, probeWorkers)
+	for i := range out {
+		if f := &out[i]; f.Kind == "video" || f.Kind == "audio" {
+			wg.Add(1)
+			slots <- struct{}{}
+			go func() {
+				defer func() { <-slots; wg.Done() }()
+				f.Seconds = MediaSeconds(filepath.Join(root, filepath.FromSlash(f.Path)))
+			}()
+		}
+	}
+	wg.Wait()
 	sort.Slice(out, func(i, j int) bool { return out[i].Mod.After(out[j].Mod) })
 	return out
 }
+
+var probeWorkers = max(4, runtime.NumCPU())
 
 func Kind(name string) string {
 	switch strings.ToLower(filepath.Ext(name)) {

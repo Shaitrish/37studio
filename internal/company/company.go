@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/Shaitrish/37studio/internal/agent"
 	"github.com/Shaitrish/37studio/internal/files"
@@ -60,6 +61,20 @@ func Save(r *http.Request) (any, error) {
 	id := httpapi.PathID(r)
 	if id == 0 && strings.TrimSpace(store.Str(b["name"])) == "" {
 		return nil, httpapi.Bad("name is required")
+	}
+	if b["source_path"] != nil || b["source_dbs"] != nil {
+		cur, _ := store.Row("select source_path,source_dbs from tenants where id=?", id) // a caller may send only one of the two
+		pick := func(k string) string {
+			if v, ok := b[k]; ok {
+				return strings.TrimSpace(store.Str(v))
+			}
+			return store.Str(cur[k])
+		}
+		dir, dbs := pick("source_path"), pick("source_dbs")
+		if err := source.CheckFolder(dir, dbs); err != nil {
+			return nil, httpapi.Bad(err.Error())
+		}
+		b["source_path"], b["source_dbs"] = dir, dbs
 	}
 	if id, err = store.Save("tenants", store.TenantCols, id, b); err != nil {
 		return nil, err
@@ -145,7 +160,8 @@ func DeleteAsset(r *http.Request) (any, error) {
 	return nil, files.SaveAssetMeta(id, meta)
 }
 
-// UpdateAsset edits one asset: {path, caption?, use?, section?, context?, source?} sets its metadata, {path, folder?} moves it to another folder.
+// UpdateAsset edits one asset: {path, caption?, use?, section?, context?, source?} sets its metadata, {path, folder?} moves it
+// to another folder, and {path, first: true} puts it first in its folder.
 func UpdateAsset(r *http.Request) (any, error) {
 	b, err := httpapi.Body(r)
 	if err != nil {
@@ -162,6 +178,12 @@ func UpdateAsset(r *http.Request) (any, error) {
 				meta[p] = map[string]any{}
 			}
 			meta[p][k] = strings.TrimSpace(v)
+		}
+	}
+	if b["first"] == true { // the library lists newest first, and the first image in logo/ is the brand's icon
+		now := time.Now()
+		if err := os.Chtimes(files.Within(files.TenantDir(id), p), now, now); err != nil {
+			return nil, err
 		}
 	}
 	if f := store.Str(b["folder"]); f != "" {

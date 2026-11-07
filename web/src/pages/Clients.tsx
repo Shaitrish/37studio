@@ -94,6 +94,12 @@ export function TenantModal({ tenant, onClose, onSaved }: { tenant?: Tenant; onC
         <Field label="Accent color">
           <div className="row"><input className="input" type="color" value={f.accent_color} onChange={set("accent_color")} style={{ width: 56 }} /><input className="input mono" value={f.accent_color ?? ""} onChange={set("accent_color")} /></div>
         </Field>
+        <Field label="Connected folder" hint="optional: a full path; the agent reads it live and can't change it" full>
+          <input className="input" value={f.source_path ?? ""} onChange={set("source_path")} placeholder="/home/you/my-product" />
+        </Field>
+        <Field label="Databases the agent may query" hint="optional: SQLite files inside that folder, comma separated" full>
+          <input className="input" value={f.source_dbs ?? ""} onChange={set("source_dbs")} placeholder="data/products.db" />
+        </Field>
         <Field label="Profile" hint="who they are, what they do, tone" full>
           <textarea className="textarea" value={f.bio ?? ""} onChange={set("bio")} placeholder="What they do, who they serve, how they sound. e.g. Bootstrapped SaaS for clinics; friendly, no jargon." />
         </Field>

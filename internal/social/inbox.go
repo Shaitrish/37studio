@@ -411,14 +411,17 @@ func SendReply(r *http.Request) (any, error) {
 	if text == "" {
 		return nil, httpapi.Bad("reply is empty")
 	}
-	if err := sendTo(a, kind, id, store.Str(b["to"]), text); err != nil {
+	if err := sendTo(a, kind, id, store.Str(b["to"]), text, true); err != nil {
 		return nil, err
 	}
 	store.DB.Exec("update inbox_drafts set status='sent' where account_id=? and item=? and status='ready'", a.id, id)
 	return nil, nil
 }
 
-func sendTo(a inboxAccount, kind, id, to, text string) error {
+// sendTo sends one reply. human is true when a person pressed Send: past Messenger's and Instagram's 24-hour window,
+// Meta lets a person (never an auto-reply) answer for 7 days with the HUMAN_AGENT tag, once the app has the Human
+// Agent permission.
+func sendTo(a inboxAccount, kind, id, to, text string, human bool) error {
 	switch {
 	case a.platform == "whatsapp":
 		return waSend(a, id, text)
@@ -426,13 +429,31 @@ func sendTo(a inboxAccount, kind, id, to, text string) error {
 		if !graphID.MatchString(to) {
 			return httpapi.Bad("no recipient")
 		}
-		return remote.Call(remote.JSON("POST", graph("/me/messages", nil), map[string]any{"recipient": map[string]string{"id": to},
-			"messaging_type": "RESPONSE", "message": map[string]string{"text": text}}, "Bearer "+a.tok), nil)
+		msg := map[string]any{"recipient": map[string]string{"id": to}, "messaging_type": "RESPONSE", "message": map[string]string{"text": text}}
+		err := remote.Call(remote.JSON("POST", graph("/me/messages", nil), msg, "Bearer "+a.tok), nil)
+		if err == nil || !outsideWindow(err) {
+			return err
+		}
+		if human {
+			msg["messaging_type"], msg["tag"] = "MESSAGE_TAG", "HUMAN_AGENT"
+			if remote.Call(remote.JSON("POST", graph("/me/messages", nil), msg, "Bearer "+a.tok), nil) == nil {
+				return nil
+			}
+		}
+		app := map[string]string{"facebook": "Facebook", "instagram": "Instagram"}[a.platform]
+		return httpapi.Bad(app + " only lets apps answer a message within 24 hours of the customer's last one, and this one is older. " +
+			"Reply from the Page's inbox in Meta Business Suite instead (people can answer there for 7 days). " +
+			"37Studio can do the same once Meta approves the app's Human Agent permission.")
 	case a.platform == "facebook":
 		return remote.Call(remote.Form("POST", graph("/"+id+"/comments", nil), url.Values{"message": {text}}, "Bearer "+a.tok), nil)
 	default:
 		return remote.Call(remote.Form("POST", graph("/"+id+"/replies", nil), url.Values{"message": {text}}, "Bearer "+a.tok), nil)
 	}
+}
+
+// outsideWindow reports Meta's refusal of a message sent past the 24-hour window: (#10), subcode 2018278.
+func outsideWindow(err error) bool {
+	return strings.Contains(err.Error(), "outside of allowed window") || strings.Contains(err.Error(), "2018278")
 }
 
 const inboxAutoMax = 20 // ponytail: per two-minute round, so a flood of comments can't run up the Claude bill
@@ -497,7 +518,7 @@ func autoReply(a inboxAccount, it inboxItem, mode string) {
 	if m := unsourced(text, a.tenant); err == nil && mode == "send" && m != "" {
 		log.Printf("auto-reply to %s on %s held for review: %q isn't in the knowledge base", it.From, a.name, m)
 	} else if err == nil && mode == "send" {
-		if err = sendTo(a, it.Kind, it.ID, it.To, text); err == nil {
+		if err = sendTo(a, it.Kind, it.ID, it.To, text, false); err == nil {
 			status = "sent"
 		}
 	}

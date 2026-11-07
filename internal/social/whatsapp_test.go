@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -105,5 +106,41 @@ func TestWhatsAppWebhook(t *testing.T) {
 	m, err := store.Row("select * from wa_messages where id='w1'")
 	if err != nil || m["name"] != "Rahim" || m["text"] != "দাম কত?" || m["account_id"] != int64(1) || m["seq"] != nil {
 		t.Fatalf("stored message: %v %v", m, err)
+	}
+}
+
+// Past the 24-hour window Meta refuses a plain reply. A person's reply retries once with the HUMAN_AGENT tag; an
+// auto-reply never does, and the refusal reaches the editor in plain words.
+func TestSendPastWindow(t *testing.T) {
+	var tags []string
+	tagOK := true
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var b map[string]any
+		json.NewDecoder(r.Body).Decode(&b)
+		tag, _ := b["tag"].(string)
+		tags = append(tags, tag)
+		if tag == "HUMAN_AGENT" && tagOK {
+			w.Write([]byte(`{"recipient_id":"9","message_id":"m1"}`))
+			return
+		}
+		w.WriteHeader(400)
+		w.Write([]byte(`{"error":{"message":"(#10) This message is sent outside of allowed window.","code":10,"error_subcode":2018278}}`))
+	}))
+	defer srv.Close()
+	old := graphURL
+	graphURL = srv.URL
+	defer func() { graphURL = old }()
+	a := inboxAccount{platform: "facebook", tok: "t"}
+
+	if err := sendTo(a, "dm", "c1", "9", "hi", true); err != nil || strings.Join(tags, ",") != ",HUMAN_AGENT" {
+		t.Fatalf("person's reply: err %v, tries %q", err, tags)
+	}
+	tags = nil
+	if err := sendTo(a, "dm", "c1", "9", "hi", false); err == nil || len(tags) != 1 || !strings.Contains(err.Error(), "Meta Business Suite") {
+		t.Fatalf("auto-reply: err %v, tries %q", err, tags)
+	}
+	tags, tagOK = nil, false
+	if err := sendTo(a, "dm", "c1", "9", "hi", true); err == nil || !strings.Contains(err.Error(), "24 hours") {
+		t.Fatalf("no Human Agent permission: err %v", err)
 	}
 }

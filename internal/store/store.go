@@ -176,6 +176,29 @@ create table if not exists queued_messages( -- typed while the agent was busy; s
   text text not null,
   quality text not null default ''
 );
+create table if not exists video_stats( -- each video on a connected account, with the platform's own numbers (stats.go); null = the platform doesn't say
+  id integer primary key,
+  account_id integer not null references social_accounts(id) on delete cascade,
+  media_id text not null,
+  platform text not null,
+  title text not null default '',
+  url text not null default '',
+  thumb text not null default '',
+  published_at text not null default '', -- RFC 3339, UTC
+  duration real, -- seconds
+  views integer,
+  reach integer,
+  likes integer,
+  comments integer,
+  shares integer,
+  saves integer,
+  watch_avg real, -- seconds per view
+  retention real, -- average share of the video watched, 0-100
+  skip_rate real, -- share of views that left in the first 3 seconds, 0-100
+  curve text not null default '', -- JSON: share of viewers still watching at evenly spaced points, 0-100
+  fetched_at text not null default current_timestamp,
+  unique(account_id, media_id)
+);
 `
 
 func Open() {
@@ -216,6 +239,8 @@ func Open() {
 		"alter table projects add column clip_stage text not null default ''",
 		"alter table projects add column template_id integer",
 		"alter table tenants add column inbox_mode text not null default 'off'",
+		"alter table tenants add column source_path text not null default ''",
+		"alter table tenants add column source_dbs text not null default ''",
 	} {
 		DB.Exec(m)
 	}
@@ -375,7 +400,7 @@ func PutSettings(r *http.Request) (any, error) {
 	return GetSettings(r)
 }
 
-var TenantCols = []string{"name", "contact", "email", "phone", "website", "teacher", "bio", "language", "brand_color", "accent_color", "font", "notes", "inbox_mode"}
+var TenantCols = []string{"name", "contact", "email", "phone", "website", "teacher", "bio", "language", "brand_color", "accent_color", "font", "notes", "inbox_mode", "source_path", "source_dbs"}
 
 var ProjectCols = []string{"tenant_id", "campaign_id", "title", "kind", "aspect", "seconds", "quality", "brief", "focus", "language", "status", "template_id"}
 

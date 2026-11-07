@@ -251,7 +251,7 @@ func scanAgent(id int64, site, notes, captureNote string) error {
 		return err
 	}
 	go func() {
-		s := agent.ParseStream(0, id, scanQuality.Model, pr)
+		s := agent.ParseStream(-id, id, scanQuality.Model, pr) // negative: a scan has no chat (0 is the Assistant's)
 		io.Copy(io.Discard, pr)
 		summary <- s
 	}()

@@ -1,21 +1,28 @@
 import { lazy as lazyPage, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  BookOpenIcon, ChartPieSliceIcon, ChatCircleDotsIcon, ChatsCircleIcon, FilmSlateIcon, FilmStripIcon, GearSixIcon, HeartIcon, IconContext, MegaphoneIcon, MonitorIcon, MoonIcon, SidebarSimpleIcon,
+  BookOpenIcon, ChartLineUpIcon, ChartPieSliceIcon, ChatCircleDotsIcon, ChatsCircleIcon, FilmSlateIcon, FilmStripIcon, GearSixIcon, HeartIcon, IconContext, MegaphoneIcon, MonitorIcon, MoonIcon, SidebarSimpleIcon,
   SquaresFourIcon, SunIcon, TagIcon,
 } from "@phosphor-icons/react";
 import "./styles.css";
-import { api, desktop, donateURL, go, makerURL, type Meta, openExternal, repoURL, saveFile, setDesktop, setDisplay, setHelp, setNudge, setToast, snoozeNudge, useApi } from "./api";
+import { api, desktop, donateURL, go, makerURL, type Meta, openExternal, pref, repoURL, saveFile, setDesktop, setDisplay, setHelp, setNudge, setToast, snoozeNudge, useApi } from "./api";
 import { Mark, Modal } from "./ui";
 // Each page loads when first opened, so the first screen doesn't wait for the project editor and its video player.
 // After an update the old page's files are gone from the server, so a tab left open reloads once to get the new ones.
 const reloaded = (v?: string) => { try { if (v === undefined) return sessionStorage.getItem("37studio:reloaded"); v ? sessionStorage.setItem("37studio:reloaded", v) : sessionStorage.removeItem("37studio:reloaded"); } catch {} return "1"; };
-const lazy = (load: () => Promise<{ default: React.ComponentType<any> }>) => lazyPage(() => load().then((m) => { reloaded(""); return m; }, (e) => {
+const pages: (() => Promise<unknown>)[] = [];
+const lazy = (load: () => Promise<{ default: React.ComponentType<any> }>) => (pages.push(load), lazyPage(() => load().then((m) => { reloaded(""); return m; }, (e) => {
   if (reloaded()) throw e; // reloading already didn't help: show the error instead of looping
   reloaded("1");
   location.reload();
   return new Promise<never>(() => {});
-}));
+})));
+// Once the first screen is up, the other pages' code loads while the browser is idle, so opening one doesn't wait for it.
+const whenIdle = (f: () => void) => ("requestIdleCallback" in window ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 1500));
+const prefetchPages = () => whenIdle(() => pages.forEach((load) => load().catch(() => {})));
+
+/** A thin bar at the top while a page's code loads. It waits a moment first, so a quick load doesn't flicker. */
+const PageLoading = () => <div className="page-loading" role="progressbar" aria-label="Loading"><span /></div>;
 const Overview = lazy(() => import("./pages/Overview"));
 const Projects = lazy(() => import("./pages/Projects"));
 const ProjectPage = lazy(() => import("./pages/Project"));
@@ -26,6 +33,7 @@ const Campaigns = lazy(() => import("./pages/Campaigns"));
 const CampaignPage = lazy(() => import("./pages/Campaigns").then((m) => ({ default: m.CampaignPage })));
 const Settings = lazy(() => import("./pages/Settings"));
 const Inbox = lazy(() => import("./pages/Inbox"));
+const Performance = lazy(() => import("./pages/Performance"));
 const Library = lazy(() => import("./pages/Library"));
 const Assistant = lazy(() => import("./pages/Assistant"));
 const Guide = lazy(() => import("./pages/Guide"));
@@ -43,6 +51,7 @@ const nav = [
   ] },
   { group: "Social", items: [
     { path: "/inbox", label: "Inbox", icon: ChatsCircleIcon },
+    { path: "/performance", label: "Performance", icon: ChartLineUpIcon },
   ] },
   { group: "Help", items: [
     { path: "/guide", label: "Guide", icon: BookOpenIcon },
@@ -50,8 +59,6 @@ const nav = [
 ];
 const pageTitles = Object.fromEntries([...nav.flatMap((g) => g.items.map((i) => [i.path, i.label])), ["/settings", "Settings"]]);
 
-// Per-browser UI preferences. Storage can throw (private mode); the defaults still work.
-const pref = (k: string, v?: string) => { try { if (v === undefined) return localStorage.getItem("37studio:" + k); localStorage.setItem("37studio:" + k, v); } catch {} return v ?? null; };
 const themes = ["system", "light", "dark"] as const;
 type Theme = (typeof themes)[number];
 const themeIcon = { system: MonitorIcon, light: SunIcon, dark: MoonIcon };
@@ -99,6 +106,7 @@ function App() {
       case "library": return <Library />;
       case "costs": return <Costs />;
       case "inbox": return <Inbox />;
+      case "performance": return <Performance />;
       case "settings": return <Settings tab={id} />;
       case "assistant": return <Assistant />;
       case "guide": return <Guide section={id} />;
@@ -168,7 +176,7 @@ function App() {
             <a className="who" href={makerURL} target="_blank" rel="noreferrer">Made by Shaitrish</a>
           </div>
         </aside>
-        <main className="main"><Suspense fallback={null}>{page}</Suspense></main>
+        <main className="main"><Suspense fallback={<PageLoading />}>{page}</Suspense></main>
         {helpAt && <Suspense fallback={null}><HelpPanel section={helpAt} onSection={setHelpAt} onClose={closeHelp} /></Suspense>}
         {toast && <div className={`toast ${toast.err ? "err" : ""}`} role="status">{toast.msg}</div>}
         {why && (
@@ -199,4 +207,4 @@ document.addEventListener("click", (e) => {
 Promise.all([
   api<Record<string, string>>("/settings").then(setDisplay, () => {}),
   api<Meta>("/meta").then((m) => setDesktop(!!m.env.desktop), () => {}),
-]).finally(() => createRoot(document.getElementById("root")!).render(<App />));
+]).finally(() => { createRoot(document.getElementById("root")!).render(<App />); prefetchPages(); });
