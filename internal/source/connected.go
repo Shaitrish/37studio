@@ -115,7 +115,8 @@ func Query(tenant int64, db, query string) ([]map[string]any, error) {
 	if !selectOnly.MatchString(q) || strings.Contains(q, ";") {
 		return nil, errors.New("only one select statement at a time")
 	}
-	u := url.URL{Scheme: "file", Path: filepath.ToSlash(files.Within(dir, name))}
+	// SQLite wants file:///C:/… on Windows: a path without a leading slash would read as a host ("C:").
+	u := url.URL{Scheme: "file", Path: "/" + strings.TrimPrefix(filepath.ToSlash(files.Within(dir, name)), "/")}
 	conn, err := sql.Open("sqlite", u.String()+"?mode=ro&_pragma=query_only(1)&_pragma=busy_timeout(5000)")
 	if err != nil {
 		return nil, err
