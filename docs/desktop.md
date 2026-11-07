@@ -157,6 +157,28 @@ release zip the way CI does, `.\desktop\package-windows.ps1`.
 
 Then follow [First steps](../README.md#first-steps): add your Claude key in Settings → AI services and add a brand.
 
+### Build on a Mac (not supported yet)
+
+There is no Mac release yet, but the desktop app builds and runs on a Mac from source. It was tried on one Mac only
+(Apple M4, macOS 26.2): the window opened, and the editor agent built and rendered a short 9:16 test video. Publishing,
+transcription and Intel Macs weren't tried.
+
+```bash
+brew install go ffmpeg node python
+git clone https://github.com/Shaitrish/37studio.git && cd 37studio
+MACOSX_DEPLOYMENT_TARGET=13.0 ./desktop/build.sh
+./desktop/bin/37studio
+```
+
+- `MACOSX_DEPLOYMENT_TARGET=13.0` builds the window code for macOS 13 and newer. Without it the build targets the
+  macOS version of the Mac that builds it, so the program may not run on an older Mac.
+- Start it from a terminal, as above. A Mac app opened from Finder doesn't get your shell's PATH, so it can't find
+  Homebrew's ffmpeg and Node or the `claude` command.
+- Your work is kept in `~/Library/Application Support/37Studio`.
+- 37Studio looks for a Claude Code login in `~/.claude/.credentials.json`, but on a Mac Claude Code keeps it in the
+  Keychain, so the app says Claude isn't set up. Add an API key, or a token from `claude setup-token`, in Settings →
+  AI services.
+
 ### Update
 
 ```bash
