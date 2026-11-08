@@ -153,6 +153,10 @@ The launcher and the cloud file use the `latest` image, so a restart can update 
 
 To build the image from your own checkout on the server, clone the repo and replace the `image:` line in `docker-compose.cloud.yml` with `build: .`.
 
+## One-Click Deploy
+
+[![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/37Studio/)
+
 ## First steps
 
 This is the short version. **[The full guide](docs/guide.md)** covers setup and every part of the app, and it is also inside the app: **Guide** in the sidebar.
