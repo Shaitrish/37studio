@@ -22,7 +22,10 @@ RUN CGO_ENABLED=0 GOARCH=$TARGETARCH go build -o /37studio ./cmd/37studio
 # ---- runtime: ffmpeg + Chrome libs for HyperFrames rendering + the Claude Code CLI
 FROM node:22-bookworm AS base
 ARG HF_VERSION=0.8.186
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Another Debian mirror (https://host, carrying debian and debian-security) for networks that block deb.debian.org.
+ARG APT_MIRROR
+RUN if [ -n "$APT_MIRROR" ]; then sed -i "s#http://deb.debian.org#$APT_MIRROR#g" /etc/apt/sources.list.d/debian.sources; fi \
+ && apt-get update && apt-get install -y --no-install-recommends \
       ffmpeg python3 python3-venv ca-certificates fonts-noto-core fonts-noto-color-emoji \
       libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 \
       libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2 libpango-1.0-0 libcairo2 libxshmfence1 \

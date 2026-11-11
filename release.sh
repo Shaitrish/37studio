@@ -10,7 +10,8 @@ grep -q "^## \[$V\]" CHANGELOG.md || { echo "CHANGELOG.md has no '## [$V]' secti
 # Both Intel PCs and Apple Silicon Macs: arm64 is built under QEMU emulation and needs a docker-container builder.
 [ -e /proc/sys/fs/binfmt_misc/qemu-aarch64 ] || docker run --privileged --rm tonistiigi/binfmt --install arm64
 docker buildx inspect studio37 >/dev/null 2>&1 || docker buildx create --name studio37 --driver docker-container
-docker buildx build --builder studio37 --platform linux/amd64,linux/arm64 -t "$IMAGE:$V" -t "$IMAGE:latest" --push .
+# APT_MIRROR=https://mirror.xtom.com ./release.sh … where deb.debian.org is blocked.
+docker buildx build --builder studio37 --platform linux/amd64,linux/arm64 --build-arg APT_MIRROR="${APT_MIRROR:-}" -t "$IMAGE:$V" -t "$IMAGE:latest" --push .
 rm -f worker/public/37studio.zip
 python3 -c "import shutil; shutil.make_archive('worker/public/37studio', 'zip', 'dist')"
 # The connect guide for people and their AI assistants: docs/platforms.md behind a short intro, with links made absolute.
