@@ -9,6 +9,9 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 - **Make other sizes**: turn one final video into a 9:16 reel for TikTok, Instagram and Shorts, a 16:9 video for Facebook and YouTube, or 4:5 and 1:1, with the arrows icon on it under the preview. **Fit** keeps the whole picture over a blurred fill, **Crop** fills the frame, and **Ask the agent** lays it out again. Publish then sends each platform its best size, and you can change any of them.
 - **Photos on social media**: Publish can post a photo (JPG, PNG, WebP or GIF) to Facebook Pages, X, LinkedIn, Pinterest, Bluesky and Mastodon. Instagram and TikTok only take photos from a public web address and YouTube takes no photos, so Publish greys those accounts out and says why.
 
+### Fixed
+- **Desktop app**: Export, draft renders and the timeline editor no longer fail with `exec: "npx": executable file not found` when 37Studio is opened from the app menu. It now finds Node, npx and Claude Code where your terminal does (nvm, ~/.local/bin and the like).
+
 ## [0.12.1] - 2026-11-11
 
 ### Changed

@@ -27,6 +27,7 @@ import (
 	"github.com/Shaitrish/37studio/internal/httpapi"
 	"github.com/Shaitrish/37studio/internal/keys"
 	"github.com/Shaitrish/37studio/internal/mcp"
+	"github.com/Shaitrish/37studio/internal/proc"
 	"github.com/Shaitrish/37studio/internal/project"
 	"github.com/Shaitrish/37studio/internal/social"
 	"github.com/Shaitrish/37studio/internal/source"
@@ -70,6 +71,7 @@ func Init() error {
 		return err
 	}
 	store.Open()
+	proc.UseLoginPath() // before anything looks for npx, claude or ffmpeg
 	agent.UseToolsPath()
 	keys.Load()
 	social.SealTokens()
