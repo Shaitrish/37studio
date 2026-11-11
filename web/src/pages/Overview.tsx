@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { ArrowRightIcon, BookOpenIcon, CheckCircleIcon, PlusIcon, SparkleIcon, WarningIcon } from "@phosphor-icons/react";
+import { ArrowRightIcon, BookOpenIcon, CheckCircleIcon, PlusIcon, SparkleIcon, WarningIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react";
 import { Meta, Project, cash, go, ago, help, repoURL, toast, useApi } from "../api";
 import { Empty, HelpButton, Status, projectStatus } from "../ui";
 import { ProjectTable, presetIcon } from "./Projects";
 import { NewProjectModal } from "./NewProject";
+import { NewPostModal } from "./NewPost";
 import { approve } from "./Autopilot";
 
 interface Costs { total: number; this_month: number }
@@ -49,6 +50,7 @@ export default function Overview() {
   const { data: costs } = useApi<Costs>("/costs");
   const { data: meta, reload: recheck } = useApi<Meta>("/meta");
   const [creating, setCreating] = useState(false);
+  const [posting, setPosting] = useState(false);
 
   const all = projects ?? [];
   const count = (s: string) => all.filter((p) => projectStatus(p) === s).length;
@@ -81,6 +83,7 @@ export default function Overview() {
         </div>
         <HelpButton to="start-here" />
         <a className="btn" href="#/clients">Brands</a>
+        <button className="btn" onClick={() => setPosting(true)}><PaperPlaneTiltIcon size={15} /> New post</button>
         <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New video</button>
       </div>
 
@@ -214,6 +217,7 @@ export default function Overview() {
         </div>
       </div>
       {creating && <NewProjectModal onClose={() => setCreating(false)} />}
+      {posting && <NewPostModal onClose={() => setPosting(false)} />}
     </div>
   );
 }

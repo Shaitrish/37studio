@@ -207,9 +207,46 @@ func ConnectMastodon(r *http.Request) (any, error) {
 }
 
 func postLinkedIn(author, tok, file, caption string) (string, string, error) {
-	st, err := os.Stat(file)
+	upload, kind := linkedinVideo, "video"
+	if files.Kind(file) == "image" {
+		upload, kind = linkedinImage, "image"
+	}
+	media, err := upload(author, tok, file)
 	if err != nil {
 		return "", "", err
+	}
+	for i := 0; ; i++ { // a post can only use the media once LinkedIn has processed it
+		var v struct {
+			Status string `json:"status"`
+		}
+		if err := remote.Call(linkedin(remote.Get(linkedinAPI+"/rest/"+kind+"s/"+url.QueryEscape(media), "Bearer "+tok)), &v); err != nil {
+			return "", "", err
+		}
+		if v.Status == "AVAILABLE" {
+			break
+		}
+		if v.Status == "PROCESSING_FAILED" || i > 120 {
+			return "", "", fmt.Errorf("linkedin could not process the %s (%s)", kind, cmp.Or(v.Status, "timed out"))
+		}
+		time.Sleep(5 * time.Second)
+	}
+	h, err := remote.CallHeader(remote.Client, linkedin(remote.JSON("POST", linkedinAPI+"/rest/posts", map[string]any{
+		"author": author, "commentary": linkedinText(caption), "visibility": "PUBLIC", "lifecycleState": "PUBLISHED", "isReshareDisabledByAuthor": false,
+		"distribution": map[string]any{"feedDistribution": "MAIN_FEED", "targetEntities": []any{}, "thirdPartyDistributionChannels": []any{}},
+		"content":      map[string]any{"media": map[string]any{"id": media}},
+	}, "Bearer "+tok)))
+	if err != nil {
+		return "", "", err
+	}
+	id := h.Get("X-Restli-Id")
+	return id, "https://www.linkedin.com/feed/update/" + id + "/", nil
+}
+
+// linkedinVideo uploads a video in LinkedIn's parts and returns its urn.
+func linkedinVideo(author, tok, file string) (string, error) {
+	st, err := os.Stat(file)
+	if err != nil {
+		return "", err
 	}
 	var init struct {
 		Value struct {
@@ -225,7 +262,7 @@ func postLinkedIn(author, tok, file, caption string) (string, string, error) {
 	req := remote.JSON("POST", linkedinAPI+"/rest/videos?action=initializeUpload", map[string]any{"initializeUploadRequest": map[string]any{
 		"owner": author, "fileSizeBytes": st.Size(), "uploadCaptions": false, "uploadThumbnail": false}}, "Bearer "+tok)
 	if err := remote.Call(linkedin(req), &init); err != nil {
-		return "", "", err
+		return "", err
 	}
 	f, _ := os.Open(file)
 	defer f.Close()
@@ -237,40 +274,41 @@ func postLinkedIn(author, tok, file, caption string) (string, string, error) {
 		up.Header.Set("Authorization", "Bearer "+tok)
 		h, err := remote.CallHeader(remote.Uploads, up)
 		if err != nil {
-			return "", "", err
+			return "", err
 		}
 		etags = append(etags, h.Get("ETag"))
 	}
 	req = remote.JSON("POST", linkedinAPI+"/rest/videos?action=finalizeUpload", map[string]any{"finalizeUploadRequest": map[string]any{
 		"video": init.Value.Video, "uploadToken": init.Value.UploadToken, "uploadedPartIds": etags}}, "Bearer "+tok)
 	if err := remote.Call(linkedin(req), nil); err != nil {
-		return "", "", err
+		return "", err
 	}
-	for i := 0; ; i++ { // a post can only use the video once LinkedIn has processed it
-		var v struct {
-			Status string `json:"status"`
-		}
-		if err := remote.Call(linkedin(remote.Get(linkedinAPI+"/rest/videos/"+url.QueryEscape(init.Value.Video), "Bearer "+tok)), &v); err != nil {
-			return "", "", err
-		}
-		if v.Status == "AVAILABLE" {
-			break
-		}
-		if v.Status == "PROCESSING_FAILED" || i > 120 {
-			return "", "", fmt.Errorf("linkedin could not process the video (%s)", cmp.Or(v.Status, "timed out"))
-		}
-		time.Sleep(5 * time.Second)
+	return init.Value.Video, nil
+}
+
+// linkedinImage uploads an image through LinkedIn's Images API and returns its urn.
+func linkedinImage(author, tok, file string) (string, error) {
+	var init struct {
+		Value struct {
+			UploadURL string `json:"uploadUrl"`
+			Image     string `json:"image"`
+		} `json:"value"`
 	}
-	h, err := remote.CallHeader(remote.Client, linkedin(remote.JSON("POST", linkedinAPI+"/rest/posts", map[string]any{
-		"author": author, "commentary": linkedinText(caption), "visibility": "PUBLIC", "lifecycleState": "PUBLISHED", "isReshareDisabledByAuthor": false,
-		"distribution": map[string]any{"feedDistribution": "MAIN_FEED", "targetEntities": []any{}, "thirdPartyDistributionChannels": []any{}},
-		"content":      map[string]any{"media": map[string]any{"id": init.Value.Video}},
-	}, "Bearer "+tok)))
+	req := remote.JSON("POST", linkedinAPI+"/rest/images?action=initializeUpload", map[string]any{"initializeUploadRequest": map[string]any{"owner": author}}, "Bearer "+tok)
+	if err := remote.Call(linkedin(req), &init); err != nil {
+		return "", err
+	}
+	f, err := os.Open(file)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
-	id := h.Get("X-Restli-Id")
-	return id, "https://www.linkedin.com/feed/update/" + id + "/", nil
+	defer f.Close()
+	st, _ := f.Stat()
+	up, _ := http.NewRequest("PUT", init.Value.UploadURL, f)
+	up.ContentLength = st.Size()
+	up.Header.Set("Content-Type", "application/octet-stream")
+	up.Header.Set("Authorization", "Bearer "+tok)
+	return init.Value.Image, remote.CallWith(remote.Uploads, up, nil)
 }
 
 var littleRe = regexp.MustCompile(`[\\|{}@\[\]()<>#*_~]`)
@@ -308,7 +346,14 @@ func postX(tok, file, text string) (string, string, error) {
 			} `json:"processing_info"`
 		} `json:"data"`
 	}
-	body := map[string]any{"media_type": "video/mp4", "total_bytes": st.Size(), "media_category": "tweet_video"}
+	mtype, category := "video/mp4", "tweet_video"
+	if files.Kind(file) == "image" {
+		mtype, category = imageType(file), "tweet_image"
+		if mtype == "image/gif" {
+			category = "tweet_gif"
+		}
+	}
+	body := map[string]any{"media_type": mtype, "total_bytes": st.Size(), "media_category": category}
 	if err := remote.Call(remote.JSON("POST", xAPI+"/2/media/upload/initialize", body, "Bearer "+tok), &m); err != nil {
 		return "", "", err
 	}
@@ -327,7 +372,7 @@ func postX(tok, file, text string) (string, string, error) {
 	}
 	for i := 0; m.Data.Processing != nil && m.Data.Processing.State != "succeeded"; i++ { // X transcodes before a post can use it
 		if m.Data.Processing.State == "failed" || i > 120 {
-			return "", "", fmt.Errorf("x could not process the video: %s", cmp.Or(m.Data.Processing.Error.Message, m.Data.Processing.State))
+			return "", "", fmt.Errorf("x could not process the media: %s", cmp.Or(m.Data.Processing.Error.Message, m.Data.Processing.State))
 		}
 		time.Sleep(time.Duration(min(max(m.Data.Processing.After, 2), 10)) * time.Second)
 		m.Data.Processing = nil
@@ -345,43 +390,64 @@ func postX(tok, file, text string) (string, string, error) {
 }
 
 func postPinterest(board, tok, file, title, caption string) (string, string, error) {
+	var src map[string]any
+	var err error
+	if files.Kind(file) == "image" {
+		src, err = pinterestImage(file)
+	} else {
+		src, err = pinterestVideo(tok, file)
+	}
+	if err != nil {
+		return "", "", err
+	}
+	var p struct {
+		ID string `json:"id"`
+	}
+	err = remote.Call(remote.JSON("POST", pinterestAPI+"/v5/pins", map[string]any{"board_id": board, "title": textutil.Cut(title, 100), "description": textutil.Cut(caption, 800),
+		"media_source": src}, "Bearer "+tok), &p)
+	return p.ID, "https://www.pinterest.com/pin/" + p.ID + "/", err
+}
+
+// pinterestVideo uploads a video and returns the Pin's media_source once Pinterest has processed it.
+func pinterestVideo(tok, file string) (map[string]any, error) {
 	var m struct {
 		ID     string            `json:"media_id"`
 		URL    string            `json:"upload_url"`
 		Params map[string]string `json:"upload_parameters"`
 	}
 	if err := remote.Call(remote.JSON("POST", pinterestAPI+"/v5/media", map[string]string{"media_type": "video"}, "Bearer "+tok), &m); err != nil {
-		return "", "", err
+		return nil, err
 	}
 	f, err := os.Open(file)
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 	defer f.Close()
 	if err := remote.CallWith(remote.Uploads, remote.Multipart(m.URL, m.Params, "file", filepath.Base(file), f, ""), nil); err != nil {
-		return "", "", err
+		return nil, err
 	}
 	for i := 0; ; i++ {
 		var s struct {
 			Status string `json:"status"`
 		}
 		if err := remote.Call(remote.Get(pinterestAPI+"/v5/media/"+m.ID, "Bearer "+tok), &s); err != nil {
-			return "", "", err
+			return nil, err
 		}
 		if s.Status == "succeeded" {
 			break
 		}
 		if s.Status == "failed" || i > 120 {
-			return "", "", fmt.Errorf("pinterest could not process the video (%s)", cmp.Or(s.Status, "timed out"))
+			return nil, fmt.Errorf("pinterest could not process the video (%s)", cmp.Or(s.Status, "timed out"))
 		}
 		time.Sleep(5 * time.Second)
 	}
-	var p struct {
-		ID string `json:"id"`
-	}
-	err = remote.Call(remote.JSON("POST", pinterestAPI+"/v5/pins", map[string]any{"board_id": board, "title": textutil.Cut(title, 100), "description": textutil.Cut(caption, 800),
-		"media_source": map[string]any{"source_type": "video_id", "media_id": m.ID, "cover_image_key_frame_time": 1}}, "Bearer "+tok), &p)
-	return p.ID, "https://www.pinterest.com/pin/" + p.ID + "/", err
+	return map[string]any{"source_type": "video_id", "media_id": m.ID, "cover_image_key_frame_time": 1}, nil
+}
+
+// pinterestImage is an image Pin's media_source: the image inline as base64 (JPG or PNG; publish converts the others).
+func pinterestImage(file string) (map[string]any, error) {
+	b, err := os.ReadFile(file) // images are small, unlike videos
+	return map[string]any{"source_type": "image_base64", "content_type": imageType(file), "data": base64.StdEncoding.EncodeToString(b)}, err
 }
 
 type bskySession struct{ DID, Handle, Access, PDS string }
@@ -409,9 +475,28 @@ func blueskySession(service, id, pass string) (bskySession, error) {
 	return s, err
 }
 
-// postBluesky uploads the video as a blob to the account's PDS and posts it. ponytail: plain uploadBlob; Bluesky's
+// bskyImageMax is the largest image blob app.bsky.embed.images accepts.
+const bskyImageMax = 1_000_000
+
+// postBluesky uploads the video or image as a blob to the account's PDS and posts it. ponytail: plain uploadBlob; Bluesky's
 // video service (app.bsky.video.uploadVideo) transcodes before posting and reports errors earlier, if this proves flaky.
 func postBluesky(did, pass, service, file, text string) (string, string, error) {
+	image := files.Kind(file) == "image"
+	ctype := "video/mp4"
+	if image {
+		ctype = imageType(file)
+		if st, err := os.Stat(file); err == nil && st.Size() > bskyImageMax { // a 2000 px JPEG is usually well under 1 MB
+			small, done, err := jpegCopy(file, 2000)
+			if err == nil {
+				defer done()
+				st, err = os.Stat(small)
+			}
+			if err != nil || st.Size() > bskyImageMax {
+				return "", "", errors.New("Bluesky takes images up to 1 MB and this one couldn't be made that small; post a smaller image")
+			}
+			file, ctype = small, "image/jpeg"
+		}
+	}
 	s, err := blueskySession(service, did, pass)
 	if err != nil {
 		return "", "", err
@@ -424,7 +509,7 @@ func postBluesky(did, pass, service, file, text string) (string, string, error) 
 	st, _ := f.Stat()
 	req, _ := http.NewRequest("POST", s.PDS+"/xrpc/com.atproto.repo.uploadBlob", f)
 	req.ContentLength = st.Size()
-	req.Header.Set("Content-Type", "video/mp4")
+	req.Header.Set("Content-Type", ctype)
 	req.Header.Set("Authorization", "Bearer "+s.Access)
 	var up struct {
 		Blob json.RawMessage `json:"blob"`
@@ -433,9 +518,14 @@ func postBluesky(did, pass, service, file, text string) (string, string, error) 
 		return "", "", err
 	}
 	text = textutil.Cut(text, 300)
-	embed := map[string]any{"$type": "app.bsky.embed.video", "video": up.Blob}
+	media := map[string]any{"$type": "app.bsky.embed.video", "video": up.Blob}
+	embed := media
+	if image { // alt text: the caption's first line, which usually says what the picture is
+		media = map[string]any{"image": up.Blob, "alt": strings.TrimSpace(strings.SplitN(text, "\n", 2)[0])}
+		embed = map[string]any{"$type": "app.bsky.embed.images", "images": []any{media}}
+	}
 	if w, h := files.VideoSize(file); w > 0 && h > 0 {
-		embed["aspectRatio"] = map[string]int{"width": w, "height": h}
+		media["aspectRatio"] = map[string]int{"width": w, "height": h}
 	}
 	rec := map[string]any{"$type": "app.bsky.feed.post", "text": text, "createdAt": time.Now().UTC().Format(time.RFC3339), "embed": embed}
 	if fs := bskyFacets(text); len(fs) > 0 {

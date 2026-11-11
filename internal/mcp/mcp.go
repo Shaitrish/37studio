@@ -141,7 +141,7 @@ var Tools = []mcpTool{
 	{Name: "get_project", Desc: "One project: brief, status (running, review, …), finished files in out/, drafts, posts, cost, and render or import progress.",
 		Method: "GET", Path: "/api/projects/{project_id}", Props: map[string]any{"project_id": project}, Required: []string{"project_id"}},
 	{Name: "create_video", Desc: "Start a new video (or post, or thumbnail) for a brand. The editor agent starts at once and works in the background for several minutes: follow it with get_project_messages and get_project. Footage is optional; with footage_url (a YouTube or Google Drive link) it downloads first.",
-		Props: map[string]any{"company_id": brand, "title": pStr("Project title"), "kind": pStr("Video kind id from get_options, like hook-reel or explainer"),
+		Props: map[string]any{"company_id": brand, "title": pStr("Project title"), "kind": pStr("Video kind id from get_options, like hook-reel or explainer; or post for a finished video or image you upload with add_project_file finished=true (no agent)"),
 			"brief": pStr("What the video should say and show"), "aspect": pEnum("Format", "9:16", "16:9", "1:1", "4:5"), "seconds": pInt("Length in seconds"),
 			"language": pStr("Language code, like en or bn"), "quality": pStr("Quality tier id from get_options"), "focus": pStr("A page URL or feature the video is about"),
 			"campaign_id": pInt("Campaign to add it to"), "template_id": pInt("Template to start from (list_templates)"), "footage_url": pStr("YouTube or Google Drive link to import"),
@@ -172,8 +172,8 @@ var Tools = []mcpTool{
 	{Name: "open_timeline", Desc: "Open the project's timeline editor (HyperFrames Studio) and get its port; the user edits there by hand at http://localhost:<port>.",
 		Method: "POST", Path: "/api/projects/{project_id}/studio", Props: map[string]any{"project_id": project}, Required: []string{"project_id"}},
 	{Name: "close_timeline", Desc: "Close the project's timeline editor.", Method: "DELETE", Path: "/api/projects/{project_id}/studio", Props: map[string]any{"project_id": project}, Required: []string{"project_id"}},
-	{Name: "add_project_file", Desc: "Add footage or any other file to a project's input folder, from a URL or as base64.",
-		Props:    map[string]any{"project_id": project, "filename": pStr("File name with extension"), "url": pStr("Download the file from here"), "content_base64": pStr("Or the file itself, base64-encoded (small files)")},
+	{Name: "add_project_file", Desc: "Add footage or any other file to a project's input folder, from a URL or as base64. With finished, it goes to out/ as a finished video or image ready to publish (a post made outside 37Studio: create the project with kind \"post\").",
+		Props:    map[string]any{"project_id": project, "filename": pStr("File name with extension"), "url": pStr("Download the file from here"), "content_base64": pStr("Or the file itself, base64-encoded (small files)"), "finished": pBool("A finished video or image to publish, not footage")},
 		Required: []string{"project_id", "filename"}, Do: addProjectFile},
 	{Name: "save_template", Desc: "Save a finished project's look as a template for future videos.", Method: "POST", Path: "/api/projects/{project_id}/template",
 		Props: map[string]any{"project_id": project, "name": pStr("Template name"), "notes": pStr("When to use it"), "shared": pBool("Offer it to every brand")}, Required: []string{"project_id"}},
@@ -471,7 +471,7 @@ func createVideo(mux http.Handler, a map[string]any) (string, bool) {
 			return fmt.Sprintf("Project %d was created, but the footage import failed: %s", p.ID, msg), true
 		}
 		return fmt.Sprintf("Project %d created; the footage is downloading and the agent starts when it's done. Follow it with get_project.", p.ID), false
-	case a["start"] != false:
+	case a["start"] != false && a["kind"] != "post": // a post is a finished file: there is nothing for the agent to make
 		if msg, bad := mcpDo(mux, "POST", fmt.Sprintf("/api/projects/%d/messages", p.ID), map[string]any{"text": ""}); bad {
 			return fmt.Sprintf("Project %d was created, but the agent didn't start: %s", p.ID, msg), true
 		}
@@ -496,7 +496,11 @@ func cloneBrandVoice(mux http.Handler, a map[string]any) (string, bool) {
 }
 
 func addProjectFile(mux http.Handler, a map[string]any) (string, bool) {
-	return mcpUpload(mux, fmt.Sprintf("/api/projects/%v/inputs", a["project_id"]), a)
+	dir := "inputs"
+	if a["finished"] == true {
+		dir = "outputs"
+	}
+	return mcpUpload(mux, fmt.Sprintf("/api/projects/%v/%s", a["project_id"], dir), a)
 }
 
 // mcpUpload streams a file from a URL (or decodes a small base64 one) into the same multipart upload the UI uses.

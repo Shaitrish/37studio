@@ -47,6 +47,8 @@ On a server, `STUDIO37_PUBLIC_URL` is `https://your-domain` (the cloud compose f
 
 **Publish** on a project sends one final video to any mix of the brand's accounts, now or at a scheduled time. Claude writes a caption for each platform from what the video shows and the brand's knowledge base: X and Bluesky stay short (their posts are limited to 280 and 300 characters), LinkedIn reads professional, YouTube gets a title and description, and Pinterest gets a title and description. You can edit every caption before posting, or ask the editor agent for them in the project chat.
 
+An image (JPG, PNG, WebP or GIF) posts the same way to Facebook Pages, LinkedIn, X, Pinterest, Bluesky and Mastodon. Instagram, TikTok and YouTube can't take one from 37Studio (see [What can't be posted to](#what-cant-be-posted-to)).
+
 The **Posts** tab shows each upload's status, a link to the live post, and the platform's own error if one fails, with **Retry**. Scheduled posts go out only while 37Studio is running; a post more than 12 hours overdue is marked missed instead of going out late. Tokens live in `37studio.db` in the data folder and are only sent to the platform they belong to.
 
 ## Facebook Pages + Instagram
@@ -62,6 +64,8 @@ The **Posts** tab shows each upload's status, a link to the live post, and the p
 
 Vertical videos of 3–90 seconds post as Reels; anything else posts as a regular Page video. Meta allows 30 API-published Reels per Page per 24 hours.
 
+Images post to the Page as photo posts with the caption (a WebP goes as a JPEG copy). Instagram can't take an image from 37Studio: its API only fetches images from a public web address. Post those from the Instagram app.
+
 ## YouTube
 
 1. In [console.cloud.google.com](https://console.cloud.google.com) create a project and enable **YouTube Data API v3** and **YouTube Analytics API** (for [Performance](#performance)).
@@ -71,6 +75,8 @@ Vertical videos of 3–90 seconds post as Reels; anything else posts as a regula
 
 Until the project passes YouTube's free API audit, YouTube keeps every upload **private**. Apply through the *YouTube API Services audit and quota extension* form. The default daily quota also allows only a handful of uploads.
 
+YouTube takes videos only; its API has no image posts.
+
 ## TikTok
 
 1. At [developers.tiktok.com](https://developers.tiktok.com) create an app with the **Desktop** platform (the only kind TikTok lets redirect to `http://localhost`; 37Studio uses PKCE for it) and the redirect URI above. On a server with a real HTTPS domain, use the **Web** platform with the `https://` redirect instead.
@@ -79,9 +85,11 @@ Until the project passes YouTube's free API audit, YouTube keeps every upload **
 
 Until TikTok reviews the app, use its Sandbox and add each brand's TikTok account as a target user. Until TikTok audits the app, direct posts must be **Only me**; or choose **Send to the TikTok app** in the Publish dialog: a notification arrives in the TikTok phone app's Inbox, and the account owner opens it, edits and taps Post. It doesn't appear under Drafts in TikTok Studio on the web. Each brand signs in with its own TikTok account, since TikTok has no agency access.
 
+TikTok can't take an image from 37Studio: its API only accepts photo posts from a public web address on a domain verified with TikTok. Post photos from the TikTok app.
+
 ## LinkedIn
 
-Posts videos to the profile of the member who signs in, and, with LinkedIn's approval, to the company Pages they administer.
+Posts videos and images to the profile of the member who signs in, and, with LinkedIn's approval, to the company Pages they administer.
 
 1. At [linkedin.com/developers](https://www.linkedin.com/developers/apps) create an app. LinkedIn asks for a LinkedIn Page to associate it with.
 2. Under **Products**, add **Sign In with LinkedIn using OpenID Connect** and **Share on LinkedIn**. Together they grant the scopes 37Studio asks for: `openid profile w_member_social`.
@@ -89,6 +97,8 @@ Posts videos to the profile of the member who signs in, and, with LinkedIn's app
 4. Brand → Social → **Connect LinkedIn**.
 
 **Company Pages** need LinkedIn's **Community Management API**, which LinkedIn approves per app. Once it's approved, set the environment variable `LINKEDIN_PAGES=1`, restart, and connect again: the Pages you administer appear next to your profile.
+
+Images post through LinkedIn's Images API with the same `w_member_social` permission (a WebP goes as a JPEG copy).
 
 LinkedIn tokens last 60 days. After that, posts to the account fail with a sign-in error; click **Connect LinkedIn** again to renew it.
 
@@ -101,18 +111,20 @@ LinkedIn tokens last 60 days. After that, posts to the account fail with a sign-
 
 Posting needs an X API access level that allows creating posts and uploading media; check what your developer account's plan includes before connecting.
 
+Images and GIFs upload the same way as videos and post with the caption. X limits images to 5 MB and GIFs to 15 MB.
+
 **On your own computer** X doesn't accept `localhost` callback URLs, so 37Studio uses `127.0.0.1` for X only: register `http://127.0.0.1:8080/api/oauth/x/callback`. You keep opening 37Studio at `http://localhost:8080` as usual; only the sign-in passes through `127.0.0.1`. On a server, register `https://<your domain>/api/oauth/x/callback`.
 
 ## Pinterest
 
-Posts video Pins to the boards you choose. Each board is an account in 37Studio, so a brand can post to one board or several.
+Posts video and image Pins to the boards you choose. Each board is an account in 37Studio, so a brand can post to one board or several.
 
 1. At [developers.pinterest.com](https://developers.pinterest.com) create an app (Pinterest asks for a business account) and add the redirect URI above.
 2. Copy the app ID and secret into `PINTEREST_APP_ID` and `PINTEREST_APP_SECRET` (Settings → Social apps or `.env`). 37Studio asks for `boards:read pins:read pins:write user_accounts:read`.
 3. New apps get **Trial** access, which only allows creating Pins through Pinterest's sandbox API. Until Pinterest grants **Standard** access, set the environment variable `PINTEREST_API=https://api-sandbox.pinterest.com` and restart. Remove it once Standard access is granted.
 4. Brand → Social → **Connect Pinterest**, then tick the boards that belong to this brand.
 
-Each Pin gets a title and a description from the captions.
+Each Pin gets a title and a description from the captions. Images post as image Pins; Pinterest's API takes JPG and PNG, so a WebP goes as a JPEG copy and a GIF as its first frame.
 
 ## Bluesky
 
@@ -121,12 +133,16 @@ No developer app needed.
 1. In Bluesky, open **Settings → Privacy and security → App passwords** and create one for 37Studio. An app password can post but can't change the account's password or delete it.
 2. Brand → Social → **Connect Bluesky**, and enter the handle (for example `yourshop.bsky.social`) and the app password. For an account on a self-hosted PDS, also enter its host.
 
+Images post with the caption's first line as their alt text. Bluesky takes images up to 1 MB, so a bigger one goes as a JPEG copy at most 2000 pixels on its longer side; if that is still too big, the post fails and asks for a smaller image.
+
 ## Mastodon
 
 No developer app needed.
 
 1. On your Mastodon server, open **Preferences → Development → New application**. Give it a name and the scopes `read:accounts`, `write:media` and `write:statuses`, and save. Open it and copy **Your access token**.
 2. Brand → Social → **Connect Mastodon**, and enter the server URL (for example `https://mastodon.social`) and the token.
+
+Images post the same way as videos, within your server's size limit.
 
 ## Inbox: Messenger, Instagram and comments
 
@@ -214,4 +230,4 @@ Then:
 - **Threads.** Its API only accepts a video from a public URL. 37Studio keeps videos on your own computer and has no public address to hand it.
 - **Facebook Groups and personal profiles.** Meta removed group posting for all apps in April 2024 and profile posting in 2018.
 - **Reddit and Snapchat.** Neither has a usable public API for posting videos.
-- **Images.** Publishing sends videos only. Thumbnails and square posts download as PNG.
+- **Images on Instagram, TikTok and YouTube.** Instagram's and TikTok's APIs only take images from a public web address (TikTok's from a domain verified with TikTok), and YouTube has no image posts. The Publish dialog greys these accounts out for an image. Images post as JPG, PNG, WebP or GIF; save other kinds (SVG, AVIF) as one of those first.

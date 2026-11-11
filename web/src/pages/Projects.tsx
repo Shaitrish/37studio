@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { BookOpenIcon, ClosedCaptioningIcon, FilmSlateIcon, ImageIcon, MegaphoneIcon, PlusIcon, MagicWandIcon, TrashIcon } from "@phosphor-icons/react";
+import { BookOpenIcon, ClosedCaptioningIcon, FilmSlateIcon, ImageIcon, MegaphoneIcon, PlusIcon, MagicWandIcon, TrashIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react";
 import { api, go, Project, cash, fail, toast, useApi, useTenants, ago } from "../api";
 import { Empty, HelpButton, Seg, Status, TenantTag, projectStatus } from "../ui";
 import { NewProjectModal } from "./NewProject";
+import { NewPostModal } from "./NewPost";
 
 export const presetIcon: Record<string, typeof FilmSlateIcon> = {
-  "hook-reel": FilmSlateIcon, captions: ClosedCaptioningIcon, explainer: BookOpenIcon, promo: MegaphoneIcon, thumbnail: ImageIcon, custom: MagicWandIcon,
+  "hook-reel": FilmSlateIcon, captions: ClosedCaptioningIcon, explainer: BookOpenIcon, promo: MegaphoneIcon, thumbnail: ImageIcon, custom: MagicWandIcon, post: PaperPlaneTiltIcon,
 };
 
 const filters = [
@@ -19,6 +20,7 @@ export default function Projects() {
   const { data: projects, reload } = useApi<Project[]>("/projects");
   const [filter, setFilter] = useState("all");
   const [creating, setCreating] = useState(false);
+  const [posting, setPosting] = useState(false);
   const [picked, setPicked] = useState<Set<number>>(new Set());
   const shown = (projects ?? []).filter((p) => filter === "all" || projectStatus(p) === filter);
   const removeMany = async () => {
@@ -39,6 +41,7 @@ export default function Projects() {
           <p>Every edit job: reels, captioned clips, explainers, promos and thumbnails.</p>
         </div>
         <HelpButton to="make-a-video" />
+        <button className="btn" onClick={() => setPosting(true)}><PaperPlaneTiltIcon size={15} /> New post</button>
         <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New video</button>
       </div>
       <div className="row wrap">
@@ -57,6 +60,7 @@ export default function Projects() {
         ) : <ProjectTable projects={shown} picked={picked} onPick={setPicked} />}
       </div>
       {creating && <NewProjectModal onClose={() => setCreating(false)} />}
+      {posting && <NewPostModal onClose={() => setPosting(false)} />}
     </div>
   );
 }

@@ -92,11 +92,22 @@ export default function ProjectPage({ id }: { id: number }) {
     seenFinals.current = finalVideos;
   }, [finalVideos]);
 
+  // A new post opens straight on Publish: picking accounts and captions is all that's left to do.
+  const autoPublish = useRef(false);
+  useEffect(() => {
+    if (p?.kind !== "post" || autoPublish.current || !p.outputs?.length || p.posts?.length) return;
+    autoPublish.current = true;
+    setPublishing(true);
+  }, [p]);
+
   if (error) return <div className="page"><Empty icon={<FilmSlateIcon size={28} />} title="Project not found"><a className="btn" href="#/projects">Back to projects</a></Empty></div>;
   if (!p) return <EditorSkeleton chatW={chatW} chatFull={chatFull} />;
 
   const media = (f: FileInfo) => f.kind === "video" || f.kind === "image" || f.kind === "audio";
   const finals = (p.outputs ?? []).filter(media);
+  // A post is a finished file from the user's computer (NewPost.tsx): no agent, timeline or export, just Publish.
+  const post = p.kind === "post";
+  const postable = finals.some((f) => f.kind === "video" || f.kind === "image");
   const drafts = (p.drafts ?? []).filter(media);
   const current: FileInfo | "comp" | undefined = view ?? (p.composition ? "comp" : finals[0] ?? drafts[0]);
   const stale = !!p.composition && !!shownComp && p.composition !== shownComp;
@@ -138,17 +149,17 @@ export default function ProjectPage({ id }: { id: number }) {
             <Status value={projectStatus(p)} />
           </div>
           <p className="row wrap small muted" style={{ marginTop: 2 }}>
-            <Icon size={14} /> {preset?.label ?? p.kind} · {p.language ? languageName(p.language) + " · " : ""}{p.aspect}{p.seconds ? ` · ~${p.seconds}s` : ""} · {cash(p.quote.cost)}
+            <Icon size={14} /> {preset?.label ?? (post ? "Post from your computer" : p.kind)} · {p.language ? languageName(p.language) + " · " : ""}{p.aspect}{p.seconds ? ` · ~${p.seconds}s` : ""} · {cash(p.quote.cost)}
           </p>
         </div>
         <div className="row wrap" style={{ justifyContent: "flex-end" }}>
           <HelpButton to={tabHelp[tab] ?? "work-on-a-project"} />
-          {!p.running && p.status !== "delivered" && finals.length > 0 && (
+          {!post && !p.running && p.status !== "delivered" && finals.length > 0 && (
             <button className="btn" onClick={() => api(`/projects/${id}`, { method: "PUT", body: { status: "delivered" } }).then(reload, fail)}>
               <CheckCircleIcon size={15} /> Mark delivered
             </button>
           )}
-          <span className="row" style={{ gap: 2 }}>
+          {!post && <span className="row" style={{ gap: 2 }}>
             <button className="btn" disabled={!p.composition} onClick={openTimeline} title="Drag, trim and split clips, change text and audio by hand">
               <SlidersHorizontalIcon size={15} /> {p.studio_port ? "Open timeline" : "Edit timeline"}
             </button>
@@ -156,18 +167,18 @@ export default function ProjectPage({ id }: { id: number }) {
               <button className="btn ghost icon" title="Close the timeline editor" aria-label="Close the timeline editor"
                 onClick={() => api(`/projects/${id}/studio`, { method: "DELETE" }).then(reload, fail)}><XIcon size={15} /></button>
             )}
-          </span>
-          <button className="btn" disabled={!p.composition} onClick={() => setTemplating(true)} title="Start later videos from this one's look">
+          </span>}
+          {!post && <button className="btn" disabled={!p.composition} onClick={() => setTemplating(true)} title="Start later videos from this one's look">
             <BookmarkSimpleIcon size={15} /> Save as template
-          </button>
-          <button className="btn" disabled={!finals.some((f) => f.kind === "video")} onClick={() => setPublishing(true)}
-            title={finals.some((f) => f.kind === "video") ? "Post to the brand's connected social accounts" : "Export a final video first"}>
+          </button>}
+          <button className={`btn ${post ? "primary" : ""}`} disabled={!postable} onClick={() => setPublishing(true)}
+            title={postable ? "Post to the brand's connected social accounts" : "Export a final video first"}>
             <ShareNetworkIcon size={15} /> Publish
           </button>
-          <button className="btn primary" disabled={!p.composition || p.running} onClick={() => act("render", { quality: "high" }, "Export started; it appears in Versions")}
+          {!post && <button className="btn primary" disabled={!p.composition || p.running} onClick={() => act("render", { quality: "high" }, "Export started; it appears in Versions")}
             title={p.running ? "Wait for the agent to finish" : "Render the final video"}>
             <DownloadSimpleIcon size={15} /> Export
-          </button>
+          </button>}
         </div>
       </div>
 
@@ -182,7 +193,7 @@ export default function ProjectPage({ id }: { id: number }) {
         </div>
       )}
 
-      <div className={`workspace ${chatFull ? "chat-full" : ""}`} ref={ws} style={{ "--chat-w": `${chatW}px` } as CSSProperties}>
+      <div className={`workspace ${chatFull && p.kind !== "post" ? "chat-full" : ""}`} ref={ws} style={{ "--chat-w": `${chatW}px` } as CSSProperties}>
         <div className="stack editor-main" style={{ minWidth: 0, gap: 14 }}>
           <div className="card">
             <div className="stage" ref={stage}>
@@ -217,7 +228,7 @@ export default function ProjectPage({ id }: { id: number }) {
 
           <div className="card tabbed">
             <div className="tabs" style={{ padding: "0 8px" }}>
-              {[...(p.children?.length ? [["videos", `Videos (${p.children.length})`]] : []), ["brief", "Brief"], ["sources", "Media"], ["generate", `Generate${p.generated?.length ? ` (${p.generated.length})` : ""}`], ["posts", `Posts${p.posts?.length ? ` (${p.posts.length})` : ""}`], ["cost", `Cost · ${cash(p.quote.cost)}`]].map(([k, l]) => (
+              {[...(p.children?.length ? [["videos", `Videos (${p.children.length})`]] : []), ["brief", "Brief"], ...(post ? [] : [["sources", "Media"], ["generate", `Generate${p.generated?.length ? ` (${p.generated.length})` : ""}`]]), ["posts", `Posts${p.posts?.length ? ` (${p.posts.length})` : ""}`], ["cost", `Cost · ${cash(p.quote.cost)}`]].map(([k, l]) => (
                 <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{l}</button>
               ))}
             </div>
@@ -250,9 +261,11 @@ export default function ProjectPage({ id }: { id: number }) {
           {publishing && <PublishModal p={p} onClose={() => setPublishing(false)} onQueued={() => { setPublishing(false); setTab("posts"); reload(); }} />}
         </div>
 
+        {post ? <PostSide p={p} onPublish={() => setPublishing(true)} postable={postable} /> : <>
         {!chatFull && <ChatResizer box={ws} width={chatW} onWidth={setChatW} />}
         <Chat p={p} events={events} qualities={meta?.qualities ?? []} full={chatFull} onFull={() => setChatFull(!chatFull)} viewing={current}
           onSend={(text, quality) => act("messages", { text, quality }).then(() => poll.current())} onStop={() => act("stop")} />
+        </>}
       </div>
     </div>
   );
@@ -499,6 +512,21 @@ function BriefCard({ p, meta, reload, onDelete }: { p: Project; meta?: Meta; rel
           <span className="small faint spacer">{meta?.qualities.find((q) => q.id === quality)?.note}</span>
           <button className="btn ghost danger sm" onClick={onDelete}><TrashIcon size={14} /> Delete project</button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Beside a post's preview, where the agent's chat would be: what happens next, and Publish. */
+function PostSide({ p, postable, onPublish }: { p: Project; postable: boolean; onPublish: () => void }) {
+  const sent = p.posts?.length ?? 0;
+  return (
+    <div className="card chat post-side">
+      <div className="card-h"><ShareNetworkIcon size={16} color="var(--primary)" /><h2 className="spacer">Post</h2></div>
+      <div className="stack" style={{ padding: 16, gap: 12 }}>
+        <p style={{ margin: 0 }}>{postable ? "Your file is ready. Pick the accounts, let the AI write a caption for each platform (it looks at the file), then post now or schedule it." : "The file is still uploading, or it isn't a video or photo."}</p>
+        <button className="btn primary" disabled={!postable} onClick={onPublish}><ShareNetworkIcon size={15} /> {sent ? "Post it again" : "Publish"}</button>
+        {sent > 0 && <p className="small muted" style={{ margin: 0 }}>{sent} post{sent === 1 ? "" : "s"} so far: see the Posts tab for each one's status and numbers.</p>}
       </div>
     </div>
   );

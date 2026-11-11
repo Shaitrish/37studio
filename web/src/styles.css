@@ -764,3 +764,9 @@ a.perf-title:hover { color: var(--primary); }
 .agent-type { flex: none; font-size: 10.5px; padding: 1px 5px; border-radius: 2px; background: var(--muted); color: var(--muted-fg); white-space: nowrap; }
 .agent-steps { display: flex; flex-direction: column; gap: 4px; padding: 0 10px 10px 36px; }
 .msg-agent.sub-text { font-size: 12.5px; color: var(--muted-fg); }
+/* ---- new post: the picked file before upload */
+.post-pick { display: flex; flex-direction: column; gap: 8px; }
+.post-pick video, .post-pick img { max-height: 280px; max-width: 100%; width: fit-content; border-radius: var(--radius-sm); background: var(--muted); }
+.post-pick .small { display: flex; align-items: center; gap: 6px; }
+.post-pick .small .btn { margin-left: auto; }
+.choice:disabled { opacity: 0.45; cursor: not-allowed; }

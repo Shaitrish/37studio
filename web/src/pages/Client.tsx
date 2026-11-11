@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { WarningIcon, CaretRightIcon, FilmSlateIcon, GlobeIcon, PencilSimpleIcon, PlusIcon, TrashIcon, UsersThreeIcon } from "@phosphor-icons/react";
+import { WarningIcon, CaretRightIcon, FilmSlateIcon, GlobeIcon, PencilSimpleIcon, PlusIcon, TrashIcon, UsersThreeIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react";
 import { api, Campaign, fail, go, Project, Tenant, toast, upload, useApi } from "../api";
 import { AssetEditor, Avatar, DropZone, Empty, FileTile, HelpButton, Md, Progress, Seg } from "../ui";
 import { ProjectTable } from "./Projects";
 import { NewProjectModal } from "./NewProject";
+import { NewPostModal } from "./NewPost";
 import { ScanModal, TenantModal } from "./Clients";
 import { CampaignGrid, CampaignModal } from "./Campaigns";
 import { SocialTab } from "./Social";
@@ -32,6 +33,7 @@ export default function ClientPage({ id, tab = "library" }: { id: number; tab?: 
   const setTab = (t: string) => { location.hash = `/clients/${id}/${t}`; };
   const [editing, setEditing] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [posting, setPosting] = useState(false);
   const [rescan, setRescan] = useState(false);
   const [newCampaign, setNewCampaign] = useState(false);
   const { data: campaigns } = useApi<Campaign[]>(`/campaigns?tenant=${id}`);
@@ -64,7 +66,8 @@ export default function ClientPage({ id, tab = "library" }: { id: number; tab?: 
           <HelpButton to={brandHelp[tab] ?? "add-a-brand"} />
           <button className="btn" disabled={scanning} onClick={() => setRescan(true)}><GlobeIcon size={14} /> {t.website || t.source ? "Re-scan" : "Scan website or folder"}</button>
           <button className="btn" onClick={() => setEditing(true)}><PencilSimpleIcon size={14} /> Edit</button>
-          <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New video</button>
+          <button className="btn" onClick={() => setPosting(true)}><PaperPlaneTiltIcon size={15} /> New post</button>
+        <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New video</button>
         </div>
       </div>
 
@@ -143,6 +146,7 @@ export default function ClientPage({ id, tab = "library" }: { id: number; tab?: 
       {rescan && <ScanModal tenant={t} onClose={() => setRescan(false)} onStarted={reload} />}
       {editing && <TenantModal tenant={t} onClose={() => setEditing(false)} onSaved={() => reload()} />}
       {creating && <NewProjectModal tenantId={id} onClose={() => setCreating(false)} />}
+      {posting && <NewPostModal onClose={() => setPosting(false)} tenantId={t.id} />}
     </div>
   );
 }

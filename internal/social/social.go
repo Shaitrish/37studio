@@ -372,7 +372,7 @@ func ListAccounts(r *http.Request) (any, error) {
 	if ownMetaApp() {
 		metaID, _ = metaApp()
 	}
-	return map[string]any{"accounts": accts, "ready": ready, "inbox_mode": mode, "replies": files.TenantDoc(httpapi.PathID(r), "replies.md"), "meta_app": metaID,
+	return map[string]any{"accounts": accts, "ready": ready, "no_images": noImages, "inbox_mode": mode, "replies": files.TenantDoc(httpapi.PathID(r), "replies.md"), "meta_app": metaID,
 		"redirect": config.PublicURL + "/api/oauth/{provider}/callback"}, err
 }
 
@@ -479,15 +479,23 @@ func MakeCaptions(id int64) (map[string]any, error) {
 	for _, n := range notes {
 		said = append(said, store.Str(n["body"]))
 	}
-	prompt := fmt.Sprintf(`Write social media post captions for a finished video by %s.
+	what, screen, look := "video", cmp.Or(onScreenText(id), "-"), []string(nil)
+	if store.Str(p["kind"]) == "post" { // a file from the user's computer: no composition or agent notes, so Claude looks at it
+		what, look = postLook(id)
+		screen = "Look at it before writing: read " + strings.Join(look, ", ") + " with the Read tool."
+		if what == "video" && len(look) > 0 {
+			screen = "Frames from the start, middle and end of the video: read " + strings.Join(look, ", ") + " with the Read tool before writing."
+		}
+	}
+	prompt := fmt.Sprintf(`Write social media post captions for a finished %s by %s.
 Language: %s (write every caption in this language; hashtags may mix in English).
-Video: %q, %v, about %v seconds. Brief: %s
+Title: %q, %v, about %v seconds. Brief: %s
 Focus: %s
 
 What is on screen:
 %s
 
-The editor agent's latest notes on the video:
+The editor agent's latest notes on it:
 %s
 
 About the client (use only these facts; never invent claims, prices or links):
@@ -495,9 +503,13 @@ About the client (use only these facts; never invent claims, prices or links):
 
 Hook the reader in the first line, keep it true to the video, end with the client's call to action if the knowledge base has one.
 Reply with only this JSON object, no code fence:
-%s`, p["tenant_name"], languageName(agent.ProjectLanguage(p)), p["title"], p["aspect"], p["seconds"], cmp.Or(store.Str(p["brief"]), "-"), cmp.Or(store.Str(p["focus"]), "-"),
-		cmp.Or(onScreenText(id), "-"), cmp.Or(textutil.Head(strings.Join(said, "\n---\n"), 3000), "-"), cmp.Or(textutil.Head(files.TenantDoc(tenant, "knowledge.md"), 5000), "-"), agent.CaptionSpec)
-	text, cost, tokens, err := claudeOnce(files.ProjectDir(id), prompt)
+%s`, what, p["tenant_name"], languageName(agent.ProjectLanguage(p)), p["title"], p["aspect"], p["seconds"], cmp.Or(store.Str(p["brief"]), "-"), cmp.Or(store.Str(p["focus"]), "-"),
+		screen, cmp.Or(textutil.Head(strings.Join(said, "\n---\n"), 3000), "-"), cmp.Or(textutil.Head(files.TenantDoc(tenant, "knowledge.md"), 5000), "-"), agent.CaptionSpec)
+	tools := ""
+	if len(look) > 0 {
+		tools = "Read"
+	}
+	text, cost, tokens, err := claudeOnce(files.ProjectDir(id), prompt, tools)
 	if err != nil {
 		return nil, err
 	}
@@ -513,12 +525,45 @@ Reply with only this JSON object, no code fence:
 	return caps, saveSocialCaptions(id, caps)
 }
 
-// claudeOnce runs one tool-less Claude turn (Sonnet, low effort) in dir and returns the text, its cost and token count.
-func claudeOnce(dir, prompt string) (text string, cost, tokens float64, err error) {
+// postLook is what Claude should look at to caption a post from the user's computer: the newest finished file in
+// out/ if it's an image, or three frames of it if it's a video. It returns "photo" or "video" and project-relative paths.
+func postLook(id int64) (string, []string) {
+	dir := files.ProjectDir(id)
+	var newest os.DirEntry
+	var at time.Time
+	entries, _ := os.ReadDir(filepath.Join(dir, "out"))
+	for _, e := range entries {
+		k := files.Kind(e.Name())
+		if i, err := e.Info(); err == nil && !e.IsDir() && (k == "image" || k == "video") && i.ModTime().After(at) {
+			newest, at = e, i.ModTime()
+		}
+	}
+	if newest == nil {
+		return "video", nil
+	}
+	rel := "out/" + newest.Name()
+	if files.Kind(rel) == "image" {
+		return "photo", []string{rel}
+	}
+	secs := files.MediaSeconds(filepath.Join(dir, rel))
+	var frames []string
+	for i, f := range []float64{0.1, 0.5, 0.9} {
+		name := fmt.Sprintf("work/look-%d.jpg", i+1)
+		if proc.Command("ffmpeg", "-y", "-loglevel", "error", "-ss", fmt.Sprintf("%.2f", secs*f), "-i", filepath.Join(dir, rel),
+			"-frames:v", "1", "-vf", "scale=720:-2", filepath.Join(dir, name)).Run() == nil {
+			frames = append(frames, name)
+		}
+	}
+	return "video", frames
+}
+
+// claudeOnce runs one Claude turn (Sonnet, low effort) in dir with no tools, or only the ones named (like "Read"),
+// and returns the text, its cost and token count.
+func claudeOnce(dir, prompt string, tools ...string) (text string, cost, tokens float64, err error) {
 	if err := keys.ClaudeReady(); err != nil {
 		return "", 0, 0, err
 	}
-	cmd := proc.Command(config.ClaudeBin, "-p", "--output-format", "json", "--model", agent.QualityByID("draft").Model, "--effort", "low", "--tools", "",
+	cmd := proc.Command(config.ClaudeBin, "-p", "--output-format", "json", "--model", agent.QualityByID("draft").Model, "--effort", "low", "--tools", strings.Join(tools, ","),
 		"--strict-mcp-config", "--settings", `{"disableAllHooks":true}`)
 	cmd.Dir = dir
 	cmd.Stdin = strings.NewReader(prompt)
@@ -573,8 +618,9 @@ func CreatePosts(r *http.Request) (any, error) {
 	if err := store.DB.QueryRow("select tenant_id from projects where id=?", id).Scan(&tenant); err != nil {
 		return nil, err
 	}
-	if !strings.HasPrefix(b.File, "out/") || files.Kind(b.File) != "video" {
-		return nil, httpapi.Bad("pick a final video from out/")
+	kind := files.Kind(b.File)
+	if !strings.HasPrefix(b.File, "out/") || (kind != "video" && kind != "image") {
+		return nil, httpapi.Bad("pick a finished video or image from out/")
 	}
 	if _, err := os.Stat(files.Within(files.ProjectDir(id), b.File)); err != nil {
 		return nil, httpapi.Bad("that video no longer exists")
@@ -595,6 +641,9 @@ func CreatePosts(r *http.Request) (any, error) {
 		var platform string
 		if store.DB.QueryRow("select platform from social_accounts where id=? and tenant_id=? and platform<>'whatsapp'", aid, tenant).Scan(&platform) != nil {
 			return nil, httpapi.Bad("an account is not connected to this client")
+		}
+		if ok, why := CanPostImage(platform); kind == "image" && !ok {
+			return nil, httpapi.Bad(why)
 		}
 		if platform == "youtube" && caption("youtube_title") == "" {
 			return nil, httpapi.Bad("YouTube needs a title")
@@ -695,13 +744,30 @@ func publish(p map[string]any) (remote, link string, err error) {
 	a["token"], a["refresh"] = keys.OpenText(store.Str(a["token"])), keys.OpenText(store.Str(a["refresh"]))
 	file := files.Within(files.ProjectDir(p["project_id"].(int64)), store.Str(p["file"]))
 	if _, err := os.Stat(file); err != nil {
-		return "", "", errors.New("the video file was deleted")
+		return "", "", errors.New("the file was deleted")
+	}
+	platform := store.Str(a["platform"])
+	if files.Kind(file) == "image" {
+		if ok, why := CanPostImage(platform); !ok {
+			return "", "", errors.New(why)
+		}
+		if imageType(file) == "" {
+			return "", "", errors.New("37Studio posts JPG, PNG, WebP and GIF images; save this one as JPG or PNG and post it again")
+		}
+		if slices.Contains(jpegFor[platform], strings.ToLower(filepath.Ext(file))) {
+			jpg, done, err := jpegCopy(file, 0)
+			if err != nil {
+				return "", "", fmt.Errorf("could not turn the image into the JPEG this platform's API needs (%v); save it as JPG or PNG and post it again", err)
+			}
+			defer done()
+			file = jpg
+		}
 	}
 	tok, err := accessToken(a)
 	if err != nil {
 		return "", "", fmt.Errorf("could not refresh the login (%v); connect the account again", err)
 	}
-	switch store.Str(a["platform"]) {
+	switch platform {
 	case "facebook":
 		return postFacebook(store.Str(a["account_id"]), tok, file, store.Str(p["caption"]))
 	case "instagram":
@@ -722,6 +788,48 @@ func publish(p map[string]any) (remote, link string, err error) {
 		return postMastodon(store.Str(a["refresh"]), tok, file, store.Str(p["caption"]))
 	}
 	return "", "", fmt.Errorf("unknown platform %v", a["platform"])
+}
+
+// noImages are the platforms whose APIs can't take an image from a local-first app, and why.
+var noImages = map[string]string{
+	"instagram": "Instagram's API only takes images from a public web address, and 37Studio keeps your files on your own computer. Post images to Instagram from its app.",
+	"tiktok":    "TikTok's API only takes photos from a public web address on a domain verified with TikTok, and 37Studio keeps your files on your own computer. Post photos to TikTok from its app.",
+	"youtube":   "YouTube's API takes videos only; it has no way to post an image.",
+}
+
+// CanPostImage says whether the publisher can post an image to a platform, and if not, why (the Publish dialog shows it).
+func CanPostImage(platform string) (bool, string) {
+	why := noImages[platform]
+	return why == "", why
+}
+
+// imageType is the MIME type of an image the publisher posts, or "" for one it doesn't.
+func imageType(file string) string {
+	return map[string]string{".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".gif": "image/gif"}[strings.ToLower(filepath.Ext(file))]
+}
+
+// jpegFor lists the image types a platform's API doesn't take, which go as a JPEG copy instead: Facebook, LinkedIn
+// and Pinterest don't list WebP, and Pinterest takes only JPG and PNG (a GIF goes as its first frame).
+var jpegFor = map[string][]string{"facebook": {".webp"}, "linkedin": {".webp"}, "pinterest": {".webp", ".gif"}}
+
+// jpegCopy writes the image as a temporary JPEG, no more than maxSide pixels on its longer side when maxSide > 0.
+// done removes it.
+func jpegCopy(file string, maxSide int) (path string, done func(), err error) {
+	dir, err := os.MkdirTemp("", "37studio-image-")
+	if err != nil {
+		return "", nil, err
+	}
+	done = func() { os.RemoveAll(dir) }
+	path = filepath.Join(dir, strings.TrimSuffix(filepath.Base(file), filepath.Ext(file))+".jpg")
+	args := []string{"-v", "error", "-y", "-i", file, "-frames:v", "1", "-q:v", "3"}
+	if maxSide > 0 {
+		args = append(args, "-vf", fmt.Sprintf("scale=%d:%d:force_original_aspect_ratio=decrease", maxSide, maxSide))
+	}
+	if out, err := proc.Command("ffmpeg", append(args, path)...).CombinedOutput(); err != nil {
+		done()
+		return "", nil, fmt.Errorf("%v %s", err, strings.TrimSpace(string(out)))
+	}
+	return path, done, nil
 }
 
 // accessToken returns a usable token: Meta Page tokens never expire; the others trade the stored refresh token.
@@ -771,6 +879,9 @@ func accessToken(a map[string]any) (string, error) {
 }
 
 func postFacebook(page, tok, file, caption string) (string, string, error) {
+	if files.Kind(file) == "image" {
+		return facebookPhoto(page, tok, file, caption)
+	}
 	w, h := files.VideoSize(file)
 	if sec := files.MediaSeconds(file); h <= w || sec < 3 || sec > 90 {
 		return facebookVideo(page, tok, file, caption) // Reels must be vertical and 3-90 s; anything else posts as a regular Page video
@@ -802,6 +913,22 @@ func facebookVideo(page, tok, file, caption string) (string, string, error) {
 	}
 	err = remote.CallWith(remote.Uploads, req, &res)
 	return res.ID, "https://www.facebook.com/" + page + "/videos/" + res.ID, err
+}
+
+// facebookPhoto publishes a photo post on the Page.
+func facebookPhoto(page, tok, file, caption string) (string, string, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return "", "", err
+	}
+	defer f.Close()
+	req := remote.Multipart(graph("/"+page+"/photos", nil), map[string]string{"message": caption, "published": "true"}, "source", filepath.Base(file), f, "Bearer "+tok)
+	var res struct {
+		ID     string `json:"id"`
+		PostID string `json:"post_id"`
+	}
+	err = remote.CallWith(remote.Uploads, req, &res)
+	return res.ID, "https://www.facebook.com/" + cmp.Or(res.PostID, res.ID), err
 }
 
 func postInstagram(ig, tok, file, caption string) (string, string, error) {

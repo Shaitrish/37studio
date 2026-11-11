@@ -351,6 +351,19 @@ Follow it on the project's **Posts** tab, which has each upload's status and a l
 
 Scheduled posts go out only while 37Studio is running. A post more than 12 hours late shows as **Failed** with the note "Missed" instead of going out late, and **Retry** posts it now.
 
+## Post from your computer
+
+Post a video or photo you already have, made in another app or on your phone, without the agent.
+
+1. Click **New post** on the Overview, Projects or a brand's page.
+2. Pick the brand and drop the video or photo in. Add a line about what it is, if you like: it helps the captions.
+3. Click **Next**. The file uploads and **Publish** opens.
+4. Pick the accounts, click **Write with AI** (it looks at the photo, or at frames from the video), then post now or schedule it.
+
+The post shows in **Projects** like a video, with its **Posts** tab and numbers.
+
+Photos post to Facebook Pages, X, LinkedIn, Pinterest, Bluesky and Mastodon. Instagram and TikTok only take photos from a public web address, which a copy on your computer doesn't have, and YouTube takes no photos, so those accounts can't be picked for a photo. Videos go to every platform.
+
 ## Autopilot
 
 Autopilot makes a fresh video before each time slot. The agent picks a topic from your brief and knowledge base, builds and checks the video, renders it and writes the captions.

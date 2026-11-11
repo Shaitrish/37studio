@@ -50,7 +50,7 @@ const tiktokPrivacy = [
   ["", "Choose who can see it"], ["PUBLIC_TO_EVERYONE", "Everyone"], ["FOLLOWER_OF_CREATOR", "Followers"],
   ["MUTUAL_FOLLOW_FRIENDS", "Friends"], ["SELF_ONLY", "Only me"], ["INBOX", "Send to the TikTok app"],
 ];
-interface SocialInfo { accounts: SocialAccount[]; ready: Record<string, boolean>; inbox_mode: string; replies: string; redirect: string; meta_app: string }
+interface SocialInfo { accounts: SocialAccount[]; ready: Record<string, boolean>; inbox_mode: string; replies: string; redirect: string; meta_app: string; no_images?: Record<string, string> }
 type Candidate = Pick<SocialAccount, "platform" | "account_id" | "name" | "picture">;
 
 function AccountLabel({ a }: { a: Pick<SocialAccount, "platform" | "name" | "picture"> }) {
@@ -300,16 +300,21 @@ function PickAccounts({ k, onDone }: { k: string; onDone: () => void }) {
 
 /** Project → Publish: one video, any mix of the brand's accounts, a caption per platform, now or scheduled. */
 export function PublishModal({ p, onClose, onQueued }: { p: Project; onClose: () => void; onQueued: () => void }) {
-  const videos = (p.outputs ?? []).filter((f) => f.kind === "video");
+  const media = (p.outputs ?? []).filter((f) => f.kind === "video" || f.kind === "image");
   const { data } = useApi<SocialInfo>(`/tenants/${p.tenant_id}/social`);
-  const [file, setFile] = useState(videos[0]?.path ?? "");
-  const [picked, setPicked] = useState<Set<number>>(new Set());
+  const [file, setFile] = useState(media[0]?.path ?? "");
+  const [pickedAll, setPicked] = useState<Set<number>>(new Set());
+  // Some platforms can't take an image from a copy on your computer (social.CanPostImage): those accounts can't be picked.
+  const image = media.find((f) => f.path === file)?.kind === "image";
+  const refuse = (a: SocialAccount) => (image ? data?.no_images?.[a.platform] : undefined);
   const [caps, setCaps] = useState<Captions>(p.social ?? {});
   const [privacy, setPrivacy] = useState({ youtube: "public", tiktok: "" });
   const [when, setWhen] = useState<"now" | "later">("now");
   const [at, setAt] = useState("");
   const [busy, setBusy] = useState("");
   const accounts = (data?.accounts ?? []).filter((a) => a.platform !== "whatsapp");
+  const allowed = accounts.filter((a) => !refuse(a));
+  const picked = new Set([...pickedAll].filter((id) => allowed.some((a) => a.id === id)));
   const chosen = accounts.filter((a) => picked.has(a.id));
   const plats = (Object.keys(platforms) as Platform[]).filter((pl) => chosen.some((a) => a.platform === pl));
   const toggle = (id: number) => setPicked((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -341,17 +346,17 @@ export function PublishModal({ p, onClose, onQueued }: { p: Project; onClose: ()
         </button>
       </>}>
       <div className="stack" style={{ gap: 18 }}>
-        <Field label="Video">
+        <Field label={media.length > 1 ? "File" : image ? "Photo" : "Video"}>
           <select className="select" value={file} onChange={(e) => setFile(e.target.value)}>
-            {videos.map((v) => <option key={v.path} value={v.path}>{v.name}</option>)}
+            {media.map((v) => <option key={v.path} value={v.path}>{v.name}{v.kind === "image" ? " (photo)" : ""}</option>)}
           </select>
         </Field>
 
         <div className="stack" style={{ gap: 8 }}>
           <span className="row" style={{ fontSize: 13, fontWeight: 500 }}>
             <span className="spacer">Accounts</span>
-            {accounts.length > 1 && <button className="btn ghost sm" onClick={() => setPicked(picked.size === accounts.length ? new Set() : new Set(accounts.map((a) => a.id)))}>
-              {picked.size === accounts.length ? "Clear" : "Select all"}
+            {allowed.length > 1 && <button className="btn ghost sm" onClick={() => setPicked(picked.size === allowed.length ? new Set() : new Set(allowed.map((a) => a.id)))}>
+              {picked.size === allowed.length ? "Clear" : "Select all"}
             </button>}
           </span>
           {data && !accounts.length ? (
@@ -359,11 +364,15 @@ export function PublishModal({ p, onClose, onQueued }: { p: Project; onClose: ()
           ) : (
             <div className="choices">
               {accounts.map((a) => (
-                <button key={a.id} type="button" className={`choice ${picked.has(a.id) ? "on" : ""}`} aria-pressed={picked.has(a.id)} onClick={() => toggle(a.id)}>
+                <button key={a.id} type="button" className={`choice ${picked.has(a.id) ? "on" : ""}`} aria-pressed={picked.has(a.id)} onClick={() => toggle(a.id)}
+                  disabled={!!refuse(a)} title={refuse(a)}>
                   <AccountLabel a={a} />
                 </button>
               ))}
             </div>
+          )}
+          {image && accounts.some(refuse) && (
+            <p className="small faint" style={{ margin: 0 }}>Greyed-out accounts can't take a photo from 37Studio: {[...new Set(accounts.filter(refuse).map((a) => platforms[a.platform as Platform]?.label ?? a.platform))].join(", ")}. Hover over one to see why.</p>
           )}
         </div>
 

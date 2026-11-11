@@ -4,6 +4,10 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 
 ## [Unreleased]
 
+### Added
+- **New post**: post a video or photo from your computer to the brand's accounts, without the agent. Click **New post** on the Overview, Projects or a brand's page, drop the file in, and **Write with AI** writes a caption for each platform after looking at the photo or at frames from the video. Post now or schedule it; it shows in Projects with its Posts tab and numbers.
+- **Photos on social media**: Publish can post a photo (JPG, PNG, WebP or GIF) to Facebook Pages, X, LinkedIn, Pinterest, Bluesky and Mastodon. Instagram and TikTok only take photos from a public web address and YouTube takes no photos, so Publish greys those accounts out and says why.
+
 ## [0.12.1] - 2026-11-11
 
 ### Changed

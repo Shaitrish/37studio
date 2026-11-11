@@ -3,6 +3,7 @@ package project
 import (
 	"fmt"
 	"io/fs"
+	"math"
 	"net/http"
 	"os"
 	"path"
@@ -133,6 +134,37 @@ func Delete(r *http.Request) (any, error) {
 
 func UploadInputs(r *http.Request) (any, error) {
 	return files.SaveUploads(r, filepath.Join(files.ProjectDir(httpapi.PathID(r)), "input"))
+}
+
+// UploadOutputs puts a finished file straight into out/: a video or image made elsewhere, to publish from 37Studio.
+// A post project takes its format and length from the file, so captions and Publish describe it right.
+func UploadOutputs(r *http.Request) (any, error) {
+	id := httpapi.PathID(r)
+	out := filepath.Join(files.ProjectDir(id), "out")
+	saved, err := files.SaveUploads(r, out)
+	names, _ := saved.([]string)
+	if err != nil || len(names) == 0 {
+		return saved, err
+	}
+	f := filepath.Join(out, names[len(names)-1])
+	if w, h := files.VideoSize(f); w > 0 && h > 0 {
+		store.DB.Exec("update projects set aspect=?, seconds=?, status='review' where id=? and kind='post'", Aspect(w, h), int(files.MediaSeconds(f)+0.5), id)
+	}
+	return saved, nil
+}
+
+// Aspect names a frame size the way projects do: 9:16, 16:9, 1:1 or 4:5, whichever is closest.
+func Aspect(w, h int) string {
+	best, diff := "16:9", 9.0
+	for _, a := range []struct {
+		name string
+		r    float64
+	}{{"9:16", 9.0 / 16}, {"16:9", 16.0 / 9}, {"1:1", 1}, {"4:5", 4.0 / 5}} {
+		if d := math.Abs(float64(w)/float64(h) - a.r); d < diff {
+			best, diff = a.name, d
+		}
+	}
+	return best
 }
 
 // UploadAttachments stores images pasted into the agent chat; messages reference them as [image: chat/<file>].

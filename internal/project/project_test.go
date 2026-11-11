@@ -91,3 +91,14 @@ func TestStorageAndCleanup(t *testing.T) {
 		t.Fatal("days 0 should be refused")
 	}
 }
+
+func TestAspect(t *testing.T) {
+	for _, c := range []struct {
+		w, h int
+		want string
+	}{{1080, 1920, "9:16"}, {1920, 1080, "16:9"}, {1080, 1080, "1:1"}, {1080, 1350, "4:5"}, {720, 1280, "9:16"}, {3024, 4032, "4:5"}} {
+		if got := Aspect(c.w, c.h); got != c.want {
+			t.Errorf("Aspect(%d, %d) = %s, want %s", c.w, c.h, got, c.want)
+		}
+	}
+}
