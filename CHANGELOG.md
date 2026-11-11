@@ -4,6 +4,8 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-11
+
 ### Added
 - **New post**: post a video or photo from your computer to the brand's accounts, without the agent. Click **New post** on the Overview, Projects or a brand's page, drop the file in, and **Write with AI** writes a caption for each platform after looking at the photo or at frames from the video. Post now or schedule it; it shows in Projects with its Posts tab and numbers.
 - **Make other sizes**: turn one final video into a 9:16 reel for TikTok, Instagram and Shorts, a 16:9 video for Facebook and YouTube, or 4:5 and 1:1, with the arrows icon on it under the preview. **Fit** keeps the whole picture over a blurred fill, **Crop** fills the frame, and **Ask the agent** lays it out again. Publish then sends each platform its best size, and you can change any of them.
