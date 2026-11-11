@@ -76,10 +76,6 @@ The launcher and the cloud file use the `latest` image, so a restart can update 
 
 To build the image from your own checkout on the server, clone the repo and replace the `image:` line in `docker-compose.cloud.yml` with `build: .`.
 
-### One-click deploy
-
-[![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/37Studio/)
-
 ## Configuration
 
 Settings are environment variables: in `.env` when running from source, under `environment:` in the launcher's `docker-compose.yml`, or in `.env` next to `docker-compose.cloud.yml`. Variables marked **Keys** can also be entered in the app under Settings → AI services or Settings → Social apps, where they are encrypted at rest. AI model IDs and unit prices, the per-turn budget, the voice, and the display currency (USD by default) and its exchange rate are under Settings too.

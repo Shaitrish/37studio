@@ -14,6 +14,7 @@ Videos made, posted and answered, with your own keys and no monthly bill.</p>
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-d4502a" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/runs%20on-Windows%20%C2%B7%20Linux%20%C2%B7%20macOS%20%C2%B7%20server-555" alt="Windows, Linux, macOS, server">
+  <a href="https://skillsllm.com/skill/37studio"><img src="https://skillsllm.com/badges/security.svg?slug=37studio" alt="SkillsLLM Automated Security Scan"></a>
 </p>
 
 [![37Studio at work, sped up: a brand's library, a brief to the editor agent, the agent building the video, the preview, publishing and the results](https://studio.shaitrish.com/demo.gif)](https://studio.shaitrish.com/#demo)
@@ -38,7 +39,11 @@ npm install -g @anthropic-ai/claude-code    # Node.js 22+; on Linux with sudo
 
 [docs/desktop.md](docs/desktop.md) covers other Linux, the .zip, building it yourself and troubleshooting.
 
-**Docker (macOS, or a server).** Every tool comes bundled. On your computer, install Docker Desktop, unzip [37studio.zip](https://studio.shaitrish.com/37studio.zip) and double-click `start.bat`, `start.command` or `start.sh`. For a team, or replies and Autopilot around the clock, run it on a Linux server with HTTPS and a password, or deploy it in one click on [RepoCloud](https://repocloud.io/details/37Studio/). [docs/docker.md](docs/docker.md) has both, plus building from source and every setting.
+**Docker (macOS, or a server).** Every tool comes bundled. On your computer, install Docker Desktop, unzip [37studio.zip](https://studio.shaitrish.com/37studio.zip) and double-click `start.bat`, `start.command` or `start.sh`. For a team, or replies and Autopilot around the clock, run it on a Linux server with HTTPS and a password. [docs/docker.md](docs/docker.md) has both, plus building from source and every setting.
+
+## One-Click Deploy
+
+[![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/37Studio/)
 
 ## First steps
 
