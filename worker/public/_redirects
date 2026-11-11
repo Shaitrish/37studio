@@ -1,6 +1,6 @@
-/download/windows       /download/37studio-0.12.1-windows-amd64-setup.exe 302
-/download/windows-zip   /download/37studio-0.12.1-windows-amd64.zip 302
-/download/linux         /download/37studio_0.12.1_amd64.deb 302
-/download/linux-arm     /download/37studio_0.12.1_arm64.deb 302
-/download/linux-tar     /download/37studio-0.12.1-linux-amd64.tar.gz 302
-/download/linux-arm-tar /download/37studio-0.12.1-linux-arm64.tar.gz 302
+/download/windows       /download/37studio-0.13.0-windows-amd64-setup.exe 302
+/download/windows-zip   /download/37studio-0.13.0-windows-amd64.zip 302
+/download/linux         /download/37studio_0.13.0_amd64.deb 302
+/download/linux-arm     /download/37studio_0.13.0_arm64.deb 302
+/download/linux-tar     /download/37studio-0.13.0-linux-amd64.tar.gz 302
+/download/linux-arm-tar /download/37studio-0.13.0-linux-arm64.tar.gz 302
