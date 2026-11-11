@@ -4,6 +4,8 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-11-11
+
 ### Changed
 - **The message box works like Claude Code's**, in the editor agent's and the Assistant's chat: the microphone sits in its corner with a বাং / EN switch, **+** attaches screenshots, **/** opens quick actions, and the row below shows how many subagents are working, the model and its effort, the files going with your message, and how long the agent has been at it.
 - The version you picked under the preview goes with your message, so "make this one shorter" means that file. Click × on it to leave it out.
