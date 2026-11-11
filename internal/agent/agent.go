@@ -463,7 +463,7 @@ func setStatus(pid int64, s string) { store.DB.Exec("update projects set status=
 
 // safeTools is the `safe` allowlist: the commands the prompts use, and no general-purpose runner (bare npx, python3,
 // node) that would run any code. It narrows what the agent does by accident; it is not a security boundary, since
-// ffmpeg and WebFetch can still reach the network. The container is the boundary (README → Agent permissions).
+// ffmpeg and WebFetch can still reach the network. The container is the boundary (docs/docker.md → From source).
 var safeTools = []string{
 	"Read", "Edit", "Write", "Glob", "Grep", "Skill", "TodoWrite", "WebFetch", "WebSearch",
 	"Bash(ffmpeg:*)", "Bash(ffprobe:*)", "Bash(npx hyperframes *)", "Bash(npx hyperframes@*)", "Bash(npx -y hyperframes@*)",

@@ -21,8 +21,8 @@ web/                 React + Vite + TypeScript UI (pages/, ui.tsx, api.ts, style
 worker/              Cloudflare Worker: the static product website (public/)
 relay/               optional WhatsApp webhook relay users deploy themselves (Cloudflare Worker + D1)
 dist/                the launcher bundle people download (docker-compose.yml, start.bat/.command/.sh)
-desktop/             desktop build, local install and packaging scripts, Linux (.sh) and Windows (.ps1) (CI: .github/workflows/desktop.yml)
-docs/                guide.md (user guide, shown in the app as Guide), platforms.md (per-platform setup), desktop.md, architecture.md
+desktop/             desktop build, local install, packaging scripts and the Windows installer (installer.nsi), Linux (.sh) and Windows (.ps1) (CI: .github/workflows/desktop.yml)
+docs/                guide.md (user guide, shown in the app as Guide), platforms.md (per-platform setup), desktop.md, docker.md (Docker, servers, settings), architecture.md
 ```
 
 ## Commands
@@ -61,7 +61,7 @@ node --check relay/src.js                        # WhatsApp relay syntax
 - Logic that can break quietly gets a small test next to it (`*_test.go`). Platform APIs are tested against an `httptest` server, never the real thing.
 - UI text and error messages say what happened and what to do next, in plain words. Costs are recorded in USD and shown in the user's currency.
 - Keep it local-first: no telemetry, no accounts, and nothing that sends user data anywhere new. Footage and messages stay on the user's machine.
-- When setup, configuration or a screen changes, update `docs/guide.md` (the in-app Guide: one line per list item, `##` for each section), `README.md`, `docs/platforms.md` or `docs/architecture.md`.
+- When setup, configuration or a screen changes, update `docs/guide.md` (the in-app Guide: one line per list item, `##` for each section), `README.md` (kept short: one image, install, links out), `docs/desktop.md`, `docs/docker.md`, `docs/platforms.md` or `docs/architecture.md`.
 - Add a line to `CHANGELOG.md` under Unreleased for anything a user would notice, in the same plain words as the UI.
 
 ## Product rules
@@ -73,4 +73,4 @@ node --check relay/src.js                        # WhatsApp relay syntax
 
 ## Releasing (maintainers)
 
-Bump `Version` in `internal/update/update.go` and move `CHANGELOG.md`'s Unreleased entries under a `## [X.Y.Z] - date` heading, then run `./release.sh "What changed"`. It pushes the multi-arch image to ghcr.io, zips `dist/` into the website's download, deploys the website Worker and tags the commit `vX.Y.Z` with a GitHub Release, which every copy's update check reads; publishing it makes CI build the Linux and Windows desktop packages and attach them. Never commit `data/`, `.env` or any backup of them.
+Bump `Version` in `internal/update/update.go` and move `CHANGELOG.md`'s Unreleased entries under a `## [X.Y.Z] - date` heading, then run `./release.sh "What changed"`. It pushes the multi-arch image to ghcr.io, zips `dist/` into the website's download and tags the commit `vX.Y.Z` with a GitHub Release, which every copy's update check reads; publishing it makes CI build the Linux and Windows desktop packages (the Windows installer from `desktop/installer.nsi`) and attach them. Then `worker/deploy.sh` waits for those, puts them on the website behind `/download/windows`, `/download/linux` and the rest, and deploys the website Worker; rerun it by hand if it stopped. Never commit `data/`, `.env` or any backup of them.

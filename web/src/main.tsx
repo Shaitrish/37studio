@@ -1,11 +1,11 @@
 import { lazy as lazyPage, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  BookOpenIcon, ChartLineUpIcon, ChartPieSliceIcon, ChatCircleDotsIcon, ChatsCircleIcon, FilmSlateIcon, FilmStripIcon, GearSixIcon, HeartIcon, IconContext, MegaphoneIcon, MonitorIcon, MoonIcon, SidebarSimpleIcon,
+  ArrowCircleUpIcon, BookOpenIcon, ChartLineUpIcon, ChartPieSliceIcon, ChatCircleDotsIcon, ChatsCircleIcon, FilmSlateIcon, FilmStripIcon, GearSixIcon, HeartIcon, IconContext, MegaphoneIcon, MonitorIcon, MoonIcon, SidebarSimpleIcon,
   SquaresFourIcon, SunIcon, TagIcon,
 } from "@phosphor-icons/react";
 import "./styles.css";
-import { api, desktop, donateURL, go, makerURL, type Meta, openExternal, pref, repoURL, saveFile, setDesktop, setDisplay, setHelp, setNudge, setToast, snoozeNudge, useApi } from "./api";
+import { api, desktop, donateURL, go, makerURL, type Meta, openExternal, pref, repoURL, saveFile, setDesktop, setReveal, setDisplay, setHelp, setNudge, setToast, snoozeNudge, toast as notify, useApi } from "./api";
 import { Mark, Modal } from "./ui";
 // Each page loads when first opened, so the first screen doesn't wait for the project editor and its video player.
 // After an update the old page's files are gone from the server, so a tab left open reloads once to get the new ones.
@@ -135,7 +135,18 @@ function App() {
     addEventListener("keydown", onKey);
     return () => removeEventListener("keydown", onKey);
   }, []);
-  const { data: upd } = useApi<{ current?: string; newer?: boolean; latest?: string }>("/update");
+  const { data: upd, reload: recheck } = useApi<{ current?: string; newer?: boolean; latest?: string }>("/update");
+  // The desktop app stays open for days, so look again now and then (the server asks GitHub at most every 6 hours).
+  useEffect(() => {
+    const t = setInterval(() => { if (!document.hidden) recheck(); }, 3 * 3600_000);
+    return () => clearInterval(t);
+  }, [recheck]);
+  // Say it once per version when it's first seen, so nobody has to notice the sidebar line.
+  useEffect(() => {
+    if (!upd?.newer || !upd.latest || pref("update-seen") === upd.latest) return;
+    pref("update-seen", upd.latest);
+    notify(`37Studio ${upd.latest} is out. Settings → About says how to update.`);
+  }, [upd?.newer, upd?.latest]);
   const ThemeIcon = themeIcon[theme];
   const nextTheme = themes[(themes.indexOf(theme) + 1) % themes.length];
 
@@ -171,7 +182,9 @@ function App() {
             <a href={donateURL} target="_blank" rel="noreferrer" title={collapsed ? "Donate" : "37Studio is free; donations keep it going"}>
               <HeartIcon size={18} /> <span className="nav-label">Donate</span>
             </a>
-            {upd?.newer && <a className="who" href="#/settings/about" style={{ color: "var(--primary)" }}>Version {upd.latest} available</a>}
+            {upd?.newer && <a className="update-link" href="#/settings/about" title={`Version ${upd.latest} is available: see how to update`}>
+              <ArrowCircleUpIcon size={18} weight="duotone" /> <span className="nav-label">Update to {upd.latest}</span>
+            </a>}
             <a className="who" href={repoURL} target="_blank" rel="noreferrer">37Studio {upd?.current} · open source</a>
             <a className="who" href={makerURL} target="_blank" rel="noreferrer">Made by Shaitrish</a>
           </div>
@@ -206,5 +219,5 @@ document.addEventListener("click", (e) => {
 // Display currency must be known before the first money value renders; whether this is the desktop app, before the first click.
 Promise.all([
   api<Record<string, string>>("/settings").then(setDisplay, () => {}),
-  api<Meta>("/meta").then((m) => setDesktop(!!m.env.desktop), () => {}),
+  api<Meta>("/meta").then((m) => { setDesktop(!!m.env.desktop); setReveal(!!m.env.reveal); }, () => {}),
 ]).finally(() => { createRoot(document.getElementById("root")!).render(<App />); prefetchPages(); });

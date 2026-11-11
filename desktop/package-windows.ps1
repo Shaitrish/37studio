@@ -1,6 +1,6 @@
-# Packages the desktop app for this machine's architecture into desktop\dist: a .zip holding the program, its icon
-# and the Start-menu installer, plus a SHA-256 file. CI runs it on every pull request and attaches the files to each
-# GitHub release (.github/workflows/desktop.yml). The PowerShell twin of package-linux.sh.
+# Packages the desktop app for this machine's architecture into desktop\dist: a setup .exe (installer.nsi), a .zip
+# holding the program, its icon and install-windows.ps1 for people who'd rather not run an installer, and a SHA-256
+# file. CI runs it on every pull request and attaches the files to each GitHub release (.github/workflows/desktop.yml). The PowerShell twin of package-linux.sh.
 #   Usage: powershell -ExecutionPolicy Bypass -File desktop\package-windows.ps1 [version]
 param([string]$Version)
 $ErrorActionPreference = "Stop"
@@ -30,6 +30,14 @@ try {
 } finally {
   Remove-Item -Recurse -Force $stage -ErrorAction SilentlyContinue
 }
+
+# The installer most people download: the same program, installed with Start-menu and desktop shortcuts and an
+# entry under Settings → Apps. NSIS is preinstalled on GitHub's Windows runners; elsewhere: winget install NSIS.NSIS
+$makensis = (Get-Command makensis -ErrorAction SilentlyContinue).Source
+if (-not $makensis) { $makensis = Join-Path ${env:ProgramFiles(x86)} "NSIS\makensis.exe" }
+if (-not (Test-Path $makensis)) { throw "NSIS isn't installed, so the installer can't be built: winget install NSIS.NSIS" }
+& $makensis /V2 "/DVERSION=$Version" "/DARCH=$arch" "/DOUT=dist\37studio-$Version-windows-$arch-setup.exe" desktop\installer.nsi
+if ($LASTEXITCODE) { throw "makensis failed" }
 
 # sha256sum's own format, so `sha256sum -c` checks it the way the Linux files are checked.
 $sums = Get-ChildItem $out -Filter "37studio-*" | ForEach-Object {

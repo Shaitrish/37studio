@@ -61,7 +61,7 @@ Fork the repo, make your change on a branch, and open a pull request against `ma
 - **Keep it local-first.** 37Studio runs on people's own computers and servers with their own keys. Changes shouldn't send their data anywhere new, add accounts or telemetry, or need a hosted service.
 - **Test what can break.** Logic with branches (parsers, schedulers, cost maths, anything touching tokens or files) gets a small test next to it, like the existing `*_test.go` files. Platform calls are tested against an `httptest` stand-in, never the real API.
 - **Write for the person using it.** UI text and error messages say what happened and what to do next, in plain words.
-- **Update the docs** when you change how something is set up or configured: the [README](README.md), [docs/platforms.md](docs/platforms.md) or [docs/architecture.md](docs/architecture.md).
+- **Update the docs** when you change how something is set up or configured: the [README](README.md) (keep it short), [docs/docker.md](docs/docker.md), [docs/desktop.md](docs/desktop.md), [docs/platforms.md](docs/platforms.md) or [docs/architecture.md](docs/architecture.md).
 
 ## Adding a social platform
 
@@ -74,7 +74,7 @@ Each platform follows the same pattern; LinkedIn, X and Pinterest (OAuth) and Bl
 4. **Posting.** A `case` in `publish()` that calls your `postXxx(…)`. It uploads the file and returns the platform's post ID, a link to the post, and an error. Use `call`/`callWith`, so the platform's own error message shows on the Posts tab, and stream the file instead of reading it into memory (`upClient` has no timeout, for slow uplinks).
 5. **Captions.** Add the platform's key (and a title key, if it needs one) to `socialSpec`, with a one-line style hint that Claude follows.
 6. **UI.** In `web/src/pages/Social.tsx`, add the platform to `platforms` (label, Phosphor icon, caption length limit) and its Connect button: `providers` for OAuth, or `pasted` (the form's fields) for app-password platforms.
-7. **Docs.** The README's platforms table, Social publishing table and configuration table, and a section in `docs/platforms.md` with the developer-app steps, scopes and redirect URI.
+7. **Docs.** The README's platforms table, the configuration table in `docs/docker.md`, and a section in `docs/platforms.md` with the developer-app steps, scopes and redirect URI.
 8. **A test.** At least the parts that can break quietly: request shape and error handling against an `httptest` server, and any text escaping the platform needs (see `platforms_test.go`).
 
 ## Adding a generation provider

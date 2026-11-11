@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpIcon, ChatCircleDotsIcon, MicrophoneIcon, MicrophoneSlashIcon, PlusIcon, SquareIcon } from "@phosphor-icons/react";
 import { api, ChatEvent, fail, Meta, useApi } from "../api";
 import { Empty, HelpButton, ModelOptions } from "../ui";
-import { Feed, liveStatus, modelName, parse, Parsed, useDictation } from "../chat";
+import { Feed, liveStatus, modelName, parse, Parsed, useDictation, usePromptHistory } from "../chat";
 
 interface AssistantState { events: ChatEvent[]; running: boolean; started: boolean }
 
@@ -24,6 +24,7 @@ export default function Assistant() {
   const { data: meta } = useApi<Meta>("/meta");
   const [quality, setQuality] = useState("draft");
   const mic = useDictation("en", (said) => setText((t) => (t ? t.trimEnd() + " " : "") + said));
+  const history = usePromptHistory(events, setText);
   const feed = useRef<HTMLDivElement>(null);
   const last = events[events.length - 1]?.id ?? 0;
 
@@ -90,6 +91,7 @@ export default function Assistant() {
               placeholder={mic.listening ? "Listening…" : running ? "Wait for the reply, or stop it…" : "Ask the assistant…"} aria-label="Message the assistant"
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => {
+                if (!mic.listening) history(e);
                 if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); mic.stop(); send(); }
                 if (e.key === "Escape" && running) stop();
               }} />

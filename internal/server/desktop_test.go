@@ -72,3 +72,39 @@ func TestDesktopSave(t *testing.T) {
 		t.Fatal("cancelled save wrote a file")
 	}
 }
+
+// Reveal shows only this app's own files, and only to a browser on this computer.
+func TestDesktopReveal(t *testing.T) {
+	dir := t.TempDir()
+	data := config.DataDir
+	config.DataDir = dir
+	t.Setenv("DISPLAY", ":0")
+	var shown []string
+	reveal = func(p string) error { shown = append(shown, p); return nil }
+	t.Cleanup(func() { config.DataDir, reveal = data, showInFolder })
+	os.MkdirAll(filepath.Join(dir, "projects", "1", "out"), 0o755)
+	os.WriteFile(filepath.Join(dir, "projects", "1", "out", "my reel.mp4"), nil, 0o644)
+	os.WriteFile(filepath.Join(dir, "keys.db"), nil, 0o644)
+
+	req := func(path string, local bool) *http.Request {
+		r := post(`{"path":"` + path + `"}`)
+		if local {
+			r.RemoteAddr = "127.0.0.1:5000"
+		}
+		return r
+	}
+	if _, err := desktopReveal(req("/files/projects/1/out/my%20reel.mp4", false)); err == nil {
+		t.Error("revealed for a browser on another computer")
+	}
+	for _, p := range []string{"/files/projects/../keys.db", "/files/projects/%2e%2e/keys.db", "/api/keys", "/files/projects/1/out/gone.mp4"} {
+		if _, err := desktopReveal(req(p, true)); err == nil {
+			t.Errorf("%s revealed", p)
+		}
+	}
+	if _, err := desktopReveal(req("/files/projects/1/out/my%20reel.mp4", true)); err != nil {
+		t.Fatal(err)
+	}
+	if len(shown) != 1 || shown[0] != filepath.Join(dir, "projects", "1", "out", "my reel.mp4") {
+		t.Fatalf("shown %v", shown)
+	}
+}

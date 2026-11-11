@@ -206,6 +206,11 @@ export let desktop = false;
 export const setDesktop = (v: boolean) => { desktop = v; };
 export const openExternal = (url: string) =>
   api("/desktop/open", { body: { url: new URL(url, location.href).href } }).catch(fail);
+// Whether files can be shown in this computer's file manager: the desktop app, or the server run on this computer.
+export let canReveal = false;
+export const setReveal = (v: boolean) => { canReveal = v; };
+export const showInFolder = (href: string) =>
+  api("/desktop/reveal", { body: { path: new URL(href, location.href).pathname } }).catch(fail);
 export function saveFile(href: string, name?: string) {
   const u = new URL(href, location.href);
   api<{ saved: string }>("/desktop/save", { body: { path: u.pathname + u.search, name } })

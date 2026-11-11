@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Publish a release to everyone: build and push the Docker image, bundle the launcher, deploy the website on
-# studio.shaitrish.com, and create the GitHub release that copies' update check reads.
+# Publish a release to everyone: build and push the Docker image, bundle the launcher, create the GitHub release that
+# copies' update check reads, and deploy the website on studio.shaitrish.com with the desktop files CI builds for it.
 # Bump `Version` in internal/update/update.go and give CHANGELOG.md a `## [X.Y.Z]` section first.   Usage: ./release.sh "What changed"
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -20,7 +20,8 @@ python3 - "$V" "${1:-}" <<'PY'
 import json, sys
 json.dump({"version": sys.argv[1], "notes": sys.argv[2], "url": "https://studio.shaitrish.com/"}, open("worker/public/version.json", "w"))
 PY
-(cd worker && npx -y wrangler deploy)
 git tag -a "v$V" -m "37Studio $V${1:+: $1}" && git push origin "v$V"
 gh release create "v$V" --verify-tag --title "37Studio $V" --notes "${1:-}"
 echo "Released 37Studio $V as $IMAGE:$V"
+# Last, because the website hosts the desktop files, which CI builds once the release is published.
+worker/deploy.sh "$V"

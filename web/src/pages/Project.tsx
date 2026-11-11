@@ -1,9 +1,9 @@
 import "@hyperframes/player";
 import { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode, RefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowsInLineHorizontalIcon, ArrowsOutLineHorizontalIcon, ArrowUpIcon, BookmarkSimpleIcon, CheckCircleIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FilmStripIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MicrophoneSlashIcon, MusicNotesIcon, SpeakerHighIcon, ImageIcon, PlayIcon, PauseIcon, PaperclipIcon, SlidersHorizontalIcon, SparkleIcon, SquareIcon, TrashIcon, MagicWandIcon, XIcon } from "@phosphor-icons/react";
+import { ArrowsInLineHorizontalIcon, ArrowsOutLineHorizontalIcon, ArrowUpIcon, BookmarkSimpleIcon, CheckCircleIcon, FolderOpenIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FilmStripIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MicrophoneSlashIcon, MusicNotesIcon, SpeakerHighIcon, ImageIcon, PlayIcon, PauseIcon, PaperclipIcon, SlidersHorizontalIcon, SparkleIcon, SquareIcon, TrashIcon, MagicWandIcon, XIcon } from "@phosphor-icons/react";
 import { Quality } from "../api";
-import { api, bytes, ChatEvent, clock, desktop, fail, FileInfo, go, languageName, Meta, nudge, openExternal, pref, Project, toast, upload, cash, useApi } from "../api";
-import { Feed, liveStatus, modelName, parse, Parsed, useDictation } from "../chat";
+import { api, bytes, canReveal, ChatEvent, clock, desktop, fail, FileInfo, go, languageName, Meta, nudge, openExternal, pref, Project, showInFolder, toast, upload, cash, useApi } from "../api";
+import { Feed, liveStatus, modelName, parse, Parsed, useDictation, usePromptHistory } from "../chat";
 import { DropZone, Empty, HelpButton, Md, FileTile, KindIcon, ModelOptions, ModelPicker, Progress, Seg, Status, projectStatus } from "../ui";
 import { presetIcon } from "./Projects";
 import { PostsCard, PublishModal } from "./Social";
@@ -324,7 +324,7 @@ function EditorSkeleton({ chatW, chatFull }: { chatW: number; chatFull: boolean 
         <div className="card chat">
           <div className="card-h"><SparkleIcon size={16} color="var(--primary)" /><h2 className="spacer">Editor agent</h2></div>
           <div className="feed">
-            {bar("62%", 36, { alignSelf: "flex-end" })}
+            {bar("100%", 36)}
             {bar("90%", 12)}{bar("80%", 12)}{bar("55%", 12)}
             {bar("100%", 30)}
           </div>
@@ -354,8 +354,9 @@ function Versions({ p, finals, drafts, current, onPick, onDeleteFinal, onDeleteD
         <span className="ellipsis">{f.name}</span>
       </button>
       <span className="vacts">
+        {canReveal && <button onClick={() => showInFolder(f.url)} title="Show in folder" aria-label={`Show ${f.name} in its folder`}><FolderOpenIcon size={13} /></button>}
         <a href={f.url} download={f.name} title="Download" aria-label={`Download ${f.name}`}><DownloadSimpleIcon size={13} /></a>
-        <button onClick={() => onDelete(f)} title="Delete" aria-label={`Delete ${f.name}`}><TrashIcon size={13} /></button>
+        <button className="del" onClick={() => onDelete(f)} title="Delete" aria-label={`Delete ${f.name}`}><TrashIcon size={13} /></button>
       </span>
     </div>
   );
@@ -542,6 +543,7 @@ function Chat({ p, events, qualities, onSend, onStop, full, onFull }: {
   };
   const live = useMemo(() => (p.running ? liveStatus(events) : undefined), [events, p.running]);
   const mic = useDictation(p.language || "en", (said) => setText((t) => (t ? t.trimEnd() + " " : "") + said));
+  const history = usePromptHistory(events, setText);
 
   return (
     <div className="card chat">
@@ -594,6 +596,7 @@ function Chat({ p, events, qualities, onSend, onStop, full, onFull }: {
               onChange={(e) => setText(e.target.value)}
               onPaste={(e) => { if (e.clipboardData.files.length) { e.preventDefault(); attach(e.clipboardData.files); } }}
               onKeyDown={(e) => {
+                if (!mic.listening) history(e);
                 if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); mic.stop(); send(); }
                 if (e.key === "Escape" && p.running) onStop(); // like Claude Code: Esc interrupts
               }}

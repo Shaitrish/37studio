@@ -5,9 +5,10 @@ brands, projects, agent and publishing, served to a native window instead of a b
 
 **Status: preview, Linux and Windows.** From 0.9.0 on, each
 [release](https://github.com/Shaitrish/37studio/releases) has a .deb for Ubuntu 24.04+ and Debian 13+ and a plain
-program for other Linux, for Intel/AMD (`amd64`) and ARM (`arm64`) computers, and a .zip for Windows 10 and 11 on
-Intel/AMD. A Mac build and automatic setup of the video tools come later; until then, the
-[ready-made Docker app](../README.md#on-your-computer-the-ready-made-app) is the way to run 37Studio on a Mac.
+program for other Linux, for Intel/AMD (`amd64`) and ARM (`arm64`) computers, and an installer (plus a .zip) for
+Windows 10 and 11 on Intel/AMD. The website's Download buttons fetch them directly:
+[studio.shaitrish.com/desktop](https://studio.shaitrish.com/desktop). A Mac build and automatic setup of the video tools come later; until then, the
+[ready-made Docker app](docker.md#on-your-computer-the-ready-made-app) is the way to run 37Studio on a Mac.
 
 ## Install from a release (Ubuntu and Debian)
 
@@ -34,14 +35,12 @@ Keep the program's name `37studio`. Each release's `.sha256` file has the checks
 
 Windows 10 or 11 on an Intel or AMD computer. The window is drawn by WebView2, which both already have.
 
-1. On the [latest release](https://github.com/Shaitrish/37studio/releases/latest), download
-   `37studio-<version>-windows-amd64.zip`.
-2. Right-click it → **Properties** → tick **Unblock** → **OK**, then unpack it. Windows marks downloaded files, and
-   refuses to run what it marked.
-3. In the unpacked folder, right-click `install-windows.ps1` → **Run with PowerShell**. It copies the app to
-   `%LOCALAPPDATA%\Programs\37Studio` and adds it to the Start menu: no admin rights, nothing for other users.
-   From a terminal instead: `powershell -ExecutionPolicy Bypass -File .\install-windows.ps1`
-4. Install the tools the agent uses, which Windows comes with none of (see *What you need*):
+1. Download the installer, [studio.shaitrish.com/download/windows](https://studio.shaitrish.com/download/windows)
+   (`37studio-<version>-windows-amd64-setup.exe` on the [release](https://github.com/Shaitrish/37studio/releases/latest)).
+2. Open it. It installs the app to `%LOCALAPPDATA%\Programs\37Studio` with a Start-menu and a desktop shortcut and
+   an entry under Settings → Apps: no admin rights, nothing for other users. It isn't signed yet, so Windows may
+   say *Windows protected your PC*: click **More info** → **Run anyway**.
+3. Install the tools the agent uses, which Windows comes with none of (see *What you need*):
 
    ```powershell
    winget install Git.Git Gyan.FFmpeg OpenJS.NodeJS.LTS Python.Python.3.13
@@ -50,14 +49,17 @@ Windows 10 or 11 on an Intel or AMD computer. The window is drawn by WebView2, w
 
    Open a new terminal afterwards, so it picks up the changed PATH. Git is there for its bash: Claude Code runs
    the agent's commands through it on Windows, so without Git the agent fails on its first step.
-5. Press the Windows key, type **37Studio** and open it. Overview → **Finish setup** lists anything still missing,
+4. Press the Windows key, type **37Studio** and open it. Overview → **Finish setup** lists anything still missing,
    with the command to install it and a **Check again** button.
 
-You can also just run `37studio.exe` from the unpacked folder, without installing it. Keep the program's name
-`37studio.exe`: the agent runs `37studio gen|clip|transcribe` from the folder it sits in.
+Without an installer: download `37studio-<version>-windows-amd64.zip`, right-click it → **Properties** → tick
+**Unblock**, unpack it and run `37studio.exe`, or right-click `install-windows.ps1` → **Run with PowerShell** for a
+Start-menu entry. Keep the program's name `37studio.exe`: the agent runs `37studio gen|clip|transcribe` from the
+folder it sits in.
 
-To update, unpack the next release and run `install-windows.ps1` again with 37Studio closed; Settings → About says
-when one is out. To remove the app, `.\install-windows.ps1 -Uninstall`; your work stays in `%AppData%\37Studio`.
+To update, close 37Studio and run the next release's installer; 37Studio says when one is out. To remove it,
+Settings → Apps → Installed apps → 37Studio → **Uninstall** (or `.\install-windows.ps1 -Uninstall` if you used the
+.zip); your work stays in `%AppData%\37Studio`.
 
 Each release's `.sha256` file has the checksum to compare against:
 
@@ -239,7 +241,7 @@ $env:STUDIO37_DATA = "C:\path\to\37Studio\data"; & "$env:LOCALAPPDATA\Programs\3
 - **Links, the timeline editor and social sign-ins open in your normal browser.** After a sign-in, the browser tab
   says to go back, and 37Studio shows the account picker by itself. Downloads and backups open a Save dialog.
 - **Port 8080.** The app uses `http://localhost:8080` when it's free, the address you register with each platform
-  ([Social publishing](../README.md#social-publishing)). If the Docker version is running, it holds 8080 and the
+  ([Connecting social platforms](platforms.md)). If the Docker version is running, it holds 8080 and the
   desktop app picks another port, so social sign-ins won't work until you stop Docker.
 - **Closing the window quits the app.** Autopilot, scheduled posts and auto-replies only run while it's open.
 - **One copy at a time.** Opening it again brings the open window to the front.
@@ -278,7 +280,7 @@ it as `powershell -ExecutionPolicy Bypass -File .\install-windows.ps1`, which al
 nothing else.
 
 **Windows: *Windows protected your PC*, or the app won't start after downloading.** The program isn't signed yet.
-Click **More info** → **Run anyway**, and tick **Unblock** in the .zip's Properties before unpacking it.
+Click **More info** → **Run anyway**. With the .zip, also tick **Unblock** in its Properties before unpacking it.
 
 **Windows: the agent stops on its first command, or every Bash step fails.** Git for Windows isn't installed.
 Claude Code runs the agent's commands through its bash, and looks for it where Git installs itself rather than on

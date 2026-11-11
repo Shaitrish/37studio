@@ -49,7 +49,7 @@
     <span class="eyebrow">Desktop app · preview</span>
     <h1 style="margin-top:14px">37Studio in its own window</h1>
     <p class="lead">The same studio as the Docker version, as a normal app on Windows and Linux: the same brands, projects, agent and publishing, with no Docker to install. It's a preview, so tell us on <a href="https://github.com/Shaitrish/37studio/issues">GitHub</a> what breaks.</p>
-    <p class="dl-ver muted" id="ver">Files from the <a href="https://github.com/Shaitrish/37studio/releases/latest">latest release</a> on GitHub.</p>
+    <p class="dl-ver muted" id="ver">The latest version, straight from this site. Every release is also on <a href="https://github.com/Shaitrish/37studio/releases/latest">GitHub</a>.</p>
   </div>
 </section>
 
@@ -69,9 +69,10 @@
       <div class="dl-card" data-for="win">
         <svg class="ic"><use href="#i-pc"/></svg>
         <b>Windows</b>
-        <span>Windows 10 and 11, Intel or AMD. A .zip with the app and a Start-menu installer.</span>
+        <span>Windows 10 and 11, Intel or AMD. An installer: no admin rights, Start menu and desktop shortcuts.</span>
         <div class="dl-btns">
-          <a class="btn sm ink" data-asset="windows-amd64\.zip$" href="https://github.com/Shaitrish/37studio/releases/latest"><svg><use href="#i-down"/></svg>Windows (.zip)</a>
+          <a class="btn sm ink" href="/download/windows" download><svg><use href="#i-down"/></svg>Windows installer</a>
+          <a class="btn sm" href="/download/windows-zip" download><svg><use href="#i-down"/></svg>.zip, no installer</a>
         </div>
       </div>
       <div class="dl-card" data-for="linux">
@@ -79,8 +80,8 @@
         <b>Ubuntu and Debian</b>
         <span>Ubuntu 24.04 or newer, Debian 13 or newer. Installs ffmpeg and Python with it.</span>
         <div class="dl-btns">
-          <a class="btn sm ink" data-asset="_amd64\.deb$" href="https://github.com/Shaitrish/37studio/releases/latest"><svg><use href="#i-down"/></svg>.deb, Intel/AMD</a>
-          <a class="btn sm" data-asset="_arm64\.deb$" href="https://github.com/Shaitrish/37studio/releases/latest"><svg><use href="#i-down"/></svg>.deb, ARM</a>
+          <a class="btn sm ink" href="/download/linux" download><svg><use href="#i-down"/></svg>.deb, Intel/AMD</a>
+          <a class="btn sm" href="/download/linux-arm" download><svg><use href="#i-down"/></svg>.deb, ARM</a>
         </div>
       </div>
       <div class="dl-card" data-for="linux">
@@ -88,8 +89,8 @@
         <b>Other Linux</b>
         <span>Fedora, Arch and the rest: the bare program. Needs GTK 4 and WebKitGTK 6.0.</span>
         <div class="dl-btns">
-          <a class="btn sm" data-asset="linux-amd64\.tar\.gz$" href="https://github.com/Shaitrish/37studio/releases/latest"><svg><use href="#i-down"/></svg>.tar.gz, Intel/AMD</a>
-          <a class="btn sm" data-asset="linux-arm64\.tar\.gz$" href="https://github.com/Shaitrish/37studio/releases/latest"><svg><use href="#i-down"/></svg>.tar.gz, ARM</a>
+          <a class="btn sm" href="/download/linux-tar" download><svg><use href="#i-down"/></svg>.tar.gz, Intel/AMD</a>
+          <a class="btn sm" href="/download/linux-arm-tar" download><svg><use href="#i-down"/></svg>.tar.gz, ARM</a>
         </div>
       </div>
     </div>
@@ -104,14 +105,12 @@
     </div>
     <div data-os-panel="win">
       <ol>
-        <li>Download the Windows .zip above.</li>
-        <li>Right-click it → <b>Properties</b> → tick <b>Unblock</b> → <b>OK</b>, then unpack it. Windows marks downloaded files and refuses to run what it marked.</li>
-        <li>In the unpacked folder, right-click <code>install-windows.ps1</code> → <b>Run with PowerShell</b>. It copies 37Studio to <code>%LOCALAPPDATA%\Programs\37Studio</code> and adds it to the Start menu. No admin rights needed.</li>
+        <li>Download the <a href="/download/windows">Windows installer</a> and open it. It installs 37Studio to <code>%LOCALAPPDATA%\Programs\37Studio</code> with a Start-menu and a desktop shortcut. No admin rights needed.</li>
         <li>Install <a href="#tools">the tools the agent uses</a>.</li>
         <li>Press the Windows key, type <b>37Studio</b> and open it. Overview → <b>Finish setup</b> lists anything still missing.</li>
       </ol>
-      <div class="note"><b>"Windows protected your PC"?</b> The app isn't signed yet, so the first start may show this. Click <b>More info</b> → <b>Run anyway</b>. Signing comes with the first release out of preview.</div>
-      <p>From a terminal instead of right-clicking: <code>powershell -ExecutionPolicy Bypass -File .\install-windows.ps1</code>. You can also run <code>37studio.exe</code> straight from the unpacked folder; keep its name, because the agent runs <code>37studio</code> commands from that folder.</p>
+      <div class="note"><b>"Windows protected your PC"?</b> The installer isn't signed yet, so Windows may show this when you open it. Click <b>More info</b> → <b>Run anyway</b>. Signing comes with the first release out of preview.</div>
+      <p>Rather not run an installer? Download the <a href="/download/windows-zip">.zip</a>, right-click it → <b>Properties</b> → tick <b>Unblock</b>, unpack it and run <code>37studio.exe</code>, or <code>install-windows.ps1</code> for a Start-menu entry. Keep the name <code>37studio.exe</code>: the agent runs <code>37studio</code> commands from that folder.</p>
     </div>
     <div data-os-panel="deb" hidden>
       <ol>
@@ -166,8 +165,8 @@ sudo npm install -g @anthropic-ai/claude-code</pre>
 
     <h2 id="update">Updates and removing</h2>
     <ul>
-      <li><b>Updates:</b> Settings → About says when a new version is out. Download it from this page and install it the same way. On Windows, close 37Studio first, then run <code>install-windows.ps1</code> again.</li>
-      <li><b>Remove on Windows:</b> <code>.\install-windows.ps1 -Uninstall</code>. Your work in <code>%AppData%\37Studio</code> stays.</li>
+      <li><b>Updates:</b> 37Studio says when a new version is out. Download it from this page and install it over the old one: on Windows, close 37Studio and run the new installer.</li>
+      <li><b>Remove on Windows:</b> Settings → Apps → Installed apps → 37Studio → <b>Uninstall</b> (with the .zip: <code>.\install-windows.ps1 -Uninstall</code>). Your work in <code>%AppData%\37Studio</code> stays.</li>
       <li><b>Remove on Ubuntu or Debian:</b> <code>sudo apt remove 37studio</code>. Your work in <code>~/.local/share/37studio</code> stays.</li>
     </ul>
 
@@ -223,20 +222,9 @@ sudo apparmor_parser -r /etc/apparmor.d/37studio</pre>
   mine.forEach((c) => c.classList.add("mine"));
   if (guess === "mac") document.getElementById("mac-note").classList.add("mine");
 
-  // Point each button at the file in the latest release. Without this (offline, or GitHub's 60-calls-an-hour limit)
-  // the buttons keep opening the release page, which lists the same files. Right after a release the desktop files
-  // take about 15 minutes to build, so a file that isn't there yet also keeps the release-page link.
-  fetch("https://api.github.com/repos/Shaitrish/37studio/releases/latest").then((r) => r.ok ? r.json() : null).then((rel) => {
-    if (!rel) return;
-    const find = (re) => rel.assets.find((a) => new RegExp(re).test(a.name));
-    document.querySelectorAll("[data-asset]").forEach((a) => {
-      const f = find(a.dataset.asset);
-      if (f) { a.href = f.browser_download_url; a.title = f.name; }
-    });
-    // A release whose desktop files aren't built yet (or one from before 0.9.0) mustn't be named as the download.
-    if (!document.querySelector('[data-asset][href*="/download/"]')) return;
-    const v = rel.tag_name.replace(/^v/, "");
-    document.getElementById("ver").innerHTML = `Version ${v}, from the <a href="${rel.html_url}">release on GitHub</a>.`;
+  // The buttons are fixed links (worker/deploy.sh points them at the current files); this only names the version.
+  fetch("/version.json").then((r) => r.ok ? r.json() : null).then((v) => {
+    if (v && v.version) document.getElementById("ver").innerHTML = `Version ${v.version}, straight from this site. Every release is also on <a href="https://github.com/Shaitrish/37studio/releases">GitHub</a>.`;
   }).catch(() => {});
 </script>
 </body>

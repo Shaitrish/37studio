@@ -5,13 +5,17 @@ import (
 	"encoding/json"
 	"io"
 	"mime"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/Shaitrish/37studio/internal/config"
+	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/httpapi"
 )
 
@@ -84,4 +88,45 @@ func desktopSave(r *http.Request) (any, error) {
 		return nil, err
 	}
 	return map[string]string{"saved": dest}, f.Close()
+}
+
+// canReveal says whether a file can be shown in this computer's file manager for the person making r. Only when
+// 37Studio runs on the computer they're looking at: the desktop app, or the server started on it. Not in Docker or
+// on a headless server, which have no screen, and not for a browser on another machine, which would see nothing
+// while a window opened on the server's screen.
+func canReveal(r *http.Request) bool {
+	host, _, _ := net.SplitHostPort(r.RemoteAddr)
+	if ip := net.ParseIP(host); ip == nil || !ip.IsLoopback() {
+		return false
+	}
+	return runtime.GOOS != "linux" || os.Getenv("DISPLAY") != "" || os.Getenv("WAYLAND_DISPLAY") != ""
+}
+
+// reveal is showInFolder, swapped out by the test so it doesn't open windows.
+var reveal = showInFolder
+
+// desktopReveal is POST /api/desktop/reveal {path}: it opens the folder holding one of this app's files (path is its
+// /files/ URL) in the file manager, with the file selected. No MCP tool, like open and save.
+func desktopReveal(r *http.Request) (any, error) {
+	if !canReveal(r) {
+		return nil, httpapi.Bad("showing a file in its folder only works when 37Studio runs on this computer, not in Docker or on a server: download it instead")
+	}
+	var b struct{ Path string }
+	if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
+		return nil, err
+	}
+	rel, ok := strings.CutPrefix(b.Path, "/files/")
+	rel, err := url.PathUnescape(rel)
+	rel = path.Clean("/" + rel) // checked after cleaning, so projects/../keys can't step out
+	if !ok || err != nil || !(strings.HasPrefix(rel, "/projects/") || strings.HasPrefix(rel, "/tenants/") || strings.HasPrefix(rel, "/templates/")) {
+		return nil, httpapi.Bad("only this app's files can be shown")
+	}
+	p, err := filepath.Abs(files.Within(config.DataDir, rel))
+	if err != nil {
+		return nil, err
+	}
+	if _, err := os.Stat(p); err != nil {
+		return nil, httpapi.Bad("that file isn't there any more")
+	}
+	return nil, reveal(p)
 }

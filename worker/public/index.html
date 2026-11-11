@@ -85,7 +85,7 @@
       <h1 style="margin-top:18px">Videos made, posted and <span class="u">answered.</span></h1>
       <p class="lead">Turn a short brief into on-brand videos and posts, publish them everywhere and answer every message, on your own computer or server.</p>
       <div class="ctas">
-        <a class="btn ink" href="#download"><svg><use href="#i-down"/></svg>Download for Windows, Mac &amp; Linux</a>
+        <a class="btn ink" href="#download" data-dl><svg><use href="#i-down"/></svg><span>Download for Windows, Mac &amp; Linux</span></a>
         <a class="btn" href="https://github.com/Shaitrish/37studio" aria-label="Star 37Studio on GitHub"><svg><use href="#i-star"/></svg>GitHub<span class="stars" hidden></span></a>
       </div>
       <p class="hero-alt"><b>New:</b> <a href="/desktop">desktop app for Windows and Linux</a>, no Docker (preview)</p>
@@ -124,6 +124,24 @@
         <button class="sound" type="button" aria-label="Turn sound on" data-video="reel"><svg><use href="#i-mute"/></svg></button>
         <div class="tag" aria-hidden="true"><b>Made in 37Studio</b><em>BCS Mate app guide, Bangla voiceover</em></div>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="s demo" id="demo">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="eyebrow">See it work</span>
+      <h2>From a brief to a posted video, in 30 seconds</h2>
+      <p class="lead">The real app, sped up: a brand's library, a request to the editor agent, the agent building and checking the video, the preview, one click to four platforms, and how every video did.</p>
+    </div>
+    <div class="frame rv demo-video">
+      <div class="bar"><i></i><i></i><i></i><span>localhost:8080</span></div>
+      <!-- The README shows the same clip as demo.gif; the maintainer's rebuild script is in the promo folder. -->
+      <video poster="/demo-poster.jpg" width="1280" height="720" autoplay muted loop playsinline preload="metadata"
+        aria-label="37Studio at work, sped up: a brand's library, a request to the editor agent, the agent building and checking the video, the preview, publishing to four platforms and the Performance page">
+        <source src="/demo.webm" type="video/webm"><source src="/demo.mp4" type="video/mp4">
+      </video>
     </div>
   </div>
 </section>
@@ -434,12 +452,13 @@
         </div>
         <ol class="wsteps">
           <li><b>Download the app</b>for Windows or Linux</li>
-          <li><b>Install it</b>Start-menu installer or a .deb</li>
+          <li><b>Install it</b>Windows installer or a .deb</li>
           <li><b>Install the tools it lists</b>Claude Code, ffmpeg, Node.js, Python</li>
           <li><b>Add your Claude key</b>then your first brand</li>
         </ol>
         <div class="way-foot">
-          <a class="btn ink" href="/desktop"><svg><use href="#i-down"/></svg>Get the desktop app</a>
+          <a class="btn ink" href="/desktop" data-dl><svg><use href="#i-down"/></svg><span>Get the desktop app</span></a>
+          <a class="btn" href="/desktop">All downloads</a>
           <span class="req-chips"><span>No Docker</span><span>Mac coming later</span></span>
         </div>
       </article>
@@ -466,7 +485,7 @@
         </div>
       </article>
     </div>
-    <p class="muted dl-note">Running it around the clock? Use the <a href="https://github.com/Shaitrish/37studio#run-it-in-the-cloud">cloud guide</a>: one compose file with HTTPS and a password. Developer? Clone the repo and run <code>docker compose up --build</code>.</p>
+    <p class="muted dl-note">Running it around the clock? Use the <a href="https://github.com/Shaitrish/37studio/blob/main/docs/docker.md#run-it-on-a-server">cloud guide</a>: one compose file with HTTPS and a password. Developer? Clone the repo and run <code>docker compose up --build</code>.</p>
   </div>
 </section>
 
@@ -477,7 +496,7 @@
       <details class="rv"><summary>Is 37Studio free?</summary><p>Yes. It's free and open source under the MIT License: no trial, no license key and no paid tier. AI usage is separate and billed to your own Claude plan or Anthropic, Google and ElevenLabs accounts. If you'd rather have someone set it up for you, <a href="https://wa.me/8801635191148?text=Hi%2C%20I%27d%20like%20help%20setting%20up%2037Studio" target="_blank" rel="noopener">message us</a>.</p></details>
       <details class="rv"><summary>Can I contribute?</summary><p>Please do. The code is on <a href="https://github.com/Shaitrish/37studio">GitHub</a>: report bugs and ask for features in Issues, and send pull requests. The README explains how to run it from source.</p></details>
       <details class="rv"><summary>Can I control how the AI replies?</summary><p>Yes, per brand. Choose off, drafts for approval or replies on their own; write rules for tone, sign-off, what never to promise and when to hand over to a person; and keep the knowledge base it answers from up to date. Facts only ever come from that knowledge base.</p></details>
-      <details class="rv"><summary>Do I need a server?</summary><p>No. Everything runs on your own Windows PC, Mac or Linux machine, inside Docker or, on Windows and Linux, as the <a href="/desktop">desktop app</a>. If you want replies and Autopilot running around the clock, you can also run it on your own Linux server with HTTPS and a password; the <a href="https://github.com/Shaitrish/37studio#run-it-in-the-cloud">cloud guide</a> shows how. The only things that leave your computer are calls to the AI providers and the social platforms you connect.</p></details>
+      <details class="rv"><summary>Do I need a server?</summary><p>No. Everything runs on your own Windows PC, Mac or Linux machine, inside Docker or, on Windows and Linux, as the <a href="/desktop">desktop app</a>. If you want replies and Autopilot running around the clock, you can also run it on your own Linux server with HTTPS and a password; the <a href="https://github.com/Shaitrish/37studio/blob/main/docs/docker.md#run-it-on-a-server">cloud guide</a> shows how. The only things that leave your computer are calls to the AI providers and the social platforms you connect.</p></details>
       <details class="rv"><summary>What happens when my computer is off?</summary><p>Nothing is lost. Messenger and Instagram keep messages on Meta, and Meta retries WhatsApp messages for a while (a relay of your own keeps them 7 days). When 37Studio starts again it answers everything the platform still allows a reply to: messages from the last 24 hours and comments up to two days old. For round-the-clock replies, keep it on a computer that doesn't sleep, such as a Mac mini, or run it on a server.</p></details>
       <details class="rv"><summary>Can I use my Claude subscription instead of an API key?</summary><p>Yes. Run <code>claude setup-token</code> in Claude Code on your computer and paste the token in Settings → AI services; the agent then works within your Pro or Max plan. Anthropic's terms govern using a subscription in other apps, so an Anthropic API key is the fully supported route.</p></details>
       <details class="rv"><summary>Can I use my Runway, Kling or other video subscription?</summary><p>Not directly. Monthly plans for video tools such as Runway, Kling or Google AI Pro work only on their own websites; using a model from another app needs a separate API key that's billed on its own. Make the clip on their site, then upload it to a project or paste a Google Drive link, and the agent edits it like any other footage. For clips generated inside 37Studio, add a Gemini key. More video models are on our list.</p></details>
@@ -533,6 +552,22 @@
   <p></p>
 </dialog>
 
+<script>
+  // Download buttons fetch the desktop app for this computer at once (worker/deploy.sh keeps /download/* current).
+  // A Mac, a phone or an unknown system keeps the link to the Download section, where the Docker app is.
+  (() => {
+    const ua = navigator.userAgent;
+    const win = /Windows/.test(ua), linux = /Linux|X11/.test(ua) && !/Android|CrOS/.test(ua);
+    if (!win && !linux) return;
+    const arm = /aarch64|arm64|armv8/i.test(ua);
+    const [href, label] = win ? ["/download/windows", "Download for Windows"] : [arm ? "/download/linux-arm" : "/download/linux", "Download for Linux (.deb)"];
+    document.querySelectorAll("a[data-dl]").forEach((a) => {
+      a.href = href;
+      a.setAttribute("download", "");
+      a.querySelector("span").textContent = label;
+    });
+  })();
+</script>
 <script>
   // Sticky nav border once scrolled.
   const nav = document.querySelector("header.nav");

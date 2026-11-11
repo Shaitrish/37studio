@@ -4,9 +4,24 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-11
+
+### Added
+- **Windows installer**: download one setup file, open it and 37Studio is installed with Start-menu and desktop shortcuts, no admin rights needed. It shows under Settings → Apps with Uninstall, and running a newer one updates it. The .zip is still there for those who prefer it.
+- **Download straight from the website**: the Download buttons on studio.shaitrish.com now download the app for your computer at once (the Windows installer or the Linux .deb) instead of opening GitHub.
+- **Chat like Claude Code**: in the editor agent and Assistant chats, press Up for the messages you sent before and Down to come back to what you were typing. Each step reads as one "● Tool(what)" row, with an error the agent got back shown under it.
+- **Copy your messages**: hover over one of your messages, or the agent's reply, and click the copy button. Selected text in your own messages now shows as selected, too.
+- **Show in folder**: a folder button on each video in the versions row opens its folder on your computer with the video selected, on Linux, Windows and macOS. It shows in the desktop app and when 37Studio runs on this computer without Docker.
+- **Website and README**: a 30-second, sped-up look at the real app, from a brand's library to a posted video and its numbers. The README is much shorter, with the Docker and server setup moved to its own page.
+
+### Fixed
+- **New version notice**: when an update is out, the sidebar shows **Update to …** with an icon (also with the sidebar collapsed), you get a one-time message when you open 37Studio, and a window left open for days checks again. On Windows, Settings → About now points to the Windows installer, not the Linux .deb.
+
 ## [0.11.0] - 2026-11-07
 
 ### Added
+- **Subagents in the chat**: when the editor agent splits work into helpers that run at the same time, each one shows as its own row, with what it's doing now, its steps and when it's done. The agent now uses them for work that doesn't depend on each other.
+- **Chat width**: drag the gap between the preview and the chat to make the chat wider or narrower (double-click resets it), or widen it to the whole page with the button beside **Editor agent**. 37Studio remembers your choice.
 - **Connected folder** on a brand: a folder on your computer the agent reads live and can't change, with nothing copied. It can't read `.env` files, keys or raw databases there.
 - **Databases the agent may query**: read-only queries on the SQLite files you list in that folder, through the new `37studio sql` command.
 - **Performance** in the sidebar: views, how much of each video people watched, average watch time, likes, comments, shares, saves and engagement for every video on your Facebook Pages, Instagram, YouTube and TikTok, sortable, with the most and least viewed on top. 37Studio reads them every 6 hours, or when you click **Refresh**. Each needs one more permission; see the Guide.
@@ -17,9 +32,14 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 - **Strategy** for each brand on the Performance page: Claude turns the numbers into lessons on request, you can edit it, and the editor agent follows it in every new video and adds notes with `37studio strategy add`.
 
 ### Changed
+- Opening a project shows its layout at once while it loads, instead of a blank page.
+- Projects and the Library open several times faster the first time after a restart, and pages you've already visited open instantly.
+- The project page checks for new messages less often while the agent is idle, and not at all while the window is hidden, so 37Studio uses less of your computer.
 - TikTok's **Send to TikTok drafts** is now **Send to the TikTok app**: the video arrives as a notification in the TikTok phone app's Inbox (it never showed under Drafts in TikTok Studio on the web).
 
 ### Fixed
+- **Inbox**: the post above a comment no longer gets cut off halfway through a line. It shows three lines, with **Show more** for the rest.
+- A brand's website scan no longer leaves its steps in the Assistant's chat.
 - **Inbox**: a Facebook or Instagram message older than 24 hours now says so above Send, and if Facebook refuses it you get a plain explanation instead of its error code: answer it from Meta Business Suite (7 days), or from 37Studio once Meta approves your app's Human Agent permission.
 - When Instagram's API refuses a Reel (since October 2026 it does this to many longer than about 40 seconds), the post now says so and what to do: post that one from the Instagram app, or cut it under 40 seconds.
 

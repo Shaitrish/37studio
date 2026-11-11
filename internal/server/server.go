@@ -166,6 +166,7 @@ func Routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/backup", store.Backup) // a zip download, not JSON; no MCP tool, since an agent has nowhere to keep it
 	mux.HandleFunc("POST /api/desktop/open", httpapi.JSON(desktopOpen))
 	mux.HandleFunc("POST /api/desktop/save", httpapi.JSON(desktopSave))
+	mux.HandleFunc("POST /api/desktop/reveal", httpapi.JSON(desktopReveal))
 	mux.HandleFunc("GET /api/templates", httpapi.JSON(templates.List))
 	mux.HandleFunc("DELETE /api/templates/{id}", httpapi.JSON(templates.Delete))
 	mux.HandleFunc("POST /api/projects/{id}/template", httpapi.JSON(templates.Save))
@@ -259,6 +260,7 @@ func getMeta(r *http.Request) (any, error) {
 			"bypass":       config.Env("STUDIO37_AGENT_PERMISSIONS", "") == "bypass",
 			"password":     config.Env("STUDIO37_PASSWORD", "") != "",
 			"desktop":      Desktop.OpenURL != nil,
+			"reveal":       canReveal(r), // files can be shown in this computer's file manager
 		},
 	}, nil
 }

@@ -65,6 +65,7 @@
   .stage { position: relative; padding-right: 0; }
   @media (min-width: 640px) { .stage { padding-right: 96px; padding-bottom: 40px; } }
   .frame { border: 1px solid var(--line); background: var(--card); border-radius: 14px; overflow: hidden; box-shadow: var(--lift); }
+  .frame > video { display: block; width: 100%; height: auto; background: #111; }
   .frame .bar { display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-bottom: 1px solid var(--line); background: #f7f6f3; }
   .frame .bar i { width: 9px; height: 9px; border-radius: 50%; background: #dcd9d2; }
   .frame .bar span { margin: 0 auto; font: 11px "Geist Mono", monospace; color: var(--muted); border: 1px solid var(--line); background: var(--card); border-radius: 99px; padding: 1px 12px; transform: translateX(-18px); }
@@ -387,7 +388,8 @@ pre.cmd { background: var(--ink); color: #f4f3f6; border-radius: 12px; padding: 
 @media (max-width: 520px) { .bank div { grid-template-columns: 1fr; gap: 2px; } }
 
 /* intro video */
-.intro-video { max-width: 1040px; margin: 0 auto; }
+.intro-video, .demo-video { max-width: 1040px; margin: 0 auto; }
+.demo { padding-bottom: 0; }
 .intro-video video { display: block; width: 100%; height: auto; background: #111; }
 
 /* desktop app downloads */

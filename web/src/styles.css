@@ -107,6 +107,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @media (hover: none) { .collapsed .brand .side-toggle { opacity: 1; pointer-events: auto; } .collapsed .brand > a { opacity: 0; } }
 .side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 2px; padding-top: 10px; border-top: 1px solid var(--border); }
 .side-foot .nav a { cursor: pointer; }
+.side-foot .nav a.update-link { color: var(--primary); font-weight: 600; }
 .who { display: flex; align-items: center; gap: 10px; padding: 8px 10px 2px; white-space: nowrap; font-size: 12px; color: var(--faint-fg); }
 
 .main { padding: 32px 40px 64px; min-width: 0; }
@@ -379,12 +380,33 @@ input[type="color"].input { padding: 3px; height: 36px; cursor: pointer; }
 .code-block { position: relative; margin: 8px 0; background: var(--muted); border-radius: var(--radius-sm); }
 .code-block pre { margin: 0; padding: 10px 62px 10px 12px; white-space: pre-wrap; word-break: break-word; font-size: 12.5px; }
 .code-block .btn { position: absolute; top: 4px; right: 4px; }
-.msg-tool { display: flex; gap: 8px; align-items: center; font-size: 12.5px; color: var(--muted-fg); padding: 5px 9px; background: var(--muted); border-radius: var(--radius-sm); min-width: 0; }
-.msg-tool svg { flex: none; }
+/* Like Claude Code: what you typed is a full-width block behind "›", agent text is plain, and each tool call is one
+   "● Tool(what)" row with an error under it after "⎿". */
+.msg-prompt { position: relative; display: flex; gap: 8px; background: var(--muted); border-radius: var(--radius-sm); padding: 8px 36px 8px 10px; line-height: 1.5; }
+.prompt-mark { flex: none; color: var(--faint-fg); font-family: var(--mono); }
+.prompt-body { flex: 1; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg-text { position: relative; }
+.msg-copy { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; display: grid; place-items: center; border: 0; border-radius: var(--radius-sm); background: var(--overlay); color: var(--muted-fg); cursor: pointer; opacity: 0; transition: opacity 0.12s; }
+.msg-text > .msg-copy { top: -2px; right: -2px; }
+.msg-copy:hover { color: var(--fg); background: var(--active); }
+.msg-prompt:hover > .msg-copy, .msg-text:hover > .msg-copy, .msg-copy:focus-visible { opacity: 1; }
+@media (hover: none) { .msg-prompt > .msg-copy { opacity: 0.7; } } /* agent text has no room kept for it; a long press selects it */
+/* The page-wide selection colour is the old message bubble's own background, so selected text there looked unselected. */
+.feed ::selection, .msg-user::selection, .msg-user ::selection { background: color-mix(in srgb, var(--primary) 28%, transparent); }
+.msg-tool { display: flex; gap: 8px; align-items: center; font-size: 12.5px; color: var(--muted-fg); padding: 1px 0; min-width: 0; }
 .msg-tool b { font-weight: 500; color: var(--fg); flex: none; }
 .msg-tool .mono { font-size: 11.5px; }
-.msg-tool.err { background: var(--danger-soft); color: var(--danger); align-items: flex-start; }
+.tool-dot { flex: none; width: 7px; height: 7px; border-radius: 99px; background: var(--success); }
+.tool-dot.live { background: var(--primary); animation: pulse 1s infinite; }
+.msg-tool.err { color: var(--danger); align-items: flex-start; padding-left: 15px; }
 .msg-tool.err .mono { white-space: pre-wrap; word-break: break-word; }
+.tool-out { flex: none; font-family: var(--mono); color: var(--faint-fg); line-height: 1.3; }
+.tools > summary { cursor: pointer; list-style: none; }
+.tools > summary::-webkit-details-marker { display: none; }
+.tools > summary:hover b { color: var(--primary); }
+.tool-caret { flex: none; color: var(--faint-fg); transition: transform 0.12s; }
+.tools[open] .tool-caret { transform: rotate(90deg); }
+.tool-steps { display: flex; flex-direction: column; gap: 2px; margin: 4px 0 0 15px; }
 .msg-done { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--faint-fg); }
 .msg-done::before, .msg-done::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 .msg-info { font-size: 12.5px; color: var(--muted-fg); text-align: center; }
@@ -457,7 +479,8 @@ input[type="color"].input { padding: 3px; height: 36px; cursor: pointer; }
 .vacts { position: absolute; top: 4px; right: 4px; display: flex; gap: 2px; opacity: 0; transition: opacity 0.12s; }
 .version:hover .vacts, .version:focus-within .vacts { opacity: 1; }
 .vacts a, .vacts button { all: unset; cursor: pointer; background: var(--overlay); border-radius: 2px; padding: 3px; display: grid; color: var(--fg); }
-.vacts button:hover { color: var(--danger); }
+.vacts a:hover, .vacts button:hover { color: var(--primary); }
+.vacts .del:hover { color: var(--danger); }
 .version.add { all: unset; cursor: pointer; flex: none; width: 112px; font-size: 12px; color: var(--muted-fg); display: flex; flex-direction: column; gap: 4px; }
 .version.add .vthumb { border: 1.5px dashed var(--input); background: transparent; }
 .version.add:hover .vthumb { border-color: var(--primary); color: var(--primary); }

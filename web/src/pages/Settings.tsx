@@ -561,7 +561,9 @@ function AboutSection({ meta }: { meta?: Meta }) {
           <p style={{ margin: 0 }}>
             37Studio <strong>{upd?.current}</strong>
             {upd?.newer ? <> · <strong style={{ color: "var(--primary)" }}>version {upd.latest} is available.</strong>{" "}
-              {desktop ? <>Download it from the <a href={upd.url} target="_blank" rel="noreferrer" style={{ color: "var(--primary)" }}>release page</a> (the .deb for Ubuntu and Debian), install it, and open 37Studio again.</>
+              {desktop ? <>Download it from the <a href={upd.url} target="_blank" rel="noreferrer" style={{ color: "var(--primary)" }}>release page</a>, {meta?.os === "windows"
+                ? <>the setup .exe for Windows. Close 37Studio and run it: it installs over the old version and keeps your work.</>
+                : <>the .deb for Ubuntu and Debian (the .tar.gz for other Linux). Install it the same way as the first one and open 37Studio again.</>}</>
                 : "Close 37Studio and open it again from the launcher to update."}</>
               : upd?.error ? <span className="muted"> · couldn't check for updates right now</span> : upd?.latest ? <span className="muted"> · up to date</span> : null}
           </p>

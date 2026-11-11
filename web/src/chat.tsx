@@ -1,10 +1,10 @@
 // The agent chat's feed, shared by the project editor and the Assistant: messages, tool steps and subagents.
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { KeyboardEvent, memo, useEffect, useMemo, useRef, useState } from "react";
 import {
-  CheckCircleIcon, CircleNotchIcon, FileTextIcon, GlobeIcon, ListChecksIcon, MagnifyingGlassIcon, PencilLineIcon, SparkleIcon, StopCircleIcon,
-  TerminalWindowIcon, TreeStructureIcon, WrenchIcon, XCircleIcon,
+  CaretRightIcon, CheckCircleIcon, CircleNotchIcon, CopyIcon, MagnifyingGlassIcon, StopCircleIcon, TreeStructureIcon, XCircleIcon,
 } from "@phosphor-icons/react";
-import { cash, ChatEvent, clock, fail, parseTime } from "./api";
+import { cash, ChatEvent, clock, fail, parseTime, toast } from "./api";
+import { flushSync } from "react-dom";
 import { Md } from "./ui";
 
 /** A chat event with its body parsed once, when it arrives: re-renders don't parse the whole conversation again,
@@ -60,23 +60,20 @@ export function liveStatus(events: Parsed[]) {
 
 const toolLabel = (name: string) => name.replace(/^mcp__37studio__/, "").replaceAll("_", " ");
 
-const toolIcon = (name: string) =>
-  name === "Bash" ? TerminalWindowIcon :
-  ["Edit", "Write", "MultiEdit", "NotebookEdit"].includes(name) ? PencilLineIcon :
-  name === "Read" ? FileTextIcon :
-  ["Glob", "Grep"].includes(name) ? MagnifyingGlassIcon :
-  name === "Skill" ? SparkleIcon :
-  name.startsWith("Web") ? GlobeIcon :
-  name === "TodoWrite" ? ListChecksIcon : WrenchIcon;
-
 // Absolute project paths are noise for an editor: show "comp/index.html", not "/home/…/projects/1/comp/index.html".
 export const tidy = (s = "") => s.replace(/\/\S*?\/(projects|tenants)\/\d+\//g, "");
 
-function Step({ t }: { t: Parsed }) {
-  if (t.kind === "tool_error") return <div className="msg-tool err" title="The agent saw this and retried"><span className="mono">{tidy(t.b.text)}</span></div>;
+// Steps read the way Claude Code prints them: "● Tool(what)", and an error the agent got back under it after "⎿".
+function Step({ t, live }: { t: Parsed; live?: boolean }) {
+  if (t.kind === "tool_error") return <div className="msg-tool err" title="The agent saw this and retried"><span className="tool-out">⎿</span><span className="mono">{tidy(t.b.text)}</span></div>;
   if (t.kind === "text") return <Md text={t.b.text} className="msg-agent sub-text" />;
-  const I = toolIcon(t.b.name);
-  return <div className="msg-tool"><I size={13} /><b>{toolLabel(t.b.name)}</b><span className="mono ellipsis" title={t.b.summary}>{tidy(t.b.summary)}</span></div>;
+  const what = tidy(t.b.summary);
+  return (
+    <div className="msg-tool">
+      <i className={`tool-dot ${live ? "live" : ""}`} />
+      <span className="ellipsis" title={what}><b>{toolLabel(t.b.name)}</b>{what && <span className="mono">({what})</span>}</span>
+    </div>
+  );
 }
 
 // A group only changes when a step is added or it opens or closes, so a poll that brings nothing new skips it.
@@ -84,14 +81,15 @@ const ToolGroup = memo(function ToolGroup({ tools, open }: { tools: Parsed[]; op
   const last = [...tools].reverse().find((t) => t.kind === "tool") ?? tools[tools.length - 1];
   const steps = tools.filter((t) => t.kind === "tool").length;
   return (
-    <details open={open || undefined}>
-      <summary className="msg-tool" style={{ cursor: "pointer", listStyle: "none" }}>
-        <WrenchIcon size={13} />
+    <details className="tools" open={open || undefined}>
+      <summary className="msg-tool">
+        <i className={`tool-dot ${open ? "live" : ""}`} />
         <b>{steps} step{steps === 1 ? "" : "s"}</b>
-        <span className="ellipsis">{last.b.name?.startsWith("mcp__") ? toolLabel(last.b.name) : tidy(last.b.summary ?? last.b.text)}</span>
+        <span className="mono ellipsis">{last.b.name?.startsWith("mcp__") ? toolLabel(last.b.name) : tidy(last.b.summary ?? last.b.text)}</span>
+        <CaretRightIcon size={11} className="tool-caret" />
       </summary>
-      <div className="stack" style={{ gap: 4, marginTop: 6 }}>
-        {tools.map((t) => <Step key={t.id} t={t} />)}
+      <div className="tool-steps">
+        {tools.map((t, i) => <Step key={t.id} t={t} live={open && i === tools.length - 1} />)}
       </div>
     </details>
   );
@@ -147,21 +145,85 @@ function AgentRow({ s, live }: { s: Sub; live: boolean }) {
 }
 
 const imageLine = /^\[image: (chat\/[^\]]+)\]$/;
+/** A message you sent, without the [image: …] lines that carry its screenshots. */
+const promptText = (text: string) => text.split("\n").filter((l) => !imageLine.test(l)).join("\n").trim();
+
+// Hidden like the code blocks' Copy where the browser has no clipboard (an http:// address other than localhost).
+function CopyButton({ text }: { text: string }) {
+  if (!navigator.clipboard) return null;
+  return (
+    <button className="msg-copy" title="Copy" aria-label="Copy this message" onClick={() => navigator.clipboard.writeText(text).then(() => toast("Copied"), fail)}>
+      <CopyIcon size={13} />
+    </button>
+  );
+}
+
+const kickoff = "Start the job."; // what agent.go sends for "Start agent": you never typed it, so Up skips it
+
+/**
+ * Up and Down in the composer walk through the messages you sent in this chat, like Claude Code: Up goes further back,
+ * Down comes forward and ends on what you were typing. They only take over on the first line (Up) or the last (Down),
+ * so moving around inside a long message still works. Returns the textarea's keydown handler.
+ */
+export function usePromptHistory(events: Parsed[], setText: (t: string) => void) {
+  const sent = useMemo(() => {
+    const out: string[] = [];
+    for (const e of events) {
+      if (e.kind !== "user") continue;
+      const t = promptText(e.b.text);
+      if (t && t !== kickoff && t !== out[out.length - 1]) out.push(t); // a quick reply sent twice is one entry, like a shell
+    }
+    return out;
+  }, [events]);
+  const back = useRef(-1); // how far back you are; -1 is your draft
+  const draft = useRef("");
+  const shown = useRef<string | undefined>(undefined);
+  const step = (el: HTMLTextAreaElement, up: boolean) => {
+    if (el.value !== shown.current) back.current = -1; // you typed since: that's your draft now
+    const next = back.current + (up ? 1 : -1);
+    if (next < -1 || next >= sent.length) return;
+    if (back.current === -1) draft.current = el.value;
+    back.current = next;
+    const t = next === -1 ? draft.current : sent[sent.length - 1 - next];
+    shown.current = t;
+    flushSync(() => setText(t)); // the text must be in before the caret can move
+    // Up leaves the caret at the start and Down at the end, so pressing again keeps going even past long messages.
+    const caret = up ? 0 : t.length;
+    el.setSelectionRange(caret, caret);
+  };
+  return (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    const up = e.key === "ArrowUp";
+    if ((!up && e.key !== "ArrowDown") || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey || e.nativeEvent.isComposing) return;
+    const el = e.currentTarget, v = el.value;
+    if (up ? v.slice(0, el.selectionStart).includes("\n") : v.slice(el.selectionEnd).includes("\n")) return;
+    const edge = up ? 0 : v.length;
+    if (el.selectionStart === edge && el.selectionEnd === edge) { e.preventDefault(); step(el, up); return; }
+    // Only the browser knows where a long line wraps: let it move the caret, and if that lands on the very start (end),
+    // the caret was on the first (last) row.
+    setTimeout(() => { if (el.selectionStart === edge && el.selectionEnd === edge && el.value === v) step(el, up); });
+  };
+}
 
 const EventView = memo(function EventView({ e, pid }: { e: Parsed; pid: number }) {
   switch (e.kind) {
     case "user": {
       const lines: string[] = e.b.text.split("\n");
       const shots = lines.map((l) => l.match(imageLine)?.[1]).filter(Boolean);
+      const said = promptText(e.b.text);
+      // What you typed, the way Claude Code shows it: a full-width block behind "›".
       return (
-        <div className="msg-user">
-          {lines.filter((l) => !imageLine.test(l)).join("\n")}
-          {shots.map((s) => <a key={s} href={`/files/projects/${pid}/${s}`} target="_blank" rel="noreferrer"><img className="msg-img" src={`/files/projects/${pid}/${s}`} alt="Attached screenshot" /></a>)}
-          {e.b.queued && <span className="queued-tag">sent while working</span>}
+        <div className="msg-prompt">
+          <span className="prompt-mark" aria-hidden>›</span>
+          <div className="prompt-body">
+            {said}
+            {shots.map((s) => <a key={s} href={`/files/projects/${pid}/${s}`} target="_blank" rel="noreferrer"><img className="msg-img" src={`/files/projects/${pid}/${s}`} alt="Attached screenshot" /></a>)}
+            {e.b.queued && <span className="queued-tag">sent while working</span>}
+          </div>
+          {said && <CopyButton text={said} />}
         </div>
       );
     }
-    case "text": return <Md text={e.b.text} />;
+    case "text": return <div className="msg-text"><Md text={e.b.text} /><CopyButton text={e.b.text} /></div>;
     case "result":
       return <div className="msg-done">{e.b.error ? "Turn ended with an error" : "Turn finished"}{e.b.model ? ` · ${modelName(e.b.model)}` : ""} · {cash(e.b.cost)} · {clock(e.b.ms / 1000)}</div>;
     case "render": return <div className="msg-render"><CheckCircleIcon size={15} /> {e.b.text}</div>;

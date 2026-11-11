@@ -68,7 +68,7 @@ sudo apt install ./37studio_*_amd64.deb
 sudo npm install -g @anthropic-ai/claude-code
 ```
 
-On Windows 10 or 11, unpack the .zip, run `install-windows.ps1`, then install the tools the agent uses:
+On Windows 10 or 11, open the installer (if Windows says it protected your PC, click **More info** → **Run anyway**), then install the tools the agent uses:
 
 ```powershell
 winget install Git.Git Gyan.FFmpeg OpenJS.NodeJS.LTS Python.Python.3.13
@@ -91,7 +91,7 @@ The [desktop guide](https://github.com/Shaitrish/37studio/blob/main/docs/desktop
 
 Use a Linux server with 16 GB of RAM, 4 or more vCPUs and 50 GB of disk. You need a domain pointing at it, and ports 80, 443 and 3100–3109 open. The app gets its own HTTPS certificate and won't start without a password.
 
-The [README's cloud section](https://github.com/Shaitrish/37studio#run-it-in-the-cloud) has the exact commands and explains what anyone with the password can do.
+The [server guide](https://github.com/Shaitrish/37studio/blob/main/docs/docker.md#run-it-on-a-server) has the exact commands and explains what anyone with the password can do.
 
 ### From source
 
@@ -222,13 +222,20 @@ Ask for changes in plain words, like "make the hook shorter" or "use the second 
 - Change the model for one message, for example a cheap one for a small fix.
 - Dictate instead of typing, in Bangla or English.
 - Keep typing while the agent works. Your message is marked as sent while working.
+- Press **Up** in the message box to bring back what you sent before, and **Down** to come back to what you were typing. **Enter** sends, **Shift+Enter** starts a new line.
 - Press **Esc** to stop the agent.
+- Hover over a message and click the copy button to copy it.
+- Drag the gap between the preview and the chat to resize the chat. Double-click it to reset.
+- Click the arrows beside **Editor agent** to widen the chat to the whole page, and again to bring the preview back.
+
+When jobs don't depend on each other, the agent hands them to subagents that work at the same time, such as finding hook moments while another picks brand assets. Each shows as a row in the chat with a spinner while it works, its latest step, and a tick when it's done. Click a row to see everything it did.
 
 ### Preview, drafts and export
 
 - **Live preview** plays the current edit instantly, with no rendering. When the agent makes a new version, click **New version ready, refresh preview**.
 - **Draft render** makes a quick low-quality file for sharing or checking timing.
 - **Export** renders the final video. It appears in the versions row and in the Library.
+- To find an exported video on your computer, point at it in the versions row and click the folder button. It opens the folder with the video selected. This works in the desktop app and when 37Studio runs on this computer without Docker; elsewhere, use the download button.
 - **Mark delivered** tells the Overview page this one is done.
 
 ### Edit by hand
@@ -432,7 +439,19 @@ Claude Code, Claude Desktop, Cursor and other apps that support MCP can run 37St
 claude mcp add --transport http 37studio http://localhost:8080/mcp
 ```
 
-Claude Desktop connects through `mcp-remote`, and Cursor through `.cursor/mcp.json`. The [README](https://github.com/Shaitrish/37studio#assistant-and-mcp) has both snippets.
+Claude Desktop connects through `mcp-remote`, in `claude_desktop_config.json`:
+
+```json
+{ "mcpServers": { "37studio": { "command": "npx", "args": ["-y", "mcp-remote", "http://localhost:8080/mcp"] } } }
+```
+
+Cursor, in `.cursor/mcp.json`:
+
+```json
+{ "mcpServers": { "37studio": { "url": "http://localhost:8080/mcp" } } }
+```
+
+With a password set (on a server), add `--header "Authorization: Basic $(printf '37studio:%s' "$PASSWORD" | base64)"` to the Claude Code command.
 
 Connected apps can spend on your AI keys and post to your accounts, so connect only ones you trust.
 
@@ -479,7 +498,7 @@ The same section shows what fills your disk and can clear out old drafts. Final 
 The sidebar says when a new version is out, and **Settings → About** tells you how to get it.
 
 - **Ready-made app:** close 37Studio and open it again from the launcher.
-- **Desktop app:** install the next release the same way as the first.
+- **Desktop app:** download the next version from [the desktop page](https://studio.shaitrish.com/desktop) and install it over the old one. On Windows, close 37Studio and run the new installer.
 - **Server:** run the command below in the app's folder.
 
 ```bash

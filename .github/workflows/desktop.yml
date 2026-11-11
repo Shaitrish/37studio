@@ -95,6 +95,8 @@ jobs:
           New-Item -ItemType File -Force web/.keep | Out-Null
           Copy-Item ../../brand/37studio-icon-1024.png icon.png
           go vet .
+      - name: NSIS, for the setup .exe
+        run: if (-not (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe")) { choco install nsis -y --no-progress }
       - name: Package
         run: ./desktop/package-windows.ps1 "${{ github.event.release.tag_name }}"
       - uses: actions/upload-artifact@v4

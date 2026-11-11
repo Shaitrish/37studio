@@ -1,6 +1,6 @@
 # Connecting social platforms
 
-How to set up each platform 37Studio posts to, plus the inbox (Messenger, Instagram, WhatsApp). The [README](../README.md#social-publishing) has the short version.
+How to set up each platform 37Studio posts to, plus the inbox (Messenger, Instagram, WhatsApp). The [README](../README.md#platforms) lists what each one can do.
 
 - [How connecting works](#how-connecting-works)
 - [Facebook Pages + Instagram](#facebook-pages--instagram)
