@@ -1,9 +1,10 @@
 import "@hyperframes/player";
 import { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode, RefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowsInLineHorizontalIcon, ArrowsOutLineHorizontalIcon, ArrowUpIcon, BookmarkSimpleIcon, CheckCircleIcon, FolderOpenIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FilmStripIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MicrophoneSlashIcon, MusicNotesIcon, SpeakerHighIcon, ImageIcon, PlayIcon, PauseIcon, PaperclipIcon, SlidersHorizontalIcon, SparkleIcon, SquareIcon, TrashIcon, MagicWandIcon, XIcon } from "@phosphor-icons/react";
+import { ArrowsInLineHorizontalIcon, ArrowsOutLineHorizontalIcon, BookmarkSimpleIcon, CheckCircleIcon, FolderOpenIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FilmStripIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MusicNotesIcon, SpeakerHighIcon, ImageIcon, PlayIcon, PauseIcon, SlidersHorizontalIcon, SparkleIcon, TrashIcon, MagicWandIcon, XIcon } from "@phosphor-icons/react";
 import { Quality } from "../api";
 import { api, bytes, canReveal, ChatEvent, clock, desktop, fail, FileInfo, go, languageName, Meta, nudge, openExternal, pref, Project, showInFolder, toast, upload, cash, useApi } from "../api";
-import { Feed, liveStatus, modelName, parse, Parsed, useDictation, usePromptHistory } from "../chat";
+import { Feed, liveStatus, parse, Parsed } from "../chat";
+import { Composer } from "../composer";
 import { DropZone, Empty, HelpButton, Md, FileTile, KindIcon, ModelOptions, ModelPicker, Progress, Seg, Status, projectStatus } from "../ui";
 import { presetIcon } from "./Projects";
 import { PostsCard, PublishModal } from "./Social";
@@ -250,7 +251,7 @@ export default function ProjectPage({ id }: { id: number }) {
         </div>
 
         {!chatFull && <ChatResizer box={ws} width={chatW} onWidth={setChatW} />}
-        <Chat p={p} events={events} qualities={meta?.qualities ?? []} full={chatFull} onFull={() => setChatFull(!chatFull)}
+        <Chat p={p} events={events} qualities={meta?.qualities ?? []} full={chatFull} onFull={() => setChatFull(!chatFull)} viewing={current}
           onSend={(text, quality) => act("messages", { text, quality }).then(() => poll.current())} onStop={() => act("stop")} />
       </div>
     </div>
@@ -507,14 +508,12 @@ function BriefCard({ p, meta, reload, onDelete }: { p: Project; meta?: Meta; rel
 
 const quickReplies = ["Looks good, render the final", "Make the hook punchier", "Make it shorter", "Try a different hook moment", "Bigger, bolder captions"];
 
-function Chat({ p, events, qualities, onSend, onStop, full, onFull }: {
+function Chat({ p, events, qualities, onSend, onStop, full, onFull, viewing }: {
   p: Project; events: Parsed[]; qualities: Quality[]; onSend: (text: string, quality?: string) => Promise<void>; onStop: () => void;
-  full: boolean; onFull: () => void;
+  full: boolean; onFull: () => void; viewing?: FileInfo | "comp";
 }) {
   // Model for the next message: cheap Haiku for small fixes, Opus for heavy edits. Defaults to the project's quality.
   const [quality, setQuality] = useState(p.quality);
-  const [text, setText] = useState("");
-  const [imgs, setImgs] = useState<string[]>([]); // attached screenshots, as project paths (chat/…)
   const feed = useRef<HTMLDivElement>(null);
   const started = !!p.session_id;
 
@@ -527,23 +526,14 @@ function Chat({ p, events, qualities, onSend, onStop, full, onFull }: {
     opened.current = true;
   }, [events.length, p.running]);
 
-  // While the agent works, sending queues the message server-side; it goes out when the turn ends.
   // Images ride along as [image: chat/<file>] lines; the agent views them with Read, the feed shows thumbnails.
-  const send = async (t = text) => {
-    if (!t.trim() && !imgs.length) return;
-    setText("");
-    setImgs([]);
-    await onSend([t.trim(), ...imgs.map((i) => `[image: ${i}]`)].filter(Boolean).join("\n"), quality);
+  const attach = async (list: File[]) => {
+    const files = list.map((f, i) => new File([f], `${Date.now()}-${i}.${f.name.split(".").pop() || "png"}`, { type: f.type })); // pasted screenshots are all "image.png"
+    try { await upload(`/projects/${p.id}/attachments`, files); return files.map((f) => "chat/" + f.name); } catch (e) { fail(e); return []; }
   };
-  const attach = async (list: FileList | File[]) => {
-    const files = [...list].filter((f) => f.type.startsWith("image/"))
-      .map((f, i) => new File([f], `${Date.now()}-${i}.${f.name.split(".").pop() || "png"}`, { type: f.type })); // pasted screenshots are all "image.png"
-    if (!files.length) return;
-    try { await upload(`/projects/${p.id}/attachments`, files); setImgs((v) => [...v, ...files.map((f) => "chat/" + f.name)]); } catch (e) { fail(e); }
-  };
+  // A version picked in the strip under the preview goes with the message, like the open file in Claude Code.
+  const viewPath = viewing && viewing !== "comp" ? decodeURIComponent(viewing.url.replace(/^\/files\/projects\/\d+\//, "")) : "";
   const live = useMemo(() => (p.running ? liveStatus(events) : undefined), [events, p.running]);
-  const mic = useDictation(p.language || "en", (said) => setText((t) => (t ? t.trimEnd() + " " : "") + said));
-  const history = usePromptHistory(events, setText);
 
   return (
     <div className="card chat">
@@ -570,69 +560,12 @@ function Chat({ p, events, qualities, onSend, onStop, full, onFull }: {
         )}
       </div>
       {started && (
-        <div className="composer">
-          {!p.running && (
-            <div className="chips">
-              {quickReplies.map((q) => <button key={q} className="chip" onClick={() => send(q)}>{q}</button>)}
-            </div>
-          )}
-          <div className={`composer-box ${mic.listening ? "listening" : ""}`}
-            onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); attach(e.dataTransfer.files); }}>
-            {imgs.length > 0 && (
-              <div className="attachments">
-                {imgs.map((i) => (
-                  <span key={i} className="attachment">
-                    <img src={`/files/projects/${p.id}/${i}`} alt="" />
-                    <button onClick={() => setImgs((v) => v.filter((x) => x !== i))} aria-label="Remove image"><XIcon size={12} /></button>
-                  </span>
-                ))}
-              </div>
-            )}
-            <textarea
-              value={mic.listening ? text + (mic.interim ? (text ? " " : "") + mic.interim : "") : text}
-              rows={2}
-              placeholder={mic.listening ? "Listening…" : p.running ? "Queue your next message…" : "Ask for changes…"}
-              aria-label="Message the agent"
-              onChange={(e) => setText(e.target.value)}
-              onPaste={(e) => { if (e.clipboardData.files.length) { e.preventDefault(); attach(e.clipboardData.files); } }}
-              onKeyDown={(e) => {
-                if (!mic.listening) history(e);
-                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); mic.stop(); send(); }
-                if (e.key === "Escape" && p.running) onStop(); // like Claude Code: Esc interrupts
-              }}
-            />
-            <div className="composer-bar">
-              <label className="cbtn" title="Attach screenshots (or paste / drop them)" aria-label="Attach images">
-                <PaperclipIcon size={15} />
-                <input type="file" accept="image/*" multiple hidden onChange={(e) => { attach(e.target.files!); e.target.value = ""; }} />
-              </label>
-              {mic.supported && (
-                <button className={`cbtn ${mic.listening ? "rec" : ""}`} onClick={mic.listening ? mic.stop : mic.start}
-                  title={mic.listening ? "Stop dictation" : "Dictate"} aria-label={mic.listening ? "Stop dictation" : "Dictate"}>
-                  {mic.listening ? <MicrophoneSlashIcon size={15} /> : <MicrophoneIcon size={15} />}
-                </button>
-              )}
-              {mic.supported && (
-                <select className="cselect" value={mic.lang} onChange={(e) => mic.setLang(e.target.value)} aria-label="Dictation language" title="Dictation language">
-                  <option value="bn-BD">বাংলা</option>
-                  <option value="en-US">EN</option>
-                </select>
-              )}
-              <select className="cselect" value={quality} onChange={(e) => setQuality(e.target.value)} aria-label="Model for this message"
-                title={qualities.find((q) => q.id === quality)?.note}>
-                <ModelOptions qualities={qualities} claudeLabel={(q) => modelName(q.model) + (q.effort === "xhigh" ? " max" : "")} />
-              </select>
-              <span className="spacer" />
-              {p.running && (
-                <button className="cbtn stop" onClick={onStop} title="Stop the agent (Esc)" aria-label="Stop the agent"><SquareIcon size={13} weight="fill" /></button>
-              )}
-              <button className="cbtn send" disabled={!text.trim() && !imgs.length} onClick={() => { mic.stop(); send(); }}
-                title={p.running ? "Queue: sends when this turn ends" : "Send (Enter)"} aria-label={p.running ? "Queue message" : "Send"}>
-                <ArrowUpIcon size={16} />
-              </button>
-            </div>
-          </div>
-        </div>
+        <Composer events={events} running={p.running} queue onSend={(t, q) => onSend(t, q)} onStop={onStop}
+          qualities={qualities} quality={quality} onQuality={setQuality} lang={p.language || "en"}
+          placeholder={p.running ? "Queue your next message…" : "Ask for changes, or / for quick actions"}
+          actions={quickReplies.map((label) => ({ label, send: true }))}
+          attach={attach} fileUrl={(f) => `/files/projects/${p.id}/${f}`}
+          context={viewPath ? { label: viewing && viewing !== "comp" ? viewing.name : viewPath, line: `[viewing: ${viewPath}]`, title: `${viewPath} goes with your message, so the agent knows which version you mean` } : undefined} />
       )}
     </div>
   );

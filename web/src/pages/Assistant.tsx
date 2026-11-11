@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpIcon, ChatCircleDotsIcon, MicrophoneIcon, MicrophoneSlashIcon, PlusIcon, SquareIcon } from "@phosphor-icons/react";
+import { ChatCircleDotsIcon, PlusIcon } from "@phosphor-icons/react";
 import { api, ChatEvent, fail, Meta, useApi } from "../api";
-import { Empty, HelpButton, ModelOptions } from "../ui";
-import { Feed, liveStatus, modelName, parse, Parsed, useDictation, usePromptHistory } from "../chat";
+import { Empty, HelpButton } from "../ui";
+import { Feed, liveStatus, parse, Parsed } from "../chat";
+import { Composer } from "../composer";
 
 interface AssistantState { events: ChatEvent[]; running: boolean; started: boolean }
 
@@ -18,13 +19,10 @@ const ideas = [
 export default function Assistant() {
   const [events, setEvents] = useState<Parsed[]>([]);
   const [running, setRunning] = useState(false);
-  const [text, setText] = useState("");
   // The video chat's models: Claude through Claude Code, the rest through OpenCode (assistant.go). Sonnet is plenty.
   // OpenCode's free models are left out: they refuse an OpenCode whose tools are locked down to this app's.
   const { data: meta } = useApi<Meta>("/meta");
   const [quality, setQuality] = useState("draft");
-  const mic = useDictation("en", (said) => setText((t) => (t ? t.trimEnd() + " " : "") + said));
-  const history = usePromptHistory(events, setText);
   const feed = useRef<HTMLDivElement>(null);
   const last = events[events.length - 1]?.id ?? 0;
 
@@ -53,11 +51,7 @@ export default function Assistant() {
   const live = useMemo(() => (running ? liveStatus(events) : undefined), [events, running]);
   useLayoutEffect(() => { feed.current?.scrollTo({ top: feed.current.scrollHeight }); }, [events.length, running]);
 
-  const send = async (t = text) => {
-    if (!t.trim() || running) return;
-    setText("");
-    try { await api("/assistant/messages", { body: { text: t.trim(), quality } }); setRunning(true); load(last); } catch (e) { fail(e); setText(t); }
-  };
+  const send = (t: string, q: string) => api("/assistant/messages", { body: { text: t, quality: q } }).then(() => { setRunning(true); load(last); }, (e) => { fail(e); throw e; });
   const stop = () => api("/assistant/stop", { body: {} }).then(() => load(last), fail);
   const reset = () => confirm("Start a new conversation? This one is cleared.") &&
     api("/assistant", { method: "DELETE" }).then(() => { setEvents([]); }, fail);
@@ -78,46 +72,17 @@ export default function Assistant() {
           {loaded && !events.length && (
             <Empty icon={<ChatCircleDotsIcon size={28} />} title="What should we make today?">
               <div className="chips" style={{ justifyContent: "center" }}>
-                {ideas.map((i) => <button key={i} className="chip" onClick={() => setText(i)}>{i}</button>)}
+                {ideas.map((i) => <button key={i} className="chip" onClick={() => send(i, quality).catch(() => {})}>{i}</button>)}
               </div>
             </Empty>
           )}
           <Feed events={events} running={running} pid={0} />
           {live && <div className="typing"><i /><i /><i /> <span className="ellipsis">{[live.agents && `${live.agents} subagent${live.agents === 1 ? "" : "s"} working`, live.step].filter(Boolean).join(" · ") || "Working…"}</span></div>}
         </div>
-        <div className="composer">
-          <div className={`composer-box ${mic.listening ? "listening" : ""}`}>
-            <textarea value={mic.listening ? text + (mic.interim ? (text ? " " : "") + mic.interim : "") : text} rows={2} autoFocus
-              placeholder={mic.listening ? "Listening…" : running ? "Wait for the reply, or stop it…" : "Ask the assistant…"} aria-label="Message the assistant"
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => {
-                if (!mic.listening) history(e);
-                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); mic.stop(); send(); }
-                if (e.key === "Escape" && running) stop();
-              }} />
-            <div className="composer-bar">
-              {mic.supported && (
-                <button className={`cbtn ${mic.listening ? "rec" : ""}`} onClick={mic.listening ? mic.stop : mic.start}
-                  title={mic.listening ? "Stop dictation" : "Dictate"} aria-label={mic.listening ? "Stop dictation" : "Dictate"}>
-                  {mic.listening ? <MicrophoneSlashIcon size={15} /> : <MicrophoneIcon size={15} />}
-                </button>
-              )}
-              {mic.supported && (
-                <select className="cselect" value={mic.lang} onChange={(e) => mic.setLang(e.target.value)} aria-label="Dictation language" title="Dictation language">
-                  <option value="bn-BD">বাংলা</option>
-                  <option value="en-US">EN</option>
-                </select>
-              )}
-              <select className="cselect" value={quality} onChange={(e) => setQuality(e.target.value)} aria-label="Model for this message"
-                title={meta?.qualities.find((q) => q.id === quality)?.note}>
-                <ModelOptions qualities={(meta?.qualities ?? []).filter((q) => !(q.harness && q.id.endsWith("-free")))} claudeLabel={(q) => modelName(q.model) + (q.effort === "xhigh" ? " max" : "")} />
-              </select>
-              <span className="small faint spacer ellipsis" style={{ marginLeft: 6 }}>Asks before it deletes, publishes or replies to customers.</span>
-              {running && <button className="cbtn stop" onClick={stop} title="Stop (Esc)" aria-label="Stop"><SquareIcon size={13} weight="fill" /></button>}
-              <button className="cbtn send" disabled={!text.trim() || running} onClick={() => { mic.stop(); send(); }} title="Send (Enter)" aria-label="Send"><ArrowUpIcon size={16} /></button>
-            </div>
-          </div>
-        </div>
+        <Composer events={events} running={running} onSend={send} onStop={stop}
+          qualities={(meta?.qualities ?? []).filter((q) => !(q.harness && q.id.endsWith("-free")))} quality={quality} onQuality={setQuality} lang="en"
+          placeholder={running ? "Wait for the reply, or stop it…" : "Ask the assistant, or / for ideas. It asks before it deletes, publishes or replies."}
+          actions={ideas.map((label) => ({ label }))} />
       </div>
     </div>
   );

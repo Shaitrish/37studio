@@ -1,9 +1,9 @@
 // The agent chat's feed, shared by the project editor and the Assistant: messages, tool steps and subagents.
 import { KeyboardEvent, memo, useEffect, useMemo, useRef, useState } from "react";
 import {
-  CaretRightIcon, CheckCircleIcon, CircleNotchIcon, CopyIcon, MagnifyingGlassIcon, StopCircleIcon, TreeStructureIcon, XCircleIcon,
+  CaretRightIcon, CheckCircleIcon, CircleNotchIcon, CopyIcon, FileIcon, MagnifyingGlassIcon, StopCircleIcon, TreeStructureIcon, XCircleIcon,
 } from "@phosphor-icons/react";
-import { cash, ChatEvent, clock, fail, parseTime, toast } from "./api";
+import { cash, ChatEvent, clock, desktop, fail, parseTime, toast } from "./api";
 import { flushSync } from "react-dom";
 import { Md } from "./ui";
 
@@ -146,7 +146,8 @@ function AgentRow({ s, live }: { s: Sub; live: boolean }) {
 
 const imageLine = /^\[image: (chat\/[^\]]+)\]$/;
 /** A message you sent, without the [image: …] lines that carry its screenshots. */
-const promptText = (text: string) => text.split("\n").filter((l) => !imageLine.test(l)).join("\n").trim();
+const viewLine = /^\[viewing: ([^\]]+)\]$/; // the version picked under the preview, sent with the message
+const promptText = (text: string) => text.split("\n").filter((l) => !imageLine.test(l) && !viewLine.test(l)).join("\n").trim();
 
 // Hidden like the code blocks' Copy where the browser has no clipboard (an http:// address other than localhost).
 function CopyButton({ text }: { text: string }) {
@@ -209,6 +210,7 @@ const EventView = memo(function EventView({ e, pid }: { e: Parsed; pid: number }
     case "user": {
       const lines: string[] = e.b.text.split("\n");
       const shots = lines.map((l) => l.match(imageLine)?.[1]).filter(Boolean);
+      const viewed = lines.map((l) => l.match(viewLine)?.[1]).find(Boolean);
       const said = promptText(e.b.text);
       // What you typed, the way Claude Code shows it: a full-width block behind "›".
       return (
@@ -216,6 +218,7 @@ const EventView = memo(function EventView({ e, pid }: { e: Parsed; pid: number }
           <span className="prompt-mark" aria-hidden>›</span>
           <div className="prompt-body">
             {said}
+            {viewed && <span className="prompt-file" title="Sent with this message"><FileIcon size={12} /> {viewed}</span>}
             {shots.map((s) => <a key={s} href={`/files/projects/${pid}/${s}`} target="_blank" rel="noreferrer"><img className="msg-img" src={`/files/projects/${pid}/${s}`} alt="Attached screenshot" /></a>)}
             {e.b.queued && <span className="queued-tag">sent while working</span>}
           </div>
@@ -243,20 +246,52 @@ const EventView = memo(function EventView({ e, pid }: { e: Parsed; pid: number }
 export const modelName = (id: string) => id.replace(/^.*\//, "").replace(/^claude-/, "").replace(/-(\d+)-(\d+)$/, " $1.$2").replace(/^\w/, (c) => c.toUpperCase());
 
 /**
- * Dictation with the browser's built-in speech recognition (Chrome, Edge, Safari). No key, no cost.
- * ponytail: Chrome sends the audio to Google's recognizer; switch to ElevenLabs Scribe if that matters.
+ * Dictation. In Chrome, Edge and Safari it uses the browser's own speech recognition (no key, no cost), which shows
+ * words as you speak. The desktop app's window has none that works (WebKitGTK has no API; WebView2's needs Google's
+ * keys), so there it records the microphone and the server transcribes the clip locally (POST /api/dictate).
+ * ponytail: Chrome sends the audio to Google's recognizer; the local path could become the default if that matters.
  */
 export function useDictation(videoLang: string, onFinal: (text: string) => void) {
-  const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+  const SR = desktop ? undefined : (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+  const canRecord = typeof navigator.mediaDevices?.getUserMedia === "function" && !!(window as any).MediaRecorder;
   const [lang, setLang] = useState(videoLang === "bn" ? "bn-BD" : "en-US");
   const [listening, setListening] = useState(false);
+  const [busy, setBusy] = useState(false); // the server is transcribing a recording
   const [interim, setInterim] = useState("");
   const rec = useRef<any>(null);
   const final = useRef(onFinal);
   final.current = onFinal;
   const stop = () => rec.current?.stop();
+  const startRecording = async () => {
+    let stream: MediaStream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    catch { fail(new Error("Dictation: the microphone isn't available. Allow 37Studio to use it, or check it's plugged in.")); return; }
+    const r = new MediaRecorder(stream);
+    const chunks: Blob[] = [];
+    r.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    r.onstop = async () => {
+      stream.getTracks().forEach((t) => t.stop());
+      rec.current = null;
+      setListening(false);
+      if (!chunks.length) return;
+      const form = new FormData();
+      form.append("audio", new Blob(chunks, { type: r.mimeType }), r.mimeType.includes("mp4") ? "dictation.m4a" : "dictation.webm");
+      form.append("lang", lang.slice(0, 2));
+      setBusy(true);
+      try {
+        const res = await fetch("/api/dictate", { method: "POST", body: form });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(out.error ?? "Dictation failed");
+        if (out.text?.trim()) final.current(out.text.trim());
+      } catch (e) { fail(e); } finally { setBusy(false); }
+    };
+    rec.current = r;
+    r.start();
+    setListening(true);
+  };
   const start = () => {
-    if (!SR || rec.current) return;
+    if (rec.current || busy) return;
+    if (!SR) { if (canRecord) startRecording(); return; }
     const r = new SR();
     r.lang = lang;
     r.continuous = true;
@@ -275,6 +310,6 @@ export function useDictation(videoLang: string, onFinal: (text: string) => void)
     r.start();
     setListening(true);
   };
-  useEffect(() => () => rec.current?.abort(), []);
-  return { supported: !!SR, listening, interim, lang, setLang, start, stop };
+  useEffect(() => () => { const r = rec.current; if (r?.abort) r.abort(); else r?.stop(); }, []);
+  return { supported: !!SR || canRecord, listening, busy, interim, lang, setLang, start, stop };
 }

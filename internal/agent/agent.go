@@ -149,6 +149,7 @@ Content strategy (strategy.md: the team's and Claude's lessons from these number
                 The editor watches comp/index.html live in the web app, so keep it valid at the end of every turn.
   out/drafts/   draft renders and stills.
   chat/         screenshots and images the editor attached to chat. A message line [image: chat/<file>] means: view that file with the Read tool before acting on the message.
+                A line [viewing: <path>] names the version the editor had open under the preview when they wrote: "this one" or "here" means that file.
   out/          final deliverables only: every file here is a finished video or image the brand will publish.
 
 ## How to work

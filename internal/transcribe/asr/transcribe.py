@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """37Studio's local transcription: faster-whisper, sized for this computer. Free; the audio never leaves the machine.
 
-Usage: transcribe.py MEDIA --out DIR [--language bn] [--quality auto|fast|best] [--model NAME]
+Usage: transcribe.py MEDIA --out DIR [--language bn] [--quality auto|fast|best] [--model NAME] [--dictation]
 
 Writes DIR/transcript.json (segments with word timestamps), transcript.srt and transcript.txt, prints progress with an
 estimate to stderr, and one JSON summary line to stdout. Sequential beam search on purpose: on a CPU, faster-whisper's
@@ -103,6 +103,7 @@ def main():
     ap.add_argument("--language", default=None, help="language code, e.g. bn for Bangla, en for English; detected when left out")
     ap.add_argument("--quality", default="auto", choices=["auto", "fast", "best"])
     ap.add_argument("--model", default=None, help="override the model (any faster-whisper name or CTranslate2 model on Hugging Face)")
+    ap.add_argument("--dictation", action="store_true", help="a short voice note: greedy decoding and no word timings, about a fifth faster")
     a = ap.parse_args()
 
     import ctranslate2  # installed with faster-whisper
@@ -137,9 +138,9 @@ def main():
     segments, info = m.transcribe(
         audio,
         language=a.language,
-        beam_size=5,
+        beam_size=1 if a.dictation else 5,
         vad_filter=True,  # classes have long silences: skipping them saves time and stops made-up text
-        word_timestamps=True,  # cut points for reels come from these
+        word_timestamps=not a.dictation,  # cut points for reels come from these
         condition_on_previous_text=False,  # keeps hours-long recordings from looping on one phrase
     )
     log(f"Language: {info.language} ({info.language_probability:.0%} sure). Transcribing…")

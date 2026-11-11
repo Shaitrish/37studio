@@ -116,6 +116,8 @@ func Routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/settings", httpapi.JSON(store.GetSettings))
 	mux.HandleFunc("GET /api/voices", httpapi.JSON(gen.ListVoices))
 	mux.HandleFunc("PUT /api/settings", httpapi.JSON(store.PutSettings))
+	// No MCP tool: it's the chat box's mic, and an agent already sends text (or runs `37studio transcribe`).
+	mux.HandleFunc("POST /api/dictate", httpapi.JSON(transcribe.Dictate))
 
 	mux.HandleFunc("GET /api/tenants", httpapi.JSON(company.List))
 	mux.HandleFunc("POST /api/tenants", httpapi.JSON(company.Save))

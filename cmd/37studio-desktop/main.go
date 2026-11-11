@@ -103,6 +103,14 @@ func main() {
 		Height:    900,
 		MinWidth:  960,
 		MinHeight: 640,
+		// The chat's mic records here and the server transcribes it (/api/dictate): neither WebKitGTK nor WebView2 has
+		// working speech recognition. Allow the microphone without a prompt; the camera is never used, so deny it,
+		// which also keeps WebView2 from its default of granting everything. WebKitGTK 6.0 has media streams and
+		// MediaRecorder on by default (enable-media-stream defaults to true), so no setting is needed for those.
+		Permissions: map[application.PermissionType]application.Permission{
+			application.PermissionMicrophone: application.PermissionAllow,
+			application.PermissionCamera:     application.PermissionDeny,
+		},
 	})
 	server.Desktop.OpenURL = app.Browser.OpenURL
 	server.Desktop.SaveAs = func(name string) (string, error) {

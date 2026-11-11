@@ -220,7 +220,9 @@ Ask for changes in plain words, like "make the hook shorter" or "use the second 
 
 - Attach screenshots by button, paste or drop, to show what you mean.
 - Change the model for one message, for example a cheap one for a small fix.
-- Dictate instead of typing, in Bangla or English.
+- Dictate instead of typing: click the microphone in the corner of the box, and the switch beside it for Bangla or English. In the desktop app it records you and turns it into text on this computer, free (needs Python 3 and ffmpeg). The first time it downloads the speech model; English takes a few seconds, Bangla about 15.
+- Type **/** or click the **/** button for quick actions such as "Looks good, render the final".
+- Pick a version under the preview and it goes with your message, so the agent knows which one "this" means. Click × on it to leave it out.
 - Keep typing while the agent works. Your message is marked as sent while working.
 - Press **Up** in the message box to bring back what you sent before, and **Down** to come back to what you were typing. **Enter** sends, **Shift+Enter** starts a new line.
 - Press **Esc** to stop the agent.
