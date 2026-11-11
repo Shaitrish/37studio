@@ -364,6 +364,19 @@ The post shows in **Projects** like a video, with its **Posts** tab and numbers.
 
 Photos post to Facebook Pages, X, LinkedIn, Pinterest, Bluesky and Mastodon. Instagram and TikTok only take photos from a public web address, which a copy on your computer doesn't have, and YouTube takes no photos, so those accounts can't be picked for a photo. Videos go to every platform.
 
+## Make other sizes
+
+One video can go out in the shape each platform shows best: 9:16 for Reels, TikTok and YouTube Shorts, 16:9 for Facebook and YouTube, 4:5 or 1:1 for feeds.
+
+1. Under the preview, hover over a final video and click the arrows icon (**Make another size**).
+2. Pick the shape, then how to fill it:
+- **Fit** keeps the whole picture over a blurred copy of itself, so nothing is cut off.
+- **Crop** fills the frame from the middle and cuts the edges.
+- **Ask the agent** lays the video out again for the new shape, so titles and the logo sit right. It looks best and costs an agent turn.
+3. The copy shows up in Versions as a new final, named like promo-9x16.mp4. Fit and Crop are free and take about as long as the video.
+
+In **Publish**, when a project has more than one shape, **Size for each platform** sends each platform its best one: vertical to TikTok, Instagram and Pinterest, wide to Facebook, YouTube, LinkedIn, X, Bluesky and Mastodon. Change any of them there; for YouTube Shorts, pick the 9:16 copy.
+
 ## Autopilot
 
 Autopilot makes a fresh video before each time slot. The agent picks a topic from your brief and knowledge base, builds and checks the video, renders it and writes the captions.

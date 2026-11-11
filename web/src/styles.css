@@ -770,3 +770,5 @@ a.perf-title:hover { color: var(--primary); }
 .post-pick .small { display: flex; align-items: center; gap: 6px; }
 .post-pick .small .btn { margin-left: auto; }
 .choice:disabled { opacity: 0.45; cursor: not-allowed; }
+.plat-files { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 6px 16px; }
+.plat-files .select { flex: 1; min-width: 0; }

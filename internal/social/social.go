@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/url"
 	"os"
@@ -601,10 +602,13 @@ func ListPosts(id int64) []map[string]any {
 	return ps
 }
 
-// CreatePosts queues one post per picked account: {file, at?, accounts: [id], captions: {platform: text, youtube_title}, privacy: {youtube, tiktok}}.
+// CreatePosts queues one post per picked account: {file, files?: {platform: file}, at?, accounts: [id],
+// captions: {platform: text, youtube_title}, privacy: {youtube, tiktok}}. files gives a platform its own copy, like the
+// 9:16 one for TikTok and the 16:9 one for Facebook (agent.ResizeVideo makes them).
 func CreatePosts(r *http.Request) (any, error) {
 	var b struct {
 		File     string            `json:"file"`
+		Files    map[string]string `json:"files"`
 		At       string            `json:"at"`
 		Accounts []int64           `json:"accounts"`
 		Captions map[string]any    `json:"captions"`
@@ -618,12 +622,14 @@ func CreatePosts(r *http.Request) (any, error) {
 	if err := store.DB.QueryRow("select tenant_id from projects where id=?", id).Scan(&tenant); err != nil {
 		return nil, err
 	}
-	kind := files.Kind(b.File)
-	if !strings.HasPrefix(b.File, "out/") || (kind != "video" && kind != "image") {
-		return nil, httpapi.Bad("pick a finished video or image from out/")
-	}
-	if _, err := os.Stat(files.Within(files.ProjectDir(id), b.File)); err != nil {
-		return nil, httpapi.Bad("that video no longer exists")
+	fileFor := func(platform string) string { return cmp.Or(b.Files[platform], b.File) }
+	for _, f := range append([]string{b.File}, slices.Collect(maps.Values(b.Files))...) {
+		if k := files.Kind(f); !strings.HasPrefix(f, "out/") || (k != "video" && k != "image") {
+			return nil, httpapi.Bad("pick a finished video or image from out/")
+		}
+		if _, err := os.Stat(files.Within(files.ProjectDir(id), f)); err != nil {
+			return nil, httpapi.Bad(f + " no longer exists")
+		}
 	}
 	if len(b.Accounts) == 0 {
 		return nil, httpapi.Bad("pick at least one account")
@@ -642,7 +648,7 @@ func CreatePosts(r *http.Request) (any, error) {
 		if store.DB.QueryRow("select platform from social_accounts where id=? and tenant_id=? and platform<>'whatsapp'", aid, tenant).Scan(&platform) != nil {
 			return nil, httpapi.Bad("an account is not connected to this client")
 		}
-		if ok, why := CanPostImage(platform); kind == "image" && !ok {
+		if ok, why := CanPostImage(platform); files.Kind(fileFor(platform)) == "image" && !ok {
 			return nil, httpapi.Bad(why)
 		}
 		if platform == "youtube" && caption("youtube_title") == "" {
@@ -665,7 +671,7 @@ func CreatePosts(r *http.Request) (any, error) {
 			title = caption(pl + "_title")
 		}
 		if _, err := tx.Exec(`insert into posts(project_id,account_id,platform,account_name,file,title,caption,privacy,publish_at) values(?,?,?,?,?,?,?,?,?)`,
-			id, aid, pl, a["name"], b.File, title, caption(pl), b.Privacy[pl], at.Format(time.DateTime)); err != nil {
+			id, aid, pl, a["name"], fileFor(pl), title, caption(pl), b.Privacy[pl], at.Format(time.DateTime)); err != nil {
 			return nil, err
 		}
 	}

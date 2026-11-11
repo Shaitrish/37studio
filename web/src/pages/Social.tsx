@@ -4,6 +4,7 @@ import {
   PinterestLogoIcon, ShareNetworkIcon, SparkleIcon, TiktokLogoIcon, TrashIcon, WhatsappLogoIcon, XLogoIcon, YoutubeLogoIcon,
 } from "@phosphor-icons/react";
 import { ago, api, Captions, compact, views, connectGuideURL, date, desktop, fail, openExternal, parseTime, pct, Platform, Post, Project, SocialAccount, toast, useApi } from "../api";
+import { preferredShapes, shapeOf } from "./Sizes";
 import { Empty, Field, Modal, Seg, Status } from "../ui";
 
 export const platforms: Record<Platform, { label: string; Icon: Icon; limit: number }> = {
@@ -307,6 +308,15 @@ export function PublishModal({ p, onClose, onQueued }: { p: Project; onClose: ()
   // Some platforms can't take an image from a copy on your computer (social.CanPostImage): those accounts can't be picked.
   const image = media.find((f) => f.path === file)?.kind === "image";
   const refuse = (a: SocialAccount) => (image ? data?.no_images?.[a.platform] : undefined);
+  // With copies in several shapes (Sizes.tsx), each platform gets the one it shows best; you can change any of them.
+  const videos = media.filter((f) => f.kind === "video");
+  const sized = !image && new Set(videos.map((f) => shapeOf(f, p))).size > 1;
+  const [perPlat, setPerPlat] = useState<Record<string, string>>({});
+  const best = (pl: string) => {
+    for (const sh of preferredShapes[pl] ?? []) { const f = videos.find((v) => shapeOf(v, p) === sh); if (f) return f.path; }
+    return file;
+  };
+  const fileFor = (pl: string) => (sized ? perPlat[pl] ?? best(pl) : file);
   const [caps, setCaps] = useState<Captions>(p.social ?? {});
   const [privacy, setPrivacy] = useState({ youtube: "public", tiktok: "" });
   const [when, setWhen] = useState<"now" | "later">("now");
@@ -329,7 +339,7 @@ export function PublishModal({ p, onClose, onQueued }: { p: Project; onClose: ()
     setBusy("post");
     try {
       const r = await api<{ queued: number }>(`/projects/${p.id}/posts`, {
-        body: { file: "out/" + file, accounts: [...picked], captions: caps, privacy, at: when === "later" ? new Date(at).toISOString() : "" },
+        body: { file: "out/" + file, files: Object.fromEntries(plats.map((pl) => [pl, "out/" + fileFor(pl)])), accounts: [...picked], captions: caps, privacy, at: when === "later" ? new Date(at).toISOString() : "" },
       });
       toast(when === "later" ? `Scheduled ${r.queued} post${r.queued === 1 ? "" : "s"}` : `Posting to ${r.queued} account${r.queued === 1 ? "" : "s"}; follow it in Posts`);
       onQueued();
@@ -346,7 +356,7 @@ export function PublishModal({ p, onClose, onQueued }: { p: Project; onClose: ()
         </button>
       </>}>
       <div className="stack" style={{ gap: 18 }}>
-        <Field label={media.length > 1 ? "File" : image ? "Photo" : "Video"}>
+        <Field label={sized ? "Video (each platform gets its size below)" : media.length > 1 ? "File" : image ? "Photo" : "Video"}>
           <select className="select" value={file} onChange={(e) => setFile(e.target.value)}>
             {media.map((v) => <option key={v.path} value={v.path}>{v.name}{v.kind === "image" ? " (photo)" : ""}</option>)}
           </select>
@@ -375,6 +385,22 @@ export function PublishModal({ p, onClose, onQueued }: { p: Project; onClose: ()
             <p className="small faint" style={{ margin: 0 }}>Greyed-out accounts can't take a photo from 37Studio: {[...new Set(accounts.filter(refuse).map((a) => platforms[a.platform as Platform]?.label ?? a.platform))].join(", ")}. Hover over one to see why.</p>
           )}
         </div>
+
+        {sized && plats.length > 0 && (
+          <div className="stack" style={{ gap: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 500 }}>Size for each platform <span className="small faint">· vertical where people scroll reels, wide where they watch</span></span>
+            <div className="plat-files">
+              {plats.map((pl) => (
+                <label key={pl} className="row" style={{ gap: 8 }}>
+                  <span style={{ width: 90 }} className="small">{platforms[pl].label}</span>
+                  <select className="select" value={fileFor(pl)} onChange={(e) => setPerPlat({ ...perPlat, [pl]: e.target.value })}>
+                    {videos.map((v) => <option key={v.path} value={v.path}>{shapeOf(v, p)} · {v.name}</option>)}
+                  </select>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
 
         {plats.length > 0 && (
           <div className="stack" style={{ gap: 12 }}>

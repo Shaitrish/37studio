@@ -1,10 +1,11 @@
 import "@hyperframes/player";
 import { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode, RefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowsInLineHorizontalIcon, ArrowsOutLineHorizontalIcon, BookmarkSimpleIcon, CheckCircleIcon, FolderOpenIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FilmStripIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MusicNotesIcon, SpeakerHighIcon, ImageIcon, PlayIcon, PauseIcon, SlidersHorizontalIcon, SparkleIcon, TrashIcon, MagicWandIcon, XIcon } from "@phosphor-icons/react";
+import { ArrowsOutCardinalIcon, ArrowsInLineHorizontalIcon, ArrowsOutLineHorizontalIcon, BookmarkSimpleIcon, CheckCircleIcon, FolderOpenIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FilmStripIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MusicNotesIcon, SpeakerHighIcon, ImageIcon, PlayIcon, PauseIcon, SlidersHorizontalIcon, SparkleIcon, TrashIcon, MagicWandIcon, XIcon } from "@phosphor-icons/react";
 import { Quality } from "../api";
 import { api, bytes, canReveal, ChatEvent, clock, desktop, fail, FileInfo, go, languageName, Meta, nudge, openExternal, pref, Project, showInFolder, toast, upload, cash, useApi } from "../api";
 import { Feed, liveStatus, parse, Parsed } from "../chat";
 import { Composer } from "../composer";
+import { shapeOf, SizesModal } from "./Sizes";
 import { DropZone, Empty, HelpButton, Md, FileTile, KindIcon, ModelOptions, ModelPicker, Progress, Seg, Status, projectStatus } from "../ui";
 import { presetIcon } from "./Projects";
 import { PostsCard, PublishModal } from "./Social";
@@ -26,6 +27,7 @@ export default function ProjectPage({ id }: { id: number }) {
   const [view, setView] = useState<FileInfo | "comp">();
   const [tab, setTab] = useState("brief");
   const [publishing, setPublishing] = useState(false);
+  const [sizing, setSizing] = useState<FileInfo>();
   const [templating, setTemplating] = useState(false);
   // The player only reloads when asked: remounting on every agent save made the preview flicker and restart.
   const [shownComp, setShownComp] = useState<string>();
@@ -223,7 +225,7 @@ export default function ProjectPage({ id }: { id: number }) {
             {p.transcript?.state === "running" && <JobBar title="Transcribing" pct={p.transcript.pct ?? 0} line={p.transcript.line} onCancel={() => skipTranscript(p.id, reload)} />}
             <Versions p={p} finals={finals} drafts={drafts} current={current} onPick={setView}
               onDeleteFinal={delFile("out")} onDeleteDraft={delFile("out/drafts")}
-              onDraft={() => act("render", { quality: "draft" }, "Draft render started")} />
+              onDraft={() => act("render", { quality: "draft" }, "Draft render started")} onSizes={setSizing} />
           </div>
 
           <div className="card tabbed">
@@ -258,6 +260,8 @@ export default function ProjectPage({ id }: { id: number }) {
             {tab === "cost" && <CostCard p={p} />}
           </div>
           {templating && <SaveTemplate projectId={p.id} title={p.title} onClose={() => setTemplating(false)} />}
+          {sizing && <SizesModal p={p} file={sizing} onClose={() => setSizing(undefined)} onStarted={reload}
+            onAskAgent={p.composition && p.session_id ? (text) => act("messages", { text }).then(() => poll.current()) : undefined} />}
           {publishing && <PublishModal p={p} onClose={() => setPublishing(false)} onQueued={() => { setPublishing(false); setTab("posts"); reload(); }} />}
         </div>
 
@@ -354,20 +358,21 @@ function act0(path: string, then: () => void) {
 }
 
 /** Every version of the video in one strip: the live composition, final exports, then drafts and generated media. */
-function Versions({ p, finals, drafts, current, onPick, onDeleteFinal, onDeleteDraft, onDraft }: {
+function Versions({ p, finals, drafts, current, onPick, onDeleteFinal, onDeleteDraft, onDraft, onSizes }: {
   p: Project; finals: FileInfo[]; drafts: FileInfo[]; current?: FileInfo | "comp"; onPick: (v: FileInfo | "comp") => void;
-  onDeleteFinal: (f: FileInfo) => void; onDeleteDraft: (f: FileInfo) => void; onDraft: () => void;
+  onDeleteFinal: (f: FileInfo) => void; onDeleteDraft: (f: FileInfo) => void; onDraft: () => void; onSizes: (f: FileInfo) => void;
 }) {
   const item = (f: FileInfo, tag: string, onDelete: (f: FileInfo) => void) => (
     <div key={f.url} className={`version ${current !== "comp" && current?.url === f.url ? "on" : ""}`}>
       <button className="cover" onClick={() => onPick(f)} title={f.path}>
         <div className="vthumb">
           {f.kind === "image" ? <img src={f.url} alt="" loading="lazy" /> : f.kind === "video" ? <video src={f.url + "#t=0.5"} preload="metadata" muted /> : <KindIcon kind={f.kind} size={20} />}
-          <span className={`vtag ${tag === "Final" ? "final" : ""}`}>{tag}</span>
+          <span className={`vtag ${tag === "Final" ? "final" : ""}`}>{tag}{tag === "Final" && f.kind === "video" ? ` · ${shapeOf(f, p)}` : ""}</span>
         </div>
         <span className="ellipsis">{f.name}</span>
       </button>
       <span className="vacts">
+        {tag === "Final" && f.kind === "video" && <button onClick={() => onSizes(f)} title="Make another size: 9:16 for Reels, TikTok and Shorts, 16:9 for Facebook and YouTube" aria-label={`Make another size of ${f.name}`}><ArrowsOutCardinalIcon size={13} /></button>}
         {canReveal && <button onClick={() => showInFolder(f.url)} title="Show in folder" aria-label={`Show ${f.name} in its folder`}><FolderOpenIcon size={13} /></button>}
         <a href={f.url} download={f.name} title="Download" aria-label={`Download ${f.name}`}><DownloadSimpleIcon size={13} /></a>
         <button className="del" onClick={() => onDelete(f)} title="Delete" aria-label={`Delete ${f.name}`}><TrashIcon size={13} /></button>

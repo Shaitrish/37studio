@@ -158,6 +158,7 @@ func Routes() *http.ServeMux {
 	mux.HandleFunc("POST /api/projects/{id}/outputs", httpapi.JSON(project.UploadOutputs))
 	mux.HandleFunc("POST /api/projects/{id}/stop", httpapi.JSON(agent.StopRun))
 	mux.HandleFunc("POST /api/projects/{id}/render", httpapi.JSON(agent.RenderFinal))
+	mux.HandleFunc("POST /api/projects/{id}/resize", httpapi.JSON(agent.ResizeVideo))
 	mux.HandleFunc("POST /api/projects/{id}/generate", httpapi.JSON(agent.GenerateMedia))
 	mux.HandleFunc("POST /api/projects/{id}/studio", httpapi.JSON(timeline.Open))
 	mux.HandleFunc("DELETE /api/projects/{id}/studio", httpapi.JSON(timeline.Close))
