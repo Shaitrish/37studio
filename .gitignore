@@ -28,3 +28,4 @@ desktop/bin/
 desktop/dist/
 # The desktop app's files, fetched from the release by worker/deploy.sh
 worker/public/download/
+worker/public/reels/*.mp4

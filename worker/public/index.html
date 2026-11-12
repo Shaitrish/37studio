@@ -403,6 +403,25 @@
   </div>
 </section>
 
+<section class="s tint" id="reels">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="eyebrow">Made with 37Studio</span>
+      <h2>Real Reels from one brand's account</h2>
+      <p class="lead">Bangla explainers for BCS Mate, each made by the editor agent from the brand's library. Tap one to play it with sound. Views are Instagram's own numbers, read by 37Studio's Performance page on 11 November 2026.</p>
+    </div>
+    <div class="reels rv">
+      <figure class="reel" data-src="/reels/quake.mp4" data-poster="/reels/quake.webp"><button type="button" aria-label="Play: Why Dhaka shakes"></button><figcaption><b class="bn">ঢাকা কেন কাঁপে?</b><span>Why Dhaka shakes</span><a href="https://www.instagram.com/reel/DfRSnntChEJ/"><img src="/logos/instagram.svg" alt="">162,360 views</a></figcaption></figure>
+      <figure class="reel" data-src="/reels/letter.mp4" data-poster="/reels/letter.webp"><button type="button" aria-label="Play: This plus sign is a Bangla letter"></button><figcaption><b class="bn">এই যোগ চিহ্নটাই বাংলা ‘ক’</b><span>This plus sign is a Bangla letter</span><a href="https://www.instagram.com/reel/DfRVGGJCm9m/"><img src="/logos/instagram.svg" alt="">138,011 views</a></figcaption></figure>
+      <figure class="reel" data-src="/reels/radcliffe.mp4" data-poster="/reels/radcliffe.webp"><button type="button" aria-label="Play: The man who drew the border"></button><figcaption><b class="bn">যিনি বাংলা ভাগ করলেন</b><span>The man who drew the border</span><a href="https://www.instagram.com/reel/DfZrGEeiIx8/"><img src="/logos/instagram.svg" alt="">66,541 views</a></figcaption></figure>
+      <figure class="reel" data-src="/reels/time.mp4" data-poster="/reels/time.webp"><button type="button" aria-label="Play: What time is it 45 degrees east"></button><figcaption><b class="bn">৪৫° পূর্বে কয়টা বাজে?</b><span>What time is it 45° east?</span><a href="https://www.instagram.com/reel/DfPS-LmiEqh/"><img src="/logos/instagram.svg" alt="">34,988 views</a></figcaption></figure>
+      <figure class="reel" data-src="/reels/enclave.mp4" data-poster="/reels/enclave.webp"><button type="button" aria-label="Play: India inside Bangladesh"></button><figcaption><b class="bn">বাংলাদেশের ভেতরে ভারত</b><span>India inside Bangladesh</span><a href="https://www.instagram.com/reel/DfZ44wUCo3H/"><img src="/logos/instagram.svg" alt="">18,700 views</a></figcaption></figure>
+      <figure class="reel" data-src="/reels/sundarbans.mp4" data-poster="/reels/sundarbans.webp"><button type="button" aria-label="Play: Why is it called the Sundarbans"></button><figcaption><b class="bn">সুন্দরবন নামটা কেন?</b><span>Why "Sundarbans"?</span><a href="https://www.instagram.com/reel/DfjwHKhiofP/"><img src="/logos/instagram.svg" alt="">3,071 views</a></figcaption></figure>
+    </div>
+    <div class="ctas rv"><a class="btn" href="https://www.instagram.com/bcsmate/"><img src="/logos/instagram.svg" alt="" width="16" height="16">More on BCS Mate's Instagram</a></div>
+  </div>
+</section>
+
 <section class="s tint" id="open">
   <div class="wrap">
     <div class="head rv center">
@@ -611,6 +630,24 @@
     if (!/^\d/.test(j.value)) return;
     document.querySelectorAll(".stars").forEach((el) => { el.textContent = j.value; el.hidden = false; });
   }).catch(() => {});
+
+  // Reels gallery: a video loads only when tapped, and starting one stops the others.
+  const reels = [...document.querySelectorAll(".reel")];
+  reels.forEach((f) => {
+    const v = document.createElement("video");
+    Object.assign(v, { poster: f.dataset.poster, preload: "none", playsInline: true, loop: true });
+    f.prepend(v);
+    f.querySelector("button").addEventListener("click", () => {
+      if (!v.src) v.src = f.dataset.src;
+      if (v.paused) {
+        reels.forEach((o) => o !== f && o.querySelector("video").pause());
+        document.querySelectorAll("#reel, #reel2").forEach((x) => (x.muted = true));
+        v.play();
+      } else v.pause();
+    });
+    v.addEventListener("play", () => f.classList.add("on"));
+    v.addEventListener("pause", () => f.classList.remove("on"));
+  });
 
   const reel2 = document.getElementById("reel2");
   new IntersectionObserver(([e]) => e.isIntersecting ? reel2.play().catch(() => {}) : reel2.pause(), { threshold: 0.4 }).observe(reel2);
