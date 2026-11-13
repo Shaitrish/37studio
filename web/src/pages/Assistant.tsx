@@ -80,7 +80,7 @@ export default function Assistant() {
           {live && <div className="typing"><i /><i /><i /> <span className="ellipsis">{[live.agents && `${live.agents} subagent${live.agents === 1 ? "" : "s"} working`, live.step].filter(Boolean).join(" · ") || "Working…"}</span></div>}
         </div>
         <Composer events={events} running={running} onSend={send} onStop={stop}
-          qualities={(meta?.qualities ?? []).filter((q) => !(q.harness && q.id.endsWith("-free")))} quality={quality} onQuality={setQuality} lang="en"
+          qualities={(meta?.qualities ?? []).filter((q) => !(q.harness && q.id.endsWith("-free")))} quality={quality} onQuality={setQuality}
           placeholder={running ? "Wait for the reply, or stop it…" : "Ask the assistant, or / for ideas. It asks before it deletes, publishes or replies."}
           actions={ideas.map((label) => ({ label }))} />
       </div>

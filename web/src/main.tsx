@@ -5,7 +5,7 @@ import {
   SquaresFourIcon, SunIcon, TagIcon,
 } from "@phosphor-icons/react";
 import "./styles.css";
-import { api, desktop, donateURL, go, makerURL, type Meta, openExternal, pref, repoURL, saveFile, setDesktop, setReveal, setDisplay, setHelp, setNudge, setToast, snoozeNudge, toast as notify, useApi } from "./api";
+import { api, desktop, donateURL, go, makerURL, type Meta, openExternal, pref, repoURL, saveFile, setClaudePlan, setDesktop, setReveal, setDisplay, setHelp, setNudge, setToast, snoozeNudge, toast as notify, useApi } from "./api";
 import { Mark, Modal } from "./ui";
 // Each page loads when first opened, so the first screen doesn't wait for the project editor and its video player.
 // After an update the old page's files are gone from the server, so a tab left open reloads once to get the new ones.
@@ -219,5 +219,5 @@ document.addEventListener("click", (e) => {
 // Display currency must be known before the first money value renders; whether this is the desktop app, before the first click.
 Promise.all([
   api<Record<string, string>>("/settings").then(setDisplay, () => {}),
-  api<Meta>("/meta").then((m) => { setDesktop(!!m.env.desktop); setReveal(!!m.env.reveal); }, () => {}),
+  api<Meta>("/meta").then((m) => { setDesktop(!!m.env.desktop); setReveal(!!m.env.reveal); setClaudePlan(!!m.env.claude_plan); }, () => {}),
 ]).finally(() => { createRoot(document.getElementById("root")!).render(<App />); prefetchPages(); });

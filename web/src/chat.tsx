@@ -3,9 +3,9 @@ import { KeyboardEvent, memo, useEffect, useMemo, useRef, useState } from "react
 import {
   CaretRightIcon, CheckCircleIcon, CircleNotchIcon, CopyIcon, FileIcon, MagnifyingGlassIcon, StopCircleIcon, TreeStructureIcon, XCircleIcon,
 } from "@phosphor-icons/react";
-import { cash, ChatEvent, clock, desktop, fail, parseTime, toast } from "./api";
+import { cash, ChatEvent, claudePlan, clock, desktop, fail, parseTime, toast } from "./api";
 import { flushSync } from "react-dom";
-import { Md } from "./ui";
+import { costTitle, Md } from "./ui";
 
 /** A chat event with its body parsed once, when it arrives: re-renders don't parse the whole conversation again,
  *  and the same object each time lets unchanged messages skip rendering. */
@@ -228,7 +228,7 @@ const EventView = memo(function EventView({ e, pid }: { e: Parsed; pid: number }
     }
     case "text": return <div className="msg-text"><Md text={e.b.text} /><CopyButton text={e.b.text} /></div>;
     case "result":
-      return <div className="msg-done">{e.b.error ? "Turn ended with an error" : "Turn finished"}{e.b.model ? ` · ${modelName(e.b.model)}` : ""} · {cash(e.b.cost)} · {clock(e.b.ms / 1000)}</div>;
+      return <div className="msg-done">{e.b.error ? "Turn ended with an error" : "Turn finished"}{e.b.model ? ` · ${modelName(e.b.model)}` : ""} · <span title={costTitle()}>{cash(e.b.cost)}{claudePlan && e.b.cost ? " at API prices" : ""}</span> · {clock(e.b.ms / 1000)}</div>;
     case "render": return <div className="msg-render"><CheckCircleIcon size={15} /> {e.b.text}</div>;
     case "image":
       return (
@@ -246,54 +246,36 @@ const EventView = memo(function EventView({ e, pid }: { e: Parsed; pid: number }
 export const modelName = (id: string) => id.replace(/^.*\//, "").replace(/^claude-/, "").replace(/-(\d+)-(\d+)$/, " $1.$2").replace(/^\w/, (c) => c.toUpperCase());
 
 /**
- * Dictation. In Chrome, Edge and Safari it uses the browser's own speech recognition (no key, no cost), which shows
- * words as you speak. The desktop app's window has none that works (WebKitGTK has no API; WebView2's needs Google's
- * keys), so there it records the microphone and the server transcribes the clip locally (POST /api/dictate).
+ * Dictation, always in English. In Chrome, Edge and Safari it uses the browser's own speech recognition, which shows
+ * words as you speak. Everywhere else (the desktop app's WebKitGTK and WebView2, Firefox) it streams the microphone to
+ * the speech model on this computer (POST /api/dictate, see streamMic).
  * ponytail: Chrome sends the audio to Google's recognizer; the local path could become the default if that matters.
  */
-export function useDictation(videoLang: string, onFinal: (text: string) => void) {
+export function useDictation(onFinal: (text: string) => void) {
   const SR = desktop ? undefined : (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-  const canRecord = typeof navigator.mediaDevices?.getUserMedia === "function" && !!(window as any).MediaRecorder;
-  const [lang, setLang] = useState(videoLang === "bn" ? "bn-BD" : "en-US");
+  const canStream = typeof navigator.mediaDevices?.getUserMedia === "function" && !!window.AudioContext;
   const [listening, setListening] = useState(false);
-  const [busy, setBusy] = useState(false); // the server is transcribing a recording
+  const [pending, setPending] = useState(0); // phrases the local model is still writing down
   const [interim, setInterim] = useState("");
-  const rec = useRef<any>(null);
+  const rec = useRef<{ stop: () => void; abort: () => void } | null>(null);
   const final = useRef(onFinal);
   final.current = onFinal;
-  const stop = () => rec.current?.stop();
-  const startRecording = async () => {
-    let stream: MediaStream;
-    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-    catch { fail(new Error("Dictation: the microphone isn't available. Allow 37Studio to use it, or check it's plugged in.")); return; }
-    const r = new MediaRecorder(stream);
-    const chunks: Blob[] = [];
-    r.ondataavailable = (e) => e.data.size && chunks.push(e.data);
-    r.onstop = async () => {
-      stream.getTracks().forEach((t) => t.stop());
-      rec.current = null;
-      setListening(false);
-      if (!chunks.length) return;
-      const form = new FormData();
-      form.append("audio", new Blob(chunks, { type: r.mimeType }), r.mimeType.includes("mp4") ? "dictation.m4a" : "dictation.webm");
-      form.append("lang", lang.slice(0, 2));
-      setBusy(true);
-      try {
-        const res = await fetch("/api/dictate", { method: "POST", body: form });
-        const out = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(out.error ?? "Dictation failed");
-        if (out.text?.trim()) final.current(out.text.trim());
-      } catch (e) { fail(e); } finally { setBusy(false); }
-    };
-    rec.current = r;
-    r.start();
-    setListening(true);
-  };
+  const stop = () => { rec.current?.stop(); setListening(false); };
   const start = () => {
-    if (rec.current || busy) return;
-    if (!SR) { if (canRecord) startRecording(); return; }
+    if (rec.current || pending) return;
+    if (!SR) {
+      if (!canStream) return;
+      let opening = true; // stop pressed while the microphone opens
+      rec.current = { stop: () => { opening = false; }, abort: () => { opening = false; } };
+      setListening(true);
+      streamMic({
+        text: (t) => final.current(t), draft: setInterim, pending: setPending,
+        ended: () => { rec.current = null; setListening(false); setInterim(""); },
+      }).then((r) => { rec.current = r; if (!opening) r.stop(); }, (e) => { rec.current = null; setListening(false); fail(e); });
+      return;
+    }
     const r = new SR();
-    r.lang = lang;
+    r.lang = "en-US";
     r.continuous = true;
     r.interimResults = true;
     r.onresult = (e: any) => {
@@ -306,10 +288,102 @@ export function useDictation(videoLang: string, onFinal: (text: string) => void)
     };
     r.onerror = (e: any) => { if (e.error !== "no-speech" && e.error !== "aborted") fail(new Error(`Dictation: ${e.error}`)); };
     r.onend = () => { rec.current = null; setListening(false); setInterim(""); };
-    rec.current = r;
+    rec.current = { stop: () => r.stop(), abort: () => r.abort() };
     r.start();
     setListening(true);
   };
-  useEffect(() => () => { const r = rec.current; if (r?.abort) r.abort(); else r?.stop(); }, []);
-  return { supported: !!SR || canRecord, listening, busy, interim, lang, setLang, start, stop };
+  useEffect(() => () => rec.current?.abort(), []);
+  return { supported: !!SR || canStream, listening, busy: pending > 0 && !listening, interim, start, stop };
+}
+
+/**
+ * Streams the microphone to this computer's speech model as 16 kHz 16-bit PCM. A pause of about half a second ends a
+ * phrase, which goes off to be written down properly (small.en) while you carry on talking; the phrase being spoken
+ * shows as a quick draft (tiny.en) a few times a second. Phrases land in the box in order as each is done, so
+ * stopping only waits for the last one. Raw PCM rather than MediaRecorder, which WebKitGTK doesn't support.
+ */
+async function streamMic(on: { text: (t: string) => void; draft: (t: string) => void; pending: (n: number) => void; ended: () => void }) {
+  const post = async (pcm: Int16Array | null, final: boolean) => {
+    const res = await fetch(`/api/dictate${final ? "?final=1" : ""}`, { method: "POST", body: pcm as BodyInit | null, headers: { "Content-Type": "application/octet-stream" } });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(out.error ?? "Dictation failed");
+    return out as { text?: string; busy?: boolean };
+  };
+  const warm = post(null, false); // loads the models while the microphone opens
+  let stream: MediaStream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+  catch { throw new Error("Dictation: the microphone isn't available. Allow 37Studio to use it, or check it's plugged in."); }
+  await warm.catch((e) => { stream.getTracks().forEach((t) => t.stop()); throw e; });
+
+  const rate = 16000;
+  type Part = { text: string; done: boolean; sent: boolean; pcm: Int16Array[]; samples: number; voiced: number };
+  const parts: Part[] = [];
+  let cur: Part | null = null, pre: Int16Array[] = [], quiet = 0, floor = 0.01, pending = 0, stopped = false, failed = false, drafting = false;
+  const join = (p: Part) => { const out = new Int16Array(p.samples); let o = 0; for (const c of p.pcm) { out.set(c, o); o += c.length; } return out; };
+  const show = () => {
+    while (parts.length && parts[0].done) { const t = parts.shift()!.text; if (t) on.text(t); }
+    on.draft(parts.map((p) => p.text).filter(Boolean).join(" "));
+    if (stopped && !pending) on.ended();
+  };
+  const end = (p: Part) => {
+    cur = null;
+    if (p.voiced < rate / 4) { parts.splice(parts.indexOf(p), 1); show(); return; } // a click or a cough
+    p.sent = true;
+    on.pending(++pending);
+    post(join(p), true)
+      .then((o) => { p.text = o.text ?? ""; }, (e) => { if (!failed) fail(e); failed = true; })
+      .finally(() => { p.done = true; on.pending(--pending); show(); });
+  };
+
+  const ac = new AudioContext();
+  ac.resume();
+  const src = ac.createMediaStreamSource(stream);
+  const node = ac.createScriptProcessor(4096, 1, 1);
+  const step = ac.sampleRate / rate;
+  node.onaudioprocess = (e) => {
+    const x = e.inputBuffer.getChannelData(0);
+    let sum = 0;
+    for (let i = 0; i < x.length; i++) sum += x[i] * x[i];
+    const rms = Math.sqrt(sum / x.length);
+    floor = rms < floor ? rms : floor * 1.003; // the room's noise, followed slowly upward and at once downward
+    const loud = rms > Math.max(0.008, floor * 3);
+    // Down to 16 kHz by averaging each window of input samples.
+    const s16 = new Int16Array(Math.floor(x.length / step));
+    for (let i = 0; i < s16.length; i++) {
+      const a = Math.floor(i * step), b = Math.min(x.length, Math.floor((i + 1) * step));
+      let v = 0;
+      for (let j = a; j < b; j++) v += x[j];
+      s16[i] = Math.max(-1, Math.min(1, v / Math.max(1, b - a))) * 32767;
+    }
+    if (!cur) {
+      if (!loud) { pre.push(s16); if (pre.length > 3) pre.shift(); return; } // a little lead-in for the first word
+      cur = { text: "", done: false, sent: false, pcm: pre, samples: pre.reduce((n, c) => n + c.length, 0), voiced: 0 };
+      pre = [];
+      parts.push(cur);
+    }
+    cur.pcm.push(s16);
+    cur.samples += s16.length;
+    if (loud) { cur.voiced += s16.length; quiet = 0; } else quiet += s16.length;
+    if (quiet >= rate * 0.6 || cur.samples >= rate * 20) end(cur);
+  };
+  src.connect(node);
+  node.connect(ac.destination); // a script node only runs when connected; it outputs silence
+
+  const drafts = setInterval(() => {
+    const p = cur;
+    if (!p || drafting || p.voiced < rate * 0.3) return;
+    drafting = true;
+    post(join(p), false).then((o) => { if (!o.busy && !p.done && o.text) { p.text = o.text; show(); } }, () => {}).finally(() => { drafting = false; });
+  }, 600);
+  const close = () => {
+    clearInterval(drafts);
+    node.onaudioprocess = null;
+    src.disconnect(); node.disconnect();
+    stream.getTracks().forEach((t) => t.stop());
+    ac.close();
+  };
+  return {
+    stop: () => { if (stopped) return; stopped = true; close(); if (cur) end(cur); show(); },
+    abort: () => { stopped = true; close(); },
+  };
 }

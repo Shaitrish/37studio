@@ -150,6 +150,7 @@ Content strategy (strategy.md: the team's and Claude's lessons from these number
   out/drafts/   draft renders and stills.
   chat/         screenshots and images the editor attached to chat. A message line [image: chat/<file>] means: view that file with the Read tool before acting on the message.
                 A line [viewing: <path>] names the version the editor had open under the preview when they wrote: "this one" or "here" means that file.
+                A line [paused at 0:12.4 in the live preview; on screen: "…" | "…"] is where the editor paused the preview when they wrote, in seconds from the start of comp/index.html (or of the [viewing:] file), with the text visible then. "Here", "this", "this line" or "at 12 sec" mean that moment and that text: find it in the composition by the quoted text or the clip whose data-start and duration cover that time, and change only that, without re-reading or rebuilding the rest.
   out/          final deliverables only: every file here is a finished video or image the brand will publish.
 
 ## How to work

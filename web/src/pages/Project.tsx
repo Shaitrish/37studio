@@ -1,18 +1,29 @@
 import "@hyperframes/player";
 import { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode, RefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowsOutCardinalIcon, ArrowsInLineHorizontalIcon, ArrowsOutLineHorizontalIcon, BookmarkSimpleIcon, CheckCircleIcon, FolderOpenIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FilmStripIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MusicNotesIcon, SpeakerHighIcon, ImageIcon, PlayIcon, PauseIcon, SlidersHorizontalIcon, SparkleIcon, TrashIcon, MagicWandIcon, XIcon } from "@phosphor-icons/react";
+import { ArrowsOutCardinalIcon, ArrowsInLineHorizontalIcon, ArrowsOutLineHorizontalIcon, BookmarkSimpleIcon, CheckCircleIcon, CoinsIcon, ImagesSquareIcon, NotePencilIcon, PaperPlaneTiltIcon, StackIcon, TimerIcon, FolderOpenIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FilmStripIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MusicNotesIcon, SpeakerHighIcon, ImageIcon, PlayIcon, PauseIcon, SlidersHorizontalIcon, SparkleIcon, TrashIcon, MagicWandIcon, XIcon } from "@phosphor-icons/react";
 import { Quality } from "../api";
 import { api, bytes, canReveal, ChatEvent, clock, desktop, fail, FileInfo, go, languageName, Meta, nudge, openExternal, pref, Project, showInFolder, toast, upload, cash, useApi } from "../api";
 import { Feed, liveStatus, parse, Parsed } from "../chat";
-import { Composer } from "../composer";
+import { Composer, type Context } from "../composer";
 import { shapeOf, SizesModal } from "./Sizes";
-import { DropZone, Empty, HelpButton, Md, FileTile, KindIcon, ModelOptions, ModelPicker, Progress, Seg, Status, projectStatus } from "../ui";
+import { costTitle, DropZone, Empty, HelpButton, PlanNote, Md, FileTile, KindIcon, ModelOptions, ModelPicker, Progress, Seg, Status, projectStatus } from "../ui";
 import { presetIcon } from "./Projects";
 import { PostsCard, PublishModal } from "./Social";
 import { SaveTemplate } from "./Library";
 import { approve, skip } from "./Autopilot";
 
 const tabHelp: Record<string, string> = { videos: "long-recordings", generate: "generated-media-and-voices", posts: "publish", cost: "costs-and-spending" };
+
+/** The editor's left rail: each opens its panel beside the preview, the way video editors keep their tools. */
+type PanelId = "videos" | "brief" | "sources" | "generate" | "posts" | "cost";
+const panelInfo: Record<PanelId, { label: string; title: string; hint: string; Icon: typeof SparkleIcon }> = {
+  videos: { label: "Videos", title: "Videos from this source", hint: "cut and queued by the agent", Icon: StackIcon },
+  brief: { label: "Brief", title: "Brief", hint: "the agent reads it on the first turn", Icon: NotePencilIcon },
+  sources: { label: "Media", title: "Media", hint: "your footage, and everything the video uses", Icon: ImagesSquareIcon },
+  generate: { label: "Generate", title: "Generate media", hint: "images, clips, voice and music", Icon: MagicWandIcon },
+  posts: { label: "Posts", title: "Posts", hint: "where this video went, and how it's doing", Icon: PaperPlaneTiltIcon },
+  cost: { label: "Cost", title: "Cost", hint: "AI usage; rendering on this computer is free", Icon: CoinsIcon },
+};
 
 export default function ProjectPage({ id }: { id: number }) {
   const { data: p, error, reload } = useApi<Project>(`/projects/${id}`);
@@ -25,7 +36,10 @@ export default function ProjectPage({ id }: { id: number }) {
   useEffect(() => { pref("chat-w", String(chatW)); }, [chatW]);
   useEffect(() => { pref("chat-full", chatFull ? "1" : "0"); }, [chatFull]);
   const [view, setView] = useState<FileInfo | "comp">();
-  const [tab, setTab] = useState("brief");
+  // The open panel is this browser's choice, kept across projects; closing it gives the preview the room.
+  const [panel, setPanelState] = useState<PanelId | null>(() => (pref("editor-panel") as PanelId) || null);
+  const setPanel = (v: PanelId | null) => { setPanelState(v); pref("editor-panel", v ?? ""); };
+  const [moment, setMoment] = useState<Moment>();
   const [publishing, setPublishing] = useState(false);
   const [sizing, setSizing] = useState<FileInfo>();
   const [templating, setTemplating] = useState(false);
@@ -42,6 +56,29 @@ export default function ProjectPage({ id }: { id: number }) {
     addEventListener("keydown", onKey);
     return () => removeEventListener("keydown", onKey);
   }, []);
+
+  // Pausing the preview marks a moment for the chat: the time, and the text on screen then, go with the next message.
+  const playerKey = `${!!p}|${shownComp}|${view && view !== "comp" ? view.url : "comp"}`;
+  useEffect(() => {
+    setMoment(undefined);
+    const el = stage.current?.querySelector<HTMLElement & { currentTime: number; paused: boolean }>("hyperframes-player, video");
+    if (!el) return;
+    let timer = 0, last = -1;
+    const update = () => {
+      const t = el.paused ? el.currentTime : -1;
+      if (Math.abs(t - last) < 0.04) return;
+      last = t;
+      clearTimeout(timer);
+      if (t < 0.05) { setMoment(undefined); return; }
+      // Dragging the playhead passes many frames: read the screen once it settles.
+      timer = window.setTimeout(() => setMoment({ t, live: el.tagName !== "VIDEO", screen: el.tagName === "VIDEO" ? [] : screenText(el) }), 250);
+    };
+    // Events for play and pause; a light poll too, since not every seek of the player fires one.
+    const evs = ["pause", "play", "timeupdate", "seeked"];
+    evs.forEach((e) => el.addEventListener(e, update));
+    const poll = setInterval(update, 500);
+    return () => { clearTimeout(timer); clearInterval(poll); evs.forEach((e) => el.removeEventListener(e, update)); };
+  }, [playerKey]);
 
   // ponytail: polling, not SSE. Every 1.5 s while the agent works (its turns take minutes), every 5 s while it waits,
   // and not at all while the window is hidden. Sending a message polls at once.
@@ -83,7 +120,7 @@ export default function ProjectPage({ id }: { id: number }) {
 
   useEffect(() => { if (p?.composition && !shownComp) setShownComp(p.composition); }, [p?.composition]);
   const hasVideos = !!p?.children?.length;
-  useEffect(() => { if (hasVideos) setTab((t) => (t === "brief" ? "videos" : t)); }, [hasVideos]);
+  useEffect(() => { if (hasVideos) setPanelState((t) => (t === "brief" ? "videos" : t)); }, [hasVideos]);
 
   // A new final video landing while the person watches is the happy moment to ask for a donation.
   const finalVideos = p?.outputs?.filter((f) => f.kind === "video").length;
@@ -115,6 +152,8 @@ export default function ProjectPage({ id }: { id: number }) {
   const stale = !!p.composition && !!shownComp && p.composition !== shownComp;
   const Icon = presetIcon[p.kind] ?? MagicWandIcon;
   const preset = meta?.presets.find((x) => x.id === p.kind);
+  const panels: PanelId[] = [...(p.children?.length ? ["videos" as const] : []), "brief", ...(post ? [] : ["sources" as const, "generate" as const]), "posts", "cost"];
+  const shown = panel && panels.includes(panel) ? panel : null;
   const act = (path: string, body: object = {}, msg?: string) =>
     api(`/projects/${id}/${path}`, { body }).then(() => { if (msg) toast(msg); reload(); }, fail);
 
@@ -151,11 +190,11 @@ export default function ProjectPage({ id }: { id: number }) {
             <Status value={projectStatus(p)} />
           </div>
           <p className="row wrap small muted" style={{ marginTop: 2 }}>
-            <Icon size={14} /> {preset?.label ?? (post ? "Post from your computer" : p.kind)} · {p.language ? languageName(p.language) + " · " : ""}{p.aspect}{p.seconds ? ` · ~${p.seconds}s` : ""} · {cash(p.quote.cost)}
+            <Icon size={14} /> {preset?.label ?? (post ? "Post from your computer" : p.kind)} · {p.language ? languageName(p.language) + " · " : ""}{p.aspect}{p.seconds ? ` · ~${p.seconds}s` : ""} · <span title={costTitle()}>{cash(p.quote.cost)}</span>
           </p>
         </div>
         <div className="row wrap" style={{ justifyContent: "flex-end" }}>
-          <HelpButton to={tabHelp[tab] ?? "work-on-a-project"} />
+          <HelpButton to={(panel && tabHelp[panel]) ?? "work-on-a-project"} />
           {!post && !p.running && p.status !== "delivered" && finals.length > 0 && (
             <button className="btn" onClick={() => api(`/projects/${id}`, { method: "PUT", body: { status: "delivered" } }).then(reload, fail)}>
               <CheckCircleIcon size={15} /> Mark delivered
@@ -187,17 +226,68 @@ export default function ProjectPage({ id }: { id: number }) {
       {p.autopilot_stage === "approve" && (
         <div className="approve-bar">
           <span className="spacer">
-            <strong>Autopilot made this video.</strong> Watch it, check the captions in the Posts tab, then approve to post to {p.posts?.filter((x) => x.status === "approval").length ?? 0} account(s).
+            <strong>Autopilot made this video.</strong> Watch it, check the captions in Posts, then approve to post to {p.posts?.filter((x) => x.status === "approval").length ?? 0} account(s).
           </span>
-          <button className="btn" onClick={() => setTab("posts")}>Check captions</button>
+          <button className="btn" onClick={() => setPanel("posts")}>Check captions</button>
           <button className="btn ghost" onClick={() => skip(p.id, reload)}>Skip</button>
           <button className="btn primary" onClick={() => approve(p.id, reload)}>Approve</button>
         </div>
       )}
 
       <div className={`workspace ${chatFull && p.kind !== "post" ? "chat-full" : ""}`} ref={ws} style={{ "--chat-w": `${chatW}px` } as CSSProperties}>
-        <div className="stack editor-main" style={{ minWidth: 0, gap: 14 }}>
-          <div className="card">
+        <div className="editor-main">
+          <nav className="rail" aria-label="Project panels">
+            {panels.map((k) => {
+              const { label, Icon } = panelInfo[k];
+              const count = k === "videos" ? p.children?.length : k === "generate" ? p.generated?.length : k === "posts" ? p.posts?.length : 0;
+              return (
+                <button key={k} className={shown === k ? "on" : ""} aria-pressed={shown === k} onClick={() => setPanel(shown === k ? null : k)}
+                  title={k === "cost" ? costTitle() : panelInfo[k].hint}>
+                  <Icon size={22} weight={shown === k ? "fill" : "regular"} />
+                  <span>{k === "cost" ? cash(p.quote.cost) : label}</span>
+                  {!!count && <i className="badge">{count}</i>}
+                </button>
+              );
+            })}
+          </nav>
+          {shown && (
+            <aside className="card panel" aria-label={panelInfo[shown].title}>
+              <div className="panel-h">
+                <div className="spacer" style={{ minWidth: 0 }}>
+                  <h2>{panelInfo[shown].title}</h2>
+                  <span className="small faint">{panelInfo[shown].hint}</span>
+                </div>
+                <button className="btn ghost sm icon" onClick={() => setPanel(null)} title="Close (the preview gets the room)" aria-label="Close panel"><XIcon size={15} /></button>
+              </div>
+              <div className="panel-b">
+                {shown === "videos" && (
+                  <div className="filelist">
+                    <p className="small faint" style={{ margin: 0, padding: "10px 14px" }}>Cut from this source and queued by the agent. The app makes and exports them one at a time; finished ones are also in the Library.</p>
+                    {p.children?.map((c) => (
+                      <a className="item" key={c.id} href={`#/projects/${c.id}`}>
+                        <span className="spacer ellipsis">{c.title}</span>
+                        <Status value={projectStatus({ ...c, running: false })} />
+                      </a>
+                    ))}
+                  </div>
+                )}
+                {shown === "brief" && <BriefCard p={p} meta={meta} reload={reload} onDelete={remove} />}
+                {shown === "sources" && <>
+                  <MediaSection title="In the video" hint="voice, music, sound and pictures the video uses"
+                    files={(p.comp_assets ?? []).filter((f) => f.kind !== "font" && f.kind !== "other")} />
+                  <Sources p={p} reload={reload} />
+                </>}
+                {shown === "generate" && <>
+                  <Generate p={p} meta={meta} />
+                  <MediaSection title="Generated for this project" hint="by you or the agent, newest first" empty="Nothing generated yet."
+                    files={p.generated ?? []} onDelete={(f) => act0(`/projects/${p.id}/files?path=${encodeURIComponent(f.path)}`, reload)} />
+                </>}
+                {shown === "posts" && <PostsCard p={p} reload={reload} onPublish={() => setPublishing(true)} />}
+                {shown === "cost" && <CostCard p={p} />}
+              </div>
+            </aside>
+          )}
+          <div className="card preview">
             <div className="stage" ref={stage}>
               <button className="btn sm icon stage-full" onClick={() => document.fullscreenElement ? document.exitFullscreen() : stage.current?.requestFullscreen()}
                 title="Full screen (F)" aria-label="Full screen"><ArrowsOutIcon size={14} /></button>
@@ -227,52 +317,56 @@ export default function ProjectPage({ id }: { id: number }) {
               onDeleteFinal={delFile("out")} onDeleteDraft={delFile("out/drafts")}
               onDraft={() => act("render", { quality: "draft" }, "Draft render started")} onSizes={setSizing} />
           </div>
-
-          <div className="card tabbed">
-            <div className="tabs" style={{ padding: "0 8px" }}>
-              {[...(p.children?.length ? [["videos", `Videos (${p.children.length})`]] : []), ["brief", "Brief"], ...(post ? [] : [["sources", "Media"], ["generate", `Generate${p.generated?.length ? ` (${p.generated.length})` : ""}`]]), ["posts", `Posts${p.posts?.length ? ` (${p.posts.length})` : ""}`], ["cost", `Cost · ${cash(p.quote.cost)}`]].map(([k, l]) => (
-                <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{l}</button>
-              ))}
-            </div>
-            {tab === "videos" && (
-              <div className="filelist">
-                <p className="small faint" style={{ margin: 0, padding: "10px 14px" }}>Cut from this source and queued by the agent. The app makes and exports them one at a time; finished ones are also in the Library.</p>
-                {p.children?.map((c) => (
-                  <a className="item" key={c.id} href={`#/projects/${c.id}`}>
-                    <span className="spacer ellipsis">{c.title}</span>
-                    <Status value={projectStatus({ ...c, running: false })} />
-                  </a>
-                ))}
-              </div>
-            )}
-            {tab === "brief" && <BriefCard p={p} meta={meta} reload={reload} onDelete={remove} />}
-            {tab === "sources" && <>
-              <Sources p={p} reload={reload} />
-              <MediaSection title="In the video" hint="everything the video uses, including AI voice, music and sound"
-                files={(p.comp_assets ?? []).filter((f) => f.kind !== "font" && f.kind !== "other")} />
-            </>}
-            {tab === "generate" && <>
-              <Generate p={p} meta={meta} />
-              <MediaSection title="Generated for this project" hint="by you or the agent, newest first" empty="Nothing generated yet."
-                files={p.generated ?? []} onDelete={(f) => act0(`/projects/${p.id}/files?path=${encodeURIComponent(f.path)}`, reload)} />
-            </>}
-            {tab === "posts" && <PostsCard p={p} reload={reload} onPublish={() => setPublishing(true)} />}
-            {tab === "cost" && <CostCard p={p} />}
-          </div>
           {templating && <SaveTemplate projectId={p.id} title={p.title} onClose={() => setTemplating(false)} />}
           {sizing && <SizesModal p={p} file={sizing} onClose={() => setSizing(undefined)} onStarted={reload}
             onAskAgent={p.composition && p.session_id ? (text) => act("messages", { text }).then(() => poll.current()) : undefined} />}
-          {publishing && <PublishModal p={p} onClose={() => setPublishing(false)} onQueued={() => { setPublishing(false); setTab("posts"); reload(); }} />}
+          {publishing && <PublishModal p={p} onClose={() => setPublishing(false)} onQueued={() => { setPublishing(false); setPanel("posts"); reload(); }} />}
         </div>
 
         {post ? <PostSide p={p} onPublish={() => setPublishing(true)} postable={postable} /> : <>
         {!chatFull && <ChatResizer box={ws} width={chatW} onWidth={setChatW} />}
-        <Chat p={p} events={events} qualities={meta?.qualities ?? []} full={chatFull} onFull={() => setChatFull(!chatFull)} viewing={current}
+        <Chat p={p} events={events} qualities={meta?.qualities ?? []} full={chatFull} onFull={() => setChatFull(!chatFull)} viewing={current} moment={moment}
           onSend={(text, quality) => act("messages", { text, quality }).then(() => poll.current())} onStop={() => act("stop")} />
         </>}
       </div>
     </div>
   );
+}
+
+/** A paused moment in the preview: seconds from the start, and whether it's the live composition (not a rendered file). */
+type Moment = { t: number; live: boolean; screen: string[] };
+
+/** 12.43 → "0:12.4" */
+const stamp = (t: number) => `${clock(Math.floor(t))}.${Math.floor((t % 1) * 10)}`;
+
+/** The text visible in the paused live preview, one entry per block (a caption, a title, a label), so the agent can
+ *  find "this line" in the composition without reading it all. Same-origin iframes, sub-compositions included. */
+function screenText(player: HTMLElement): string[] {
+  const docs: Document[] = [];
+  const add = (d?: Document | null) => {
+    if (!d?.body) return;
+    docs.push(d);
+    d.querySelectorAll("iframe").forEach((f) => { try { add(f.contentDocument); } catch { /* another origin */ } });
+  };
+  try { add((player as any).iframeElement?.contentDocument); } catch { /* not loaded */ }
+  const blocks = new Map<Element, string[]>();
+  for (const d of docs) {
+    const w = d.defaultView!;
+    const walk = d.createTreeWalker(d.body, NodeFilter.SHOW_TEXT);
+    for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+      const text = n.textContent?.replace(/\s+/g, " ").trim();
+      const el = n.parentElement;
+      if (!text || !el || el.closest("script, style, noscript, template")) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width < 1 || r.height < 1 || r.right < 0 || r.bottom < 0 || r.left > w.innerWidth || r.top > w.innerHeight) continue;
+      if (el.checkVisibility && !el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) continue;
+      // Word-by-word captions are a span per word: gather words under their nearest block.
+      let block: Element = el;
+      while (block.parentElement && block !== d.body && w.getComputedStyle(block).display.startsWith("inline")) block = block.parentElement;
+      blocks.set(block, [...(blocks.get(block) ?? []), text]);
+    }
+  }
+  return [...blocks.values()].map((ws) => ws.join(" ").slice(0, 140)).filter((t, i, all) => all.indexOf(t) === i).slice(0, 8);
 }
 
 // Events that only add to the chat; anything else (a reply, a render, an error) can change the project too.
@@ -443,6 +537,7 @@ function CostCard({ p }: { p: Project }) {
           ))}
           <FragmentRow left={<strong>Total</strong>} right={<strong>{cash(q.cost)}</strong>} cls="total" />
         </div>
+        <PlanNote style={{ marginTop: 14 }} />
       </div>
     </div>
   );
@@ -453,11 +548,11 @@ function FragmentRow({ left, right, cls = "" }: { left: ReactNode; right: ReactN
 }
 
 const genKinds = [
-  { value: "image", label: "Image", provider: "gemini", hint: "Thumbnail background: glowing equations on a dark violet gradient…" },
-  { value: "video", label: "Video clip", provider: "gemini", hint: "Slow push-in on a chalkboard full of equations, warm light…" },
-  { value: "voice", label: "Voiceover", provider: "eleven", hint: "The exact script to speak, in the video's language…" },
-  { value: "sfx", label: "Sound effect", provider: "eleven", hint: "Soft whoosh transition, short and clean" },
-  { value: "music", label: "Music", provider: "eleven", hint: "Upbeat lo-fi bed, no vocals, 90 bpm, builds at the end" },
+  { value: "image", label: "Image", Icon: ImageIcon, provider: "gemini", hint: "Thumbnail background: glowing equations on a dark violet gradient…" },
+  { value: "video", label: "Video clip", Icon: FilmStripIcon, provider: "gemini", hint: "Slow push-in on a chalkboard full of equations, warm light…" },
+  { value: "voice", label: "Voiceover", Icon: MicrophoneIcon, provider: "eleven", hint: "The exact script to speak, in the video's language…" },
+  { value: "sfx", label: "Sound effect", Icon: SpeakerHighIcon, provider: "eleven", hint: "Soft whoosh transition, short and clean" },
+  { value: "music", label: "Music", Icon: MusicNotesIcon, provider: "eleven", hint: "Upbeat lo-fi bed, no vocals, 90 bpm, builds at the end" },
 ] as const;
 
 function Generate({ p, meta }: { p: Project; meta?: Meta }) {
@@ -479,7 +574,14 @@ function Generate({ p, meta }: { p: Project; meta?: Meta }) {
     <div className="card">
       <div className="card-h"><h2>Generate media</h2><span className="small faint">images, clips, voice and music · counted in this project's cost</span></div>
       <div className="card-b stack" style={{ gap: 12 }}>
-        <Seg value={kind} options={genKinds.map(({ value, label }) => ({ value, label }))} onChange={(v) => { setKind(v); setSeconds(v === "music" ? p.seconds || 30 : 2); }} />
+        <div className="gen-kinds" role="radiogroup" aria-label="What to generate">
+          {genKinds.map((g) => (
+            <button key={g.value} role="radio" aria-checked={kind === g.value} className={kind === g.value ? "on" : ""}
+              onClick={() => { setKind(g.value); setSeconds(g.value === "music" ? p.seconds || 30 : 2); }}>
+              <g.Icon size={20} /><span>{g.label}</span>
+            </button>
+          ))}
+        </div>
         <textarea className="textarea" rows={3} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={k.hint} />
         <div className="row wrap">
           {visual && <Seg value={aspect} options={["9:16", "16:9", ...(kind === "image" ? ["1:1", "4:5"] : [])].map((v) => ({ value: v, label: v }))} onChange={setAspect} />}
@@ -531,7 +633,7 @@ function PostSide({ p, postable, onPublish }: { p: Project; postable: boolean; o
       <div className="stack" style={{ padding: 16, gap: 12 }}>
         <p style={{ margin: 0 }}>{postable ? "Your file is ready. Pick the accounts, let the AI write a caption for each platform (it looks at the file), then post now or schedule it." : "The file is still uploading, or it isn't a video or photo."}</p>
         <button className="btn primary" disabled={!postable} onClick={onPublish}><ShareNetworkIcon size={15} /> {sent ? "Post it again" : "Publish"}</button>
-        {sent > 0 && <p className="small muted" style={{ margin: 0 }}>{sent} post{sent === 1 ? "" : "s"} so far: see the Posts tab for each one's status and numbers.</p>}
+        {sent > 0 && <p className="small muted" style={{ margin: 0 }}>{sent} post{sent === 1 ? "" : "s"} so far: see Posts for each one's status and numbers.</p>}
       </div>
     </div>
   );
@@ -541,9 +643,9 @@ function PostSide({ p, postable, onPublish }: { p: Project; postable: boolean; o
 
 const quickReplies = ["Looks good, render the final", "Make the hook punchier", "Make it shorter", "Try a different hook moment", "Bigger, bolder captions"];
 
-function Chat({ p, events, qualities, onSend, onStop, full, onFull, viewing }: {
+function Chat({ p, events, qualities, onSend, onStop, full, onFull, viewing, moment }: {
   p: Project; events: Parsed[]; qualities: Quality[]; onSend: (text: string, quality?: string) => Promise<void>; onStop: () => void;
-  full: boolean; onFull: () => void; viewing?: FileInfo | "comp";
+  full: boolean; onFull: () => void; viewing?: FileInfo | "comp"; moment?: Moment;
 }) {
   // Model for the next message: cheap Haiku for small fixes, Opus for heavy edits. Defaults to the project's quality.
   const [quality, setQuality] = useState(p.quality);
@@ -594,11 +696,18 @@ function Chat({ p, events, qualities, onSend, onStop, full, onFull, viewing }: {
       </div>
       {started && (
         <Composer events={events} running={p.running} queue onSend={(t, q) => onSend(t, q)} onStop={onStop}
-          qualities={qualities} quality={quality} onQuality={setQuality} lang={p.language || "en"}
+          qualities={qualities} quality={quality} onQuality={setQuality}
           placeholder={p.running ? "Queue your next message…" : "Ask for changes, or / for quick actions"}
           actions={quickReplies.map((label) => ({ label, send: true }))}
           attach={attach} fileUrl={(f) => `/files/projects/${p.id}/${f}`}
-          context={viewPath ? { label: viewing && viewing !== "comp" ? viewing.name : viewPath, line: `[viewing: ${viewPath}]`, title: `${viewPath} goes with your message, so the agent knows which version you mean` } : undefined} />
+          context={[
+            ...(viewPath ? [{ label: viewing && viewing !== "comp" ? viewing.name : viewPath, line: `[viewing: ${viewPath}]`, title: `${viewPath} goes with your message, so the agent knows which version you mean` }] : []),
+            ...(moment ? [{
+              label: stamp(moment.t), icon: <TimerIcon size={14} />,
+              line: `[paused at ${stamp(moment.t)} ${moment.live ? "in the live preview" : "in the version I'm viewing"}${moment.screen.length ? `; on screen: ${moment.screen.map((t) => JSON.stringify(t)).join(" | ")}` : ""}]`,
+              title: `Where you paused goes with your message${moment.screen.length ? `, with what's on screen:\n${moment.screen.join("\n")}` : ""}. Say "here" or "this line" and the agent goes straight to it.`,
+            } satisfies Context] : []),
+          ]} />
       )}
     </div>
   );
@@ -626,7 +735,7 @@ const mediaName = (path: string) => {
 
 function MediaSection({ title, hint, files, empty, onDelete }: { title: string; hint: string; files: MediaFile[]; empty?: string; onDelete?: (f: MediaFile) => void }) {
   const [playing, setPlaying] = useState<string>();
-  const [pick, setPick] = useState<string>();
+  const [pos, setPos] = useState(0); // how far through the playing track, 0 to 1
   const player = useRef<HTMLAudioElement>(null);
   useEffect(() => () => player.current?.pause(), []);
   if (!files.length && !empty) return null;
@@ -636,60 +745,69 @@ function MediaSection({ title, hint, files, empty, onDelete }: { title: string; 
     list.forEach((f) => used.add(f));
     return { ...g, list };
   }).filter((g) => g.list.length);
-  const g = groups.find((x) => x.id === pick) ?? groups[0];
-  // One player for the whole list, so starting one track stops the last.
-  const toggle = (url: string) => {
+  // One player for the whole list, so starting one track stops the last. Clicking the bar starts from there.
+  const play = (f: MediaFile, at?: number) => {
     const a = player.current!;
-    if (playing === url) { a.pause(); setPlaying(undefined); return; }
-    a.src = url;
-    a.play().then(() => setPlaying(url), fail);
+    if (playing === f.url && at === undefined) { a.pause(); setPlaying(undefined); return; }
+    if (playing !== f.url) { a.src = f.url; setPos(0); }
+    if (at !== undefined && a.duration) a.currentTime = at * a.duration;
+    else if (at !== undefined) a.addEventListener("loadedmetadata", () => { a.currentTime = at * a.duration; }, { once: true });
+    a.play().then(() => setPlaying(f.url), fail);
   };
   const meta = (f: MediaFile) => <span className="small faint nowrap">{f.seconds ? clock(f.seconds) : bytes(f.size)}{f.cost ? ` · ${cash(f.cost)}` : ""}</span>;
   // Only out/ files: anything the agent put in comp/assets may be in the video, and the server refuses it anyway.
   const del = (f: MediaFile) => onDelete && f.path.startsWith("out/") &&
     <button className="btn ghost sm icon" onClick={() => onDelete(f)} aria-label={`Delete ${mediaName(f.path)}`} title="Delete"><TrashIcon size={14} /></button>;
   return (
-    <div className="card-b stack" style={{ gap: 12, borderTop: "1px solid var(--border)" }}>
-      <div className="row wrap"><h3>{title}</h3><span className="small faint">{hint}</span></div>
-      <audio ref={player} onEnded={() => setPlaying(undefined)} hidden />
-      {!files.length ? <p className="small muted">{empty}</p> : <>
-        <div className="media-tabs" role="tablist">
-          {groups.map((x) => (
-            <button key={x.id} role="tab" aria-selected={x === g} className={x === g ? "on" : ""} onClick={() => setPick(x.id)}>
-              <x.Icon size={15} /> {x.label} <span className="count">{x.list.length}</span>
-            </button>
-          ))}
-        </div>
-        {g.list[0].kind === "audio" ? (
-          <div className="media-list">
-            {g.list.map((f) => (
-              <div key={f.url} className={`media-row ${playing === f.url ? "on" : ""}`}>
-                <button className="btn icon sm" onClick={() => toggle(f.url)} aria-label={`${playing === f.url ? "Pause" : "Play"} ${mediaName(f.path)}`}>
-                  {playing === f.url ? <PauseIcon size={14} weight="fill" /> : <PlayIcon size={14} weight="fill" />}
-                </button>
-                <span className="spacer ellipsis" title={f.path}>{mediaName(f.path)}{f.item && <span className="faint"> · {f.item}</span>}</span>
-                {meta(f)}
-                <a className="btn ghost sm icon" href={f.url} download aria-label={`Download ${mediaName(f.path)}`} title="Download"><DownloadSimpleIcon size={14} /></a>
-                {del(f)}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="media-grid">
-            {g.list.map((f) => (
-              <div key={f.url} className="media-item">
-                {f.kind === "image" ? <a href={f.url} target="_blank" rel="noreferrer"><img src={f.url} alt={mediaName(f.path)} loading="lazy" /></a> : <video src={f.url} controls preload="metadata" />}
-                <div className="small row" style={{ gap: 6 }}>
-                  <span className="ellipsis spacer" title={f.path}>{mediaName(f.path)}</span>
-                  {meta(f)}
-                  {del(f)}
+    <div className="media-sec">
+      <div className="media-sec-h"><h3>{title}</h3><span className="small faint">{hint}</span></div>
+      <audio ref={player} hidden onEnded={() => { setPlaying(undefined); setPos(0); }}
+        onTimeUpdate={(e) => { const a = e.currentTarget; if (a.duration) setPos(a.currentTime / a.duration); }} />
+      {!files.length ? <p className="small muted">{empty}</p> : groups.map((g) => (
+        <section key={g.id} className="media-group">
+          <h4><g.Icon size={16} /> {g.label} <span className="count">{g.list.length}</span></h4>
+          {g.list[0].kind === "audio" ? (
+            <div className="tracks">
+              {g.list.map((f) => {
+                const on = playing === f.url;
+                return (
+                  <div key={f.url} className={`track ${on ? "on" : ""}`}>
+                    <button className="play" onClick={() => play(f)} aria-label={`${on ? "Pause" : "Play"} ${mediaName(f.path)}`}>
+                      {on ? <PauseIcon size={15} weight="fill" /> : <PlayIcon size={15} weight="fill" />}
+                    </button>
+                    <div className="track-main">
+                      <div className="row" style={{ gap: 8 }}><span className="spacer ellipsis track-name" title={f.path}>{mediaName(f.path)}</span>{meta(f)}</div>
+                      <div className="track-bar" title="Click to play from here"
+                        onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); play(f, (e.clientX - r.left) / r.width); }}>
+                        <i style={{ width: `${on ? pos * 100 : 0}%` }} />
+                      </div>
+                      {f.item && <div className="small faint ellipsis" title={f.item}>{f.item}</div>}
+                    </div>
+                    <span className="track-acts">
+                      <a className="btn ghost sm icon" href={f.url} download aria-label={`Download ${mediaName(f.path)}`} title="Download"><DownloadSimpleIcon size={14} /></a>
+                      {del(f)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="media-grid">
+              {g.list.map((f) => (
+                <div key={f.url} className="media-item">
+                  {f.kind === "image" ? <a href={f.url} target="_blank" rel="noreferrer"><img src={f.url} alt={mediaName(f.path)} loading="lazy" /></a> : <video src={f.url} controls preload="metadata" />}
+                  <div className="small row" style={{ gap: 6 }}>
+                    <span className="ellipsis spacer" title={f.path}>{mediaName(f.path)}</span>
+                    {meta(f)}
+                    {del(f)}
+                  </div>
+                  {f.item && <div className="small faint ellipsis" title={f.item}>{f.item}</div>}
                 </div>
-                {f.item && <div className="small faint">{f.item}</div>}
-              </div>
-            ))}
-          </div>
-        )}
-      </>}
+              ))}
+            </div>
+          )}
+        </section>
+      ))}
     </div>
   );
 }

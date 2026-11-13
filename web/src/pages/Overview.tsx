@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowRightIcon, BookOpenIcon, CheckCircleIcon, PlusIcon, SparkleIcon, WarningIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react";
-import { Meta, Project, cash, go, ago, help, repoURL, toast, useApi } from "../api";
+import { Meta, Project, cash, claudePlan, go, ago, help, repoURL, toast, useApi } from "../api";
 import { Empty, HelpButton, Status, projectStatus } from "../ui";
 import { ProjectTable, presetIcon } from "./Projects";
 import { NewProjectModal } from "./NewProject";
@@ -90,7 +90,7 @@ export default function Overview() {
       <div className="card kpis">
         <Kpi label="Active projects" value={String(active.length)} sub={`${count("running")} with the agent now`} />
         <Kpi label="Delivered" value={String(count("delivered"))} sub={`of ${all.length} project${all.length === 1 ? "" : "s"}`} />
-        <Kpi label="Spent this month" value={cash(costs?.this_month ?? 0)} sub="all your AI services" />
+        <Kpi label="Spent this month" value={cash(costs?.this_month ?? 0)} sub={claudePlan ? "at API prices; your Claude plan covers Claude" : "all your AI services"} />
         <Kpi label="Spent in total" value={cash(costs?.total ?? 0)} sub="see Costs for the breakdown" />
       </div>
 

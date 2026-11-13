@@ -4,6 +4,20 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-11-14
+
+### Added
+- **Point at a moment**: pause the preview and the time, with the text on screen then, goes with your next message as a chip such as **0:12.0**. "Fix the caption here" now takes the agent straight to it.
+- **Project panels**: Brief, Media, Generate, Posts and Cost moved from the small tabs under the preview to a rail on the left that opens each beside the preview, which now fills the height. Media lists voiceover, music and sound effects as separate sections with big play buttons and a bar you can click to play from any point.
+- **Costs on a Claude plan**: when Claude Code runs on your Claude Pro or Max plan, cost figures say they are API-price equivalents you aren't charged.
+
+### Changed
+- **Dictation** is English only and shows the words as you speak in the desktop app too. Each phrase is written down on this computer when you pause, so stopping no longer waits for the whole recording, and it no longer needs ffmpeg.
+
+### Fixed
+- **Desktop app on Linux**: the microphone did nothing, because its window can't record audio files. Dictation now streams the sound instead.
+- **Assistant**: it can now read a brand with a large knowledge base or library. Before, it got `No such tool available: Read` and could not see the brand.
+
 ## [0.13.0] - 2026-11-11
 
 ### Added

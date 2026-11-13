@@ -1,7 +1,7 @@
 import { ChartPieSliceIcon } from "@phosphor-icons/react";
 import { ReactNode } from "react";
 import { cash, useApi, useTenants } from "../api";
-import { Empty, HelpButton, TenantTag } from "../ui";
+import { costTitle, Empty, HelpButton, PlanNote, TenantTag } from "../ui";
 
 interface Row { provider: string; item: string; n: number; qty: number; cost: number }
 interface Costs {
@@ -38,8 +38,9 @@ export default function Costs() {
         </div>
         <HelpButton to="costs-and-spending" />
       </div>
+      <PlanNote style={{ marginBottom: 16 }} />
 
-      <div className="grid stats">
+      <div className="grid stats" title={costTitle()}>
         <div className="card stat"><div className="label">This month</div><div className="value">{cash(c.this_month)}</div><div className="sub">since the 1st</div></div>
         <div className="card stat"><div className="label">All time</div><div className="value">{cash(c.total)}</div><div className="sub">{projects} project{projects === 1 ? "" : "s"}</div></div>
         <div className="card stat"><div className="label">Per project</div><div className="value">{cash(projects ? c.total / projects : 0)}</div><div className="sub">average, including inbox replies</div></div>

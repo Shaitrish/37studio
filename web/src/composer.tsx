@@ -1,7 +1,7 @@
 // The message box under the editor agent's and the Assistant's chat, laid out like Claude Code's: what you type on
 // top, with the microphone in its corner; below it + to attach, / for quick actions, how many subagents are
 // working, the model and its effort, the files that go with the message, the turn's running time, and Send.
-import { useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpIcon, FileIcon, MicrophoneIcon, PlusIcon, SpinnerGapIcon, SquareIcon, XIcon } from "@phosphor-icons/react";
 import { clock, parseTime, type Quality } from "./api";
 import { liveStatus, modelName, Parsed, useDictation, usePromptHistory } from "./chat";
@@ -12,25 +12,26 @@ const effortName: Record<string, string> = { low: "Low", medium: "Medium", high:
 export const modelLabel = (q: Quality) => (q.harness ? q.label : `${modelName(q.model)}${effortName[q.effort] ? ` · ${effortName[q.effort]}` : ""}`);
 
 export interface Action { label: string; send?: boolean } // send: goes out at once; otherwise it fills the box
-/** Something on screen that rides along with the message as one line the agent understands, e.g. [viewing: out/a.mp4]. */
-export interface Context { label: string; title?: string; line: string }
+/** Something on screen that rides along with the message as one line the agent understands, e.g. [viewing: out/a.mp4]
+ *  or [paused at 0:12.4 in the live preview; …]. */
+export interface Context { label: string; title?: string; line: string; icon?: ReactNode }
 
-export function Composer({ events, running, queue, onSend, onStop, qualities, quality, onQuality, lang, placeholder, actions = [], attach, fileUrl, context }: {
+export function Composer({ events, running, queue, onSend, onStop, qualities, quality, onQuality, placeholder, actions = [], attach, fileUrl, context }: {
   events: Parsed[]; running: boolean;
   queue?: boolean; // while the agent works, a message waits for the turn to end (the editor agent) instead of being refused
   onSend: (text: string, quality: string) => Promise<unknown> | void; onStop: () => void;
   qualities: Quality[]; quality: string; onQuality: (id: string) => void;
-  lang: string; placeholder: string; actions?: Action[];
+  placeholder: string; actions?: Action[];
   attach?: (files: File[]) => Promise<string[]>; // uploads images and returns their paths, sent as [image: …] lines
   fileUrl?: (path: string) => string;
-  context?: Context;
+  context?: Context[];
 }) {
   const [text, setText] = useState("");
   const [files, setFiles] = useState<string[]>([]);
-  const [hideCtx, setHideCtx] = useState<string>(); // the context chip you closed, until something else is on screen
-  const ctx = context && context.line !== hideCtx ? context : undefined;
+  const [hidden, setHidden] = useState<string[]>([]); // chips you closed, until something else is on screen
+  const ctx = (context ?? []).filter((c) => !hidden.includes(c.line));
   const box = useRef<HTMLTextAreaElement>(null);
-  const mic = useDictation(lang, (said) => setText((t) => (t ? t.trimEnd() + " " : "") + said));
+  const mic = useDictation((said) => setText((t) => (t ? t.trimEnd() + " " : "") + said));
   const history = usePromptHistory(events, setText);
   const agents = useMemo(() => (running ? liveStatus(events).agents : 0), [events, running]);
 
@@ -58,7 +59,7 @@ export function Composer({ events, running, queue, onSend, onStop, qualities, qu
   const send = async (t = text) => {
     if ((!t.trim() && !files.length) || blocked) return;
     mic.stop();
-    const lines = [t.trim(), ...(ctx ? [ctx.line] : []), ...files.map((f) => `[image: ${f}]`)].filter(Boolean);
+    const lines = [t.trim(), ...ctx.map((c) => c.line), ...files.map((f) => `[image: ${f}]`)].filter(Boolean);
     const kept = { t, files };
     setText(""); setFiles([]); setMenu(false);
     try { await onSend(lines.join("\n"), quality); } catch { setText(kept.t); setFiles(kept.files); }
@@ -90,7 +91,7 @@ export function Composer({ events, running, queue, onSend, onStop, qualities, qu
         )}
         <div className="composer-top">
           <textarea ref={box} rows={1}
-            value={mic.listening ? text + (mic.interim ? (text ? " " : "") + mic.interim : "") : text}
+            value={mic.interim ? text + (text ? " " : "") + mic.interim : text} readOnly={!!mic.interim}
             placeholder={mic.busy ? "Writing down what you said…" : mic.listening ? "Listening… click the microphone to stop" : placeholder}
             aria-label={placeholder}
             onChange={(e) => setText(e.target.value)}
@@ -107,10 +108,8 @@ export function Composer({ events, running, queue, onSend, onStop, qualities, qu
             }} />
           {mic.supported && (
             <div className="mic">
-              <button className="lang" onClick={() => mic.setLang(mic.lang === "bn-BD" ? "en-US" : "bn-BD")}
-                title="Language you'll speak in. Click to switch." aria-label="Dictation language">{mic.lang === "bn-BD" ? "বাং" : "EN"}</button>
               <button className={`cbtn ${mic.listening ? "rec" : ""}`} onClick={mic.listening ? mic.stop : mic.start} disabled={mic.busy}
-                title={mic.busy ? "Writing down what you said" : mic.listening ? "Stop dictation" : "Dictate"} aria-label={mic.listening ? "Stop dictation" : "Dictate"}>
+                title={mic.busy ? "Writing down what you said" : mic.listening ? "Stop dictation" : "Dictate (English)"} aria-label={mic.listening ? "Stop dictation" : "Dictate"}>
                 {mic.busy ? <SpinnerGapIcon size={16} className="spin" /> : mic.listening ? <SquareIcon size={13} weight="fill" /> : <MicrophoneIcon size={16} />}
               </button>
             </div>
@@ -135,14 +134,14 @@ export function Composer({ events, running, queue, onSend, onStop, qualities, qu
               <ModelOptions qualities={qualities} claudeLabel={modelLabel} />
             </select>
           </label>
-          {(ctx || files.length > 0) && <span className="csep" />}
+          {(ctx.length > 0 || files.length > 0) && <span className="csep" />}
           <div className="cfiles">
-            {ctx && (
-              <span className="cfile" title={ctx.title ?? "Sent with your message, so the agent knows what you're looking at"}>
-                <FileIcon size={14} /><span className="ellipsis">{ctx.label}</span>
-                <button onClick={() => setHideCtx(ctx.line)} aria-label={`Don't send ${ctx.label}`}><XIcon size={12} /></button>
+            {ctx.map((c) => (
+              <span key={c.line} className="cfile" title={c.title ?? "Sent with your message, so the agent knows what you're looking at"}>
+                {c.icon ?? <FileIcon size={14} />}<span className="ellipsis">{c.label}</span>
+                <button onClick={() => setHidden([...hidden, c.line])} aria-label={`Don't send ${c.label}`}><XIcon size={12} /></button>
               </span>
-            )}
+            ))}
             {files.map((f) => (
               <span key={f} className="cfile" title={f}>
                 {fileUrl ? <img src={fileUrl(f)} alt="" /> : <FileIcon size={14} />}<span className="ellipsis">{f.replace(/^.*\//, "")}</span>

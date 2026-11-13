@@ -262,11 +262,13 @@ func getMeta(r *http.Request) (any, error) {
 			"anthropic":    os.Getenv("ANTHROPIC_API_KEY") != "" || os.Getenv("CLAUDE_CODE_OAUTH_TOKEN") != "",
 			"codex":        agent.CodexReady(),
 			"claude_login": keys.ClaudeLoggedIn(),
-			"opencode":     agent.ToolInstalled("opencode"),
-			"bypass":       config.Env("STUDIO37_AGENT_PERMISSIONS", "") == "bypass",
-			"password":     config.Env("STUDIO37_PASSWORD", "") != "",
-			"desktop":      Desktop.OpenURL != nil,
-			"reveal":       canReveal(r), // files can be shown in this computer's file manager
+			// Claude Code on a Pro/Max plan: its cost figures are what the run would cost at API prices, not a bill.
+			"claude_plan": os.Getenv("ANTHROPIC_API_KEY") == "" && (os.Getenv("CLAUDE_CODE_OAUTH_TOKEN") != "" || keys.ClaudeLoggedIn()),
+			"opencode":    agent.ToolInstalled("opencode"),
+			"bypass":      config.Env("STUDIO37_AGENT_PERMISSIONS", "") == "bypass",
+			"password":    config.Env("STUDIO37_PASSWORD", "") != "",
+			"desktop":     Desktop.OpenURL != nil,
+			"reveal":      canReveal(r), // files can be shown in this computer's file manager
 		},
 	}, nil
 }

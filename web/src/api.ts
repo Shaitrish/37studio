@@ -204,6 +204,9 @@ export const fail = (e: unknown) => toast(e instanceof Error ? e.message : Strin
 // downloads to a Save dialog, through the app (internal/server/desktop.go). main.tsx sets this from /api/meta.
 export let desktop = false;
 export const setDesktop = (v: boolean) => { desktop = v; };
+// Claude Code runs on the person's Claude Pro/Max plan: its costs are API-price equivalents, not charges. main.tsx sets it.
+export let claudePlan = false;
+export const setClaudePlan = (v: boolean) => { claudePlan = v; };
 export const openExternal = (url: string) =>
   api("/desktop/open", { body: { url: new URL(url, location.href).href } }).catch(fail);
 // Whether files can be shown in this computer's file manager: the desktop app, or the server run on this computer.

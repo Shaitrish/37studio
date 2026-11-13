@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { CaretRightIcon, MegaphoneIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
 import { api, Campaign, fail, go, toast, cash, useApi, useTenants } from "../api";
-import { Empty, HelpButton, Field, Modal, TenantPicker, TenantTag } from "../ui";
+import { costTitle, Empty, HelpButton, Field, Modal, TenantPicker, TenantTag } from "../ui";
 import { ProjectTable } from "./Projects";
 import { NewProjectModal } from "./NewProject";
 
@@ -106,7 +106,7 @@ export function CampaignPage({ id }: { id: number }) {
         <div className="spacer">
           <div className="crumbs"><a href="#/campaigns">Campaigns</a><CaretRightIcon size={14} /><a href={`#/clients/${c.tenant_id}`}>{c.tenant_name}</a></div>
           <h1>{c.name}</h1>
-          <p>{c.video_count} video{c.video_count === 1 ? "" : "s"} · cost {cash(c.cost ?? 0)}</p>
+          <p>{c.video_count} video{c.video_count === 1 ? "" : "s"} · <span title={costTitle()}>cost {cash(c.cost ?? 0)}</span></p>
         </div>
         <HelpButton to="campaigns" />
         <button className="btn primary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New video</button>

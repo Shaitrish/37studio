@@ -1,10 +1,27 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { CSSProperties, ReactNode, useEffect, useRef, useState } from "react";
 import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, DownloadSimpleIcon, FileAudioIcon, FileTextIcon, FilmStripIcon, ImageIcon, PencilSimpleIcon, PushPinIcon, TrashIcon, TextTIcon, CloudArrowUpIcon, QuestionIcon, XIcon } from "@phosphor-icons/react";
-import { AssetMeta, bytes, clock, fail, FileInfo, help, Project, Quality, Tenant, toast } from "./api";
+import { AssetMeta, bytes, claudePlan, clock, fail, FileInfo, help, Project, Quality, Tenant, toast } from "./api";
 
 /** Opens the guide section `to` (its heading's anchor in docs/guide.md) beside the page. Every screen has one. */
 export function HelpButton({ to, label = "Help" }: { to: string; label?: string }) {
   return <button className="btn ghost sm help-btn" onClick={() => help(to)} title="Read how this works, without leaving this page (?)"><QuestionIcon size={15} /> {label}</button>;
+}
+
+/** Hover text for any cost figure that includes Claude. */
+export const costTitle = () => claudePlan
+  ? "Claude's share is what Claude Code reports at API prices. It runs on your Claude plan, so you aren't charged it; it only counts toward the plan's usage limits."
+  : "Billed by the AI services to your own keys, at these prices.";
+
+/** Beside cost figures: on a Claude Pro/Max plan, Claude Code's dollar figures are API-price equivalents, not a bill,
+ *  and people seeing "$6.80" for one video should know that before they panic. */
+export function PlanNote({ style }: { style?: CSSProperties }) {
+  if (!claudePlan) return null;
+  return (
+    <p className="note-box small" style={{ margin: 0, ...style }}>
+      <strong>You aren't charged this for Claude.</strong> Claude Code reports what each run would cost at API prices, and you run it on your
+      Claude plan, so it only counts toward the plan's usage limits. Gemini and ElevenLabs media are billed to those accounts.
+    </p>
+  );
 }
 
 export function Modal({ title, sub, onClose, children, footer, size, help: topic }: {

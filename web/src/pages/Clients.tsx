@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { FolderOpenIcon, GlobeIcon, PlusIcon, UsersThreeIcon } from "@phosphor-icons/react";
 import { api, bytes, fail, folderFiles, go, Tenant, toast, cash, upload, useApi } from "../api";
-import { Avatar, Empty, Field, HelpButton, Modal, Progress } from "../ui";
+import { Avatar, costTitle, Empty, Field, HelpButton, Modal, Progress } from "../ui";
 
 export default function Clients() {
   const { data: tenants } = useApi<Tenant[]>("/tenants");
@@ -40,7 +40,7 @@ export default function Clients() {
                 <span className="swatch" style={{ background: t.brand_color }} />
                 <span className="swatch" style={{ background: t.accent_color }} />
                 <span className="spacer" />
-                <span>{t.project_count} project{t.project_count === 1 ? "" : "s"}</span>·<span>{cash(t.cost_usd ?? 0)} spent</span>
+                <span>{t.project_count} project{t.project_count === 1 ? "" : "s"}</span>·<span title={costTitle()}>{cash(t.cost_usd ?? 0)} spent</span>
               </div>
             </a>
           ))}

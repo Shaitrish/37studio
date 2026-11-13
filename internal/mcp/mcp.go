@@ -337,7 +337,11 @@ func Handler(mux http.Handler) http.HandlerFunc {
 				if len(t.Required) > 0 {
 					schema["required"] = t.Required
 				}
-				tools = append(tools, map[string]any{"name": t.Name, "description": t.Desc, "inputSchema": schema})
+				// Claude Code saves a result over 50,000 characters to a file and tells the model to read it, but the
+				// Assistant has no file tools, so a big brand (get_company) came back unreadable. This raises that
+				// limit; Claude Code still cuts results at MAX_MCP_OUTPUT_TOKENS (25,000 tokens, about 100,000 characters).
+				tools = append(tools, map[string]any{"name": t.Name, "description": t.Desc, "inputSchema": schema,
+					"_meta": map[string]any{"anthropic/maxResultSizeChars": 100000}})
 			}
 			mcpReply(w, req.ID, map[string]any{"tools": tools}, nil)
 		case "tools/call":

@@ -1,54 +1,61 @@
 package transcribe
 
 import (
+	"bytes"
+	"encoding/json"
 	"io"
-	"mime/multipart"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"slices"
+	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/Shaitrish/37studio/internal/httpapi"
 )
 
-// A dictation upload streams to disk with its language, and a missing, oversized or oddly labelled one is the
-// user's error (400), not the server's.
-func TestDictationUpload(t *testing.T) {
-	upload := func(lang string, audio io.Reader) (string, []byte, error) {
-		pr, pw := io.Pipe()
-		mw := multipart.NewWriter(pw)
-		go func() {
-			if lang != "" {
-				mw.WriteField("lang", lang)
-			}
-			if audio != nil {
-				w, _ := mw.CreateFormFile("audio", "clip.webm")
-				io.Copy(w, audio)
-			}
-			pw.CloseWithError(mw.Close())
-		}()
-		r := httptest.NewRequest("POST", "/api/dictate", pr)
-		r.Header.Set("Content-Type", mw.FormDataContentType())
-		path := filepath.Join(t.TempDir(), "clip")
-		got, err := saveClip(r, path)
-		pr.CloseWithError(io.ErrClosedPipe) // let the writer finish when saveClip stopped early
-		b, _ := os.ReadFile(path)
-		return got, b, err
+// The worker protocol end to end, with a fake Python that echoes how many samples it got: drafts and finals reach
+// it, an empty body only starts it, and odd or oversized uploads are the user's error (400), not the server's.
+func TestDictate(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the fake Python is a shell script")
+	}
+	fake := filepath.Join(t.TempDir(), "python")
+	os.WriteFile(fake, []byte(`#!/bin/sh
+echo '{"ready": true}'
+while read -r head; do
+  n=$(echo "$head" | sed 's/.*"n":\([0-9]*\).*/\1/')
+  final=$(echo "$head" | grep -c '"final":true')
+  head -c "$n" >/dev/null
+  echo "{\"text\": \"$((n / 2)) samples, final $final\"}"
+done
+`), 0o755)
+	t.Setenv("STUDIO37_ASR_PYTHON", fake)
+	t.Cleanup(func() {
+		if dictation.w != nil {
+			dictation.drop(dictation.w)
+		}
+	})
+
+	post := func(query string, body []byte) (any, error) {
+		return Dictate(httptest.NewRequest("POST", "/api/dictate"+query, bytes.NewReader(body)))
+	}
+	text := func(v any) string { b, _ := json.Marshal(v); return string(b) }
+
+	if v, err := post("", nil); err != nil || text(v) != `{"ok":true}` {
+		t.Fatalf("warm: %v %v", text(v), err)
+	}
+	if v, err := post("?final=1", make([]byte, 3200)); err != nil || text(v) != `{"text":"1600 samples, final 1"}` {
+		t.Fatalf("final: %v %v", text(v), err)
+	}
+	if v, err := post("", make([]byte, 64)); err != nil || text(v) != `{"text":"32 samples, final 0"}` {
+		t.Fatalf("draft: %v %v", text(v), err)
 	}
 	bad := func(err error) bool { _, ok := err.(httpapi.Error); return ok }
-
-	if lang, b, err := upload(" BN ", strings.NewReader("opus")); err != nil || lang != "bn" || string(b) != "opus" {
-		t.Fatalf("got %q %q %v", lang, b, err)
+	if _, err := post("?final=1", make([]byte, 3)); !bad(err) {
+		t.Fatalf("odd bytes: %v", err)
 	}
-	if _, _, err := upload("en", nil); !bad(err) {
-		t.Fatalf("no audio: %v", err)
-	}
-	if _, _, err := upload("bangla; rm", strings.NewReader("opus")); !bad(err) {
-		t.Fatalf("odd lang: %v", err)
-	}
-	if _, _, err := upload("", io.LimitReader(zeros{}, maxClip+1)); !bad(err) || !strings.Contains(err.Error(), "too long") {
+	if _, err := Dictate(httptest.NewRequest("POST", "/api/dictate", io.LimitReader(zeros{}, maxClip+2))); !bad(err) || !strings.Contains(err.Error(), "too long") {
 		t.Fatalf("too long: %v", err)
 	}
 }
@@ -56,22 +63,3 @@ func TestDictationUpload(t *testing.T) {
 type zeros struct{}
 
 func (zeros) Read(p []byte) (int, error) { clear(p); return len(p), nil }
-
-// English takes the fast model; Bangla and detection keep the script's, since small and medium write Bangla in
-// Devanagari. The text comes out as one line.
-func TestDictationModelAndText(t *testing.T) {
-	if a := dictationArgs("en"); !slices.Contains(a, "small") || !slices.Contains(a, "--dictation") {
-		t.Fatalf("en: %v", a)
-	}
-	if a := dictationArgs("bn"); slices.Contains(a, "--model") || !slices.Contains(a, "bn") {
-		t.Fatalf("bn: %v", a)
-	}
-	if a := dictationArgs(""); slices.Contains(a, "--language") || slices.Contains(a, "--model") {
-		t.Fatalf("detect: %v", a)
-	}
-	path := filepath.Join(t.TempDir(), "transcript.json")
-	os.WriteFile(path, []byte(`{"segments":[{"text":" আজকের ক্লাসে "},{"text":""},{"text":"Newton's laws."}]}`), 0o644)
-	if s, err := transcriptText(path); err != nil || s != "আজকের ক্লাসে Newton's laws." {
-		t.Fatalf("text = %q %v", s, err)
-	}
-}

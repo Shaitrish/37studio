@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { BookOpenIcon, ClosedCaptioningIcon, FilmSlateIcon, ImageIcon, MegaphoneIcon, PlusIcon, MagicWandIcon, TrashIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react";
 import { api, go, Project, cash, fail, toast, useApi, useTenants, ago } from "../api";
-import { Empty, HelpButton, Seg, Status, TenantTag, projectStatus } from "../ui";
+import { costTitle, Empty, HelpButton, Seg, Status, TenantTag, projectStatus } from "../ui";
 import { NewProjectModal } from "./NewProject";
 import { NewPostModal } from "./NewPost";
 
@@ -101,7 +101,7 @@ export function ProjectTable({ projects, hideClient, picked, onPick }: {
                 </td>
                 {!hideClient && <td className="muted"><TenantTag tenants={tenants} id={p.tenant_id} name={p.tenant_name} /></td>}
                 <td><Status value={projectStatus(p)} /></td>
-                <td className="num">{cash(p.quote?.cost)}</td>
+                <td className="num" title={costTitle()}>{cash(p.quote?.cost)}</td>
                 <td className="num muted">{ago(p.created_at)}</td>
               </tr>
             );

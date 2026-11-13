@@ -18,7 +18,7 @@ The whole journey, in order:
 
 ### Find help in the app
 
-- **Help**, at the top of every page and in most windows, opens the part of this guide about what's on screen. It opens beside the page, so you don't lose your place. In a project or brand it follows the tab you're on.
+- **Help**, at the top of every page and in most windows, opens the part of this guide about what's on screen. It opens beside the page, so you don't lose your place. In a project it follows the open panel, and in a brand the tab you're on.
 - Press **?** to do the same from the keyboard, and **Esc** to close it.
 - **Learn 37Studio** on the Overview page has the first steps.
 - **Guide** in the sidebar is the whole guide, with search.
@@ -212,7 +212,7 @@ Other models you've connected appear in the same menus.
 
 ## Work on a project
 
-The project page has a preview, a row of versions, some tabs and the agent's chat.
+The project page has a rail of panels on the left, the preview with its row of versions, and the agent's chat.
 
 ### Chat with the editor agent
 
@@ -220,9 +220,10 @@ Ask for changes in plain words, like "make the hook shorter" or "use the second 
 
 - Attach screenshots by button, paste or drop, to show what you mean.
 - Change the model for one message, for example a cheap one for a small fix.
-- Dictate instead of typing: click the microphone in the corner of the box, and the switch beside it for Bangla or English. In the desktop app it records you and turns it into text on this computer, free (needs Python 3 and ffmpeg). The first time it downloads the speech model; English takes a few seconds, Bangla about 15.
+- Dictate in English instead of typing: click the microphone in the corner of the box, talk, and click it again to stop. Words show as you speak. In the desktop app and Firefox it runs on this computer, free (needs Python 3); each phrase is written down properly when you pause. The first time it downloads the speech models, about 550 MB.
 - Type **/** or click the **/** button for quick actions such as "Looks good, render the final".
 - Pick a version under the preview and it goes with your message, so the agent knows which one "this" means. Click × on it to leave it out.
+- Pause the preview where something is wrong, and that moment goes with your message with the text on screen then, shown as a clock and a time such as **0:12.0**. Say "fix the caption here" and the agent goes straight to it, which is quicker and costs less than describing it. Click × on it to leave it out.
 - Keep typing while the agent works. Your message is marked as sent while working.
 - Press **Up** in the message box to bring back what you sent before, and **Down** to come back to what you were typing. **Enter** sends, **Shift+Enter** starts a new line.
 - Press **Esc** to stop the agent.
@@ -244,16 +245,18 @@ When jobs don't depend on each other, the agent hands them to subagents that wor
 
 **Edit timeline** opens a real timeline editor in a browser tab, where you can drag, trim and split clips and change text and audio. The agent picks up your hand edits on its next turn. Close it with the **X** beside the button.
 
-### Project tabs
+### Project panels
 
-| Tab | What's there |
+The rail on the left of the preview opens a panel beside it. Click the same icon, or the ×, to close it and give the preview the room.
+
+| Panel | What's there |
 | --- | --- |
 | Videos | The videos cut from this source. Only shows when there are some |
 | Brief | The brief, focus page and quality, plus **Delete project** |
-| Media | Your sources and everything the video uses. Add footage or subtitles here |
+| Media | Everything the video uses, by voiceover, music, sound effects and pictures, each with a play button. Then your sources: add footage or subtitles here |
 | Generate | Make images, clips, voiceover, sound effects and music by hand |
 | Posts | Every post of this video and where it stands |
-| Cost | What this project has cost so far |
+| Cost | What this project has cost so far. The rail shows the total |
 
 ## Long recordings
 
@@ -486,6 +489,8 @@ Connected apps can spend on your AI keys and post to your accounts, so connect o
 ## Costs and spending
 
 Every project, campaign and brand shows what it cost in AI usage, and the **Costs** page breaks it down by service, brand and month. There's no markup, because you pay the AI services directly. Rendering, transcription and storage run on your machine, so they are free.
+
+The Claude figures are what Claude Code reports a run would cost at API prices. If Claude Code runs on your Claude Pro or Max plan rather than an API key, you aren't charged them: they only count toward the plan's usage limits, and the Costs page and each project say so. Gemini and ElevenLabs are billed to those accounts.
 
 Two limits are in **Settings → Spending**:
 

@@ -485,8 +485,6 @@ input[type="color"].input { padding: 3px; height: 36px; cursor: pointer; }
 .version.add .vthumb { border: 1.5px dashed var(--input); background: transparent; }
 .version.add:hover .vthumb { border-color: var(--primary); color: var(--primary); }
 .version.add:disabled { opacity: 0.5; cursor: not-allowed; }
-.tabbed > .card { border: 0; box-shadow: none; border-radius: 0 0 var(--radius) var(--radius); }
-.tabbed > .card > .card-h:first-child { display: none; }
 .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
 .chip { white-space: nowrap; }
 .typing { min-width: 0; }
@@ -500,15 +498,6 @@ input[type="color"].input { padding: 3px; height: 36px; cursor: pointer; }
 .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
 .media-item { border: 1px solid var(--border); border-radius: var(--radius); padding: 8px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .media-item audio { width: 100%; height: 36px; }
-.media-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
-.media-tabs button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--card); color: var(--muted-fg); padding: 6px 12px; border-radius: 99px; cursor: pointer; font: inherit; font-weight: 500; white-space: nowrap; }
-.media-tabs button:hover { color: var(--fg); }
-.media-tabs button.on { background: var(--fg); border-color: var(--fg); color: var(--bg); }
-.media-tabs .count { font-size: 12px; opacity: 0.6; }
-.media-list { border: 1px solid var(--border); border-radius: var(--radius); display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); overflow: hidden; }
-.media-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 6px; min-width: 0; border-bottom: 1px solid var(--border); }
-.media-row.on { background: var(--primary-soft); }
-.media-row.on .spacer { color: var(--primary); }
 .media-item img, .media-item video { width: 100%; height: 120px; object-fit: contain; background: var(--muted); border-radius: var(--radius-sm); display: block; }
 
 /* ---- composer: one box, toolbar inside (like Claude / ChatGPT) */
@@ -522,8 +511,6 @@ input[type="color"].input { padding: 3px; height: 36px; cursor: pointer; }
 .composer-box textarea { display: block; flex: 1; min-width: 0; border: 0; outline: 0; resize: none; background: transparent; padding: 12px 12px 6px 14px; min-height: 48px; max-height: 200px; line-height: 1.5; field-sizing: content; }
 .composer-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 4px 6px 6px; min-width: 0; }
 .composer .mic { flex: none; display: flex; align-items: center; gap: 2px; padding: 6px 6px 0 0; }
-.composer .mic .lang { border: 0; background: transparent; color: var(--faint-fg); font-size: 11.5px; font-weight: 600; padding: 2px 5px; border-radius: 5px; cursor: pointer; }
-.composer .mic .lang:hover { background: var(--muted); color: var(--fg); }
 .composer .slash-btn { font: 600 15px/1 "Geist Mono", ui-monospace, monospace; border: 1px solid var(--input); width: 24px; height: 24px; margin: 0 3px; border-radius: 6px; }
 .cpill { flex: none; position: relative; display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 99px; background: var(--muted); color: var(--muted-fg); font-size: 12.5px; font-weight: 500; white-space: nowrap; }
 .cpill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint-fg); opacity: 0.6; }
@@ -772,3 +759,56 @@ a.perf-title:hover { color: var(--primary); }
 .choice:disabled { opacity: 0.45; cursor: not-allowed; }
 .plat-files { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 6px 16px; }
 .plat-files .select { flex: 1; min-width: 0; }
+
+/* ---- editor: a rail of panels on the left (Brief, Media, Generate, Posts, Cost), the open panel, then the preview */
+.editor-main { display: flex; gap: 12px; min-width: 0; align-items: stretch; }
+.rail { flex: none; width: 68px; display: flex; flex-direction: column; gap: 4px; }
+.rail button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px 8px; border: 0; border-radius: var(--radius); background: transparent; color: var(--muted-fg); cursor: pointer; font-size: 11.5px; font-weight: 500; line-height: 1.2; }
+.rail button:hover { background: var(--hover); color: var(--fg); }
+.rail button.on { background: var(--primary-soft); color: var(--primary); }
+.rail button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rail .badge { position: absolute; top: 4px; right: 8px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 99px; background: var(--fg); color: var(--bg); font: 600 10px/16px var(--font); font-style: normal; text-align: center; }
+.panel { flex: 0 0 min(380px, 42%); min-width: 0; display: flex; flex-direction: column; overflow: hidden; animation: panel-in 0.18s var(--ease); }
+@keyframes panel-in { from { opacity: 0; transform: translateX(-8px); } }
+.panel-h { display: flex; align-items: center; gap: 8px; padding: 12px 10px 10px 16px; border-bottom: 1px solid var(--border); }
+.panel-h h2 { font-size: 15px; }
+.panel-b { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+.panel-b > .card { border: 0; box-shadow: none; border-radius: 0; background: transparent; }
+.panel-b > .card > .card-h:first-child { display: none; }
+.panel-b > * + * { border-top: 1px solid var(--border); }
+.preview { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+.media-sec { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 16px; }
+.media-sec-h { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.media-group h4 { margin: 0 0 8px; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted-fg); }
+.media-group .count { font-weight: 500; opacity: 0.7; }
+.tracks { display: flex; flex-direction: column; gap: 6px; }
+.track { display: flex; align-items: center; gap: 10px; padding: 8px 4px 8px 8px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); min-width: 0; }
+.track.on { border-color: var(--primary); background: var(--primary-soft); }
+.track .play { flex: none; width: 34px; height: 34px; border-radius: 99px; border: 0; background: var(--ink); color: var(--ink-fg); display: grid; place-items: center; cursor: pointer; }
+.track .play:hover { background: var(--ink-hover); }
+.track.on .play { background: var(--primary); color: var(--primary-fg); }
+.track-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.track-name { font-weight: 500; }
+.track-bar { height: 6px; border-radius: 99px; background: var(--muted); cursor: pointer; overflow: hidden; }
+.track.on .track-bar { background: var(--card); }
+.track-bar i { display: block; height: 100%; background: var(--primary); transition: width 0.25s linear; }
+.track-acts { flex: none; display: flex; opacity: 0.55; }
+.track:hover .track-acts, .track:focus-within .track-acts { opacity: 1; }
+.panel .media-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.gen-kinds { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; }
+.gen-kinds button { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); color: var(--muted-fg); cursor: pointer; font-size: 12.5px; font-weight: 500; }
+.gen-kinds button:hover { color: var(--fg); border-color: var(--input); }
+.gen-kinds button.on { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+
+@media (min-width: 1101px) {
+  .editor-main { overflow: hidden; padding-right: 0; }
+  .editor .preview .stage { flex: 1; height: auto; min-height: 300px; }
+}
+@media (max-width: 1100px) {
+  .editor-main { flex-direction: column; }
+  .preview { order: 0; }
+  .rail { order: 1; width: auto; flex-direction: row; overflow-x: auto; scrollbar-width: thin; }
+  .rail button { flex: 1 0 72px; }
+  .panel { order: 2; flex: none; }
+}
