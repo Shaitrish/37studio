@@ -25,6 +25,7 @@ import (
 	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/gen"
 	"github.com/Shaitrish/37studio/internal/httpapi"
+	"github.com/Shaitrish/37studio/internal/integrations"
 	"github.com/Shaitrish/37studio/internal/keys"
 	"github.com/Shaitrish/37studio/internal/mcp"
 	"github.com/Shaitrish/37studio/internal/proc"
@@ -38,7 +39,7 @@ import (
 	"github.com/Shaitrish/37studio/internal/update"
 )
 
-// CLI runs the agent's helper commands (gen, clip, transcribe, sql, stats, strategy) when args name one. The agent calls them as
+// CLI runs the agent's helper commands (gen, api, clip, transcribe, sql, stats, strategy) when args name one. The agent calls them as
 // `37studio …`, so every build of the app, desktop included, has to answer to them.
 func CLI(args []string) (code int, ok bool) {
 	if len(args) == 0 {
@@ -47,6 +48,8 @@ func CLI(args []string) (code int, ok bool) {
 	switch args[0] {
 	case "gen":
 		return agent.GenCLI(args[1:]), true
+	case "api":
+		return agent.APICLI(args[1:]), true
 	case "clip":
 		return project.ClipCLI(args[1:]), true
 	case "transcribe":
@@ -182,6 +185,10 @@ func Routes() *http.ServeMux {
 	mux.HandleFunc("DELETE /api/codex/login", httpapi.JSON(agent.CodexLogout))
 	mux.HandleFunc("GET /api/keys", httpapi.JSON(keys.List))
 	mux.HandleFunc("PUT /api/keys", httpapi.JSON(keys.Put))
+	mux.HandleFunc("GET /api/integrations", httpapi.JSON(integrations.List))
+	mux.HandleFunc("PUT /api/integrations/{service}", httpapi.JSON(integrations.Put))
+	mux.HandleFunc("DELETE /api/integrations/{service}", httpapi.JSON(integrations.Delete))
+	mux.HandleFunc("POST /api/integrations/{service}/call", httpapi.JSON(integrations.Call))
 	mux.HandleFunc("GET /api/update", httpapi.JSON(update.Check))
 	mux.HandleFunc("GET /api/autopilots", httpapi.JSON(autopilot.List))
 	mux.HandleFunc("POST /api/autopilots", httpapi.JSON(autopilot.Save))

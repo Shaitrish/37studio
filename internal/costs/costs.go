@@ -29,6 +29,10 @@ func Quote(p map[string]any) map[string]any {
 		if u["provider"] == "fal" {
 			label = "fal.ai " + store.Str(u["item"])
 		}
+		var name string // a service connected in Settings → Other services, booked by `37studio api`
+		if store.DB.QueryRow("select name from integrations where id=?", u["provider"]).Scan(&name) == nil {
+			label = name + " " + store.Str(u["item"])
+		}
 		if u["provider"] == "anthropic" || u["provider"] == "opencode" || u["provider"] == "codex" {
 			name := map[string]string{"anthropic": "Claude", "opencode": "OpenCode", "codex": "Codex"}[store.Str(u["provider"])]
 			label, detail = name+" agent ("+store.Str(u["item"])+")", fmt.Sprintf("%v runs, %.1fM tokens", u["n"], qty/1e6)

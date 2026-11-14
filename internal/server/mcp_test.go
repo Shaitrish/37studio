@@ -48,7 +48,7 @@ func TestMCP(t *testing.T) {
 			continue
 		}
 		path := tl.Path
-		for _, id := range []string{"company_id", "project_id", "campaign_id", "autopilot_id"} {
+		for _, id := range []string{"company_id", "project_id", "campaign_id", "autopilot_id", "service"} {
 			path = strings.ReplaceAll(path, "{"+id+"}", "1")
 		}
 		if _, pattern := mux.Handler(httptest.NewRequest(tl.Method, path, nil)); pattern == "" || pattern == "GET /" {

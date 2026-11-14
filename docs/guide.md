@@ -133,6 +133,18 @@ From source the service is called `37studio`, and in the desktop app the command
 | Codex | Sign in with a ChatGPT plan, no API key. Runs count against your plan |
 | OpenCode, OpenAI, xAI, OpenRouter | More models for the agent. Each adds its newest models to the model menus |
 
+### Any other service
+
+A voice, image, video, music or transcription service with an API key works too, such as Cartesia, Deepgram or Runway:
+
+- Open **Assistant** and say what it's for and paste the key, like "Connect Cartesia for voiceovers, here's my key: …".
+- The Assistant reads the service's API docs, saves how to call it, tests the key and picks a default voice or model.
+- It shows under **Settings → AI services → Other services**, where you can read how videos use it, replace the key or remove it.
+- The editor agent uses it when you ask for it by name, or instead of the built-in one if you said so ("use Cartesia for every voiceover").
+- Its cost shows on the project and the Costs page when the Assistant saved its price, and counts toward **Ask before media costs more than**.
+- Apps connected over MCP (Claude Code, Cursor) can set one up the same way.
+- Social platforms can't be added like this: each needs its own sign-in and upload code in the app.
+
 ## Add a brand
 
 Everything you make belongs to a brand, so add one first.
@@ -459,6 +471,7 @@ The numbers need one more permission per platform. Meta needs `read_insights` an
 - "Plan three reels a week for a brand at 8 pm with my approval"
 - "Publish yesterday's video to all its Pages"
 - "What did we spend this month, by brand?"
+- "Connect Cartesia for voiceovers, here's my key: …"
 
 It asks before it deletes anything, publishes, approves an Autopilot video or replies to a customer. Each reply's cost shows in the chat and on the Costs page. **New conversation** clears the chat.
 

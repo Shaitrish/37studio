@@ -4,6 +4,11 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-11-15
+
+### Added
+- **Any other AI service**: tell the Assistant "Connect Cartesia for voiceovers, here's my key" (or Deepgram, Runway, any service with an API key). It reads the service's docs, saves how to call it and tests the key, and the editor agent can use it from then on. Connected services show under Settings → AI services → Other services, with their cost on each project.
+
 ## [0.14.0] - 2026-11-14
 
 ### Added

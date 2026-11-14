@@ -253,6 +253,25 @@ var Tools = []mcpTool{
 		Do: func(mux http.Handler, a map[string]any) (string, bool) {
 			return mcpDo(mux, "PUT", "/api/keys", a["keys"])
 		}},
+	{Name: "list_integrations", Desc: "Services connected without built-in support (any API with a key, like Cartesia or Deepgram): what each is for, its guide for the editor agent, and whether its key is set (last 4 characters only).",
+		Method: "GET", Path: "/api/integrations"},
+	{Name: "save_integration", Desc: "Connect any service that has an HTTP API and a key, or change one, so the editor agent can use it (37studio api <service> …). " +
+		"Use set_keys instead for the built-in ones (Gemini, ElevenLabs, fal.ai, OpenAI and the rest). Read the service's API docs first (WebFetch), then save: its https base URL, how the key is sent, any headers every call needs (like an API version), " +
+		"what it is for, and a guide the editor agent follows: when to use it, then for each job an example `37studio api <service> POST /path --json '{…}' --out comp/assets/file.mp3` call with the real field names, models and voice ids, the formats it returns, and its limits. " +
+		"Then test the key with call_integration on a free read endpoint. Only with a key the user gave you; never repeat it back. Only the fields you pass change.",
+		Method: "PUT", Path: "/api/integrations/{service}", Props: map[string]any{"service": pStr("Short id the agent calls it by: lowercase letters, digits and dashes, like cartesia"),
+			"name": pStr("Display name, like Cartesia"), "base_url": pStr("The API's https address that every path goes under, like https://api.cartesia.ai"),
+			"auth":    pStr(`How the key is sent, with {key} where it goes: a header line like "X-API-Key: {key}" (default "Authorization: Bearer {key}"), or a query parameter like "?key={key}"`),
+			"headers": pObj(`Fixed headers every call needs, like {"Cartesia-Version": "2025-04-16"}`), "kinds": pList("What it is for", "string"),
+			"prefer": pBool("The editor wants it used instead of the built-in generator for those kinds (for example their voice service instead of ElevenLabs)"),
+			"guide":  pStr("How the editor agent uses it (markdown, under 4000 characters)"), "docs_url": pStr("Its API docs"),
+			"unit": pStr(`What it bills by, like "1,000 characters" or "second of audio"`), "unit_price": map[string]any{"type": "number", "description": "USD per unit, for the Costs page and the spending check"},
+			"key": pStr("The API key the user gave you")}, Required: []string{"service"}},
+	{Name: "call_integration", Desc: "Make one call to a connected service with its key, to check the key or look up voices, models and settings for its guide. Text and JSON replies come back; a file (audio, image) is only described. Prefer free read endpoints: anything it generates is billed to the user.",
+		Method: "POST", Path: "/api/integrations/{service}/call", Props: map[string]any{"service": pStr("The service's id"), "method": pEnum("HTTP method (default GET)", "GET", "POST", "PUT", "PATCH", "DELETE"),
+			"path": pStr("Path under its base URL, like /voices?limit=20"), "json": pObj("JSON body, if the call takes one")}, Required: []string{"service", "path"}},
+	{Name: "delete_integration", Desc: "Remove a connected service and its key. Ask the user first.", Method: "DELETE", Path: "/api/integrations/{service}",
+		Props: map[string]any{"service": pStr("The service's id")}, Required: []string{"service"}},
 	{Name: "connect_link", Desc: "A sign-in link that connects a brand's accounts on a platform. The user opens it in their browser, signs in on the platform and ticks the accounts; the app's own credentials for that platform must be set first (set_keys).",
 		Props:    map[string]any{"company_id": brand, "platform": pEnum("meta = Facebook & Instagram, google = YouTube", "meta", "google", "tiktok", "linkedin", "x", "pinterest")},
 		Required: []string{"company_id", "platform"}, Do: connectLink},

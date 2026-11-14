@@ -23,6 +23,7 @@ import (
 	"github.com/Shaitrish/37studio/internal/config"
 	"github.com/Shaitrish/37studio/internal/files"
 	"github.com/Shaitrish/37studio/internal/httpapi"
+	"github.com/Shaitrish/37studio/internal/integrations"
 	"github.com/Shaitrish/37studio/internal/keys"
 	"github.com/Shaitrish/37studio/internal/proc"
 	"github.com/Shaitrish/37studio/internal/source"
@@ -201,7 +202,7 @@ When the editor names a voice ("use Rahim's voice"), use that brand voice; if it
 To change the voice of a video, even a finished one: find every voiceover file the composition plays (npx hyperframes@{hf} timeline --json lists the audio clips) and run gen revoice on each, writing over the same path, so captions and animation stay in sync. Then check it and tell the editor to Export again. Revoice only a voice-only track: a file mixed with music turns the music into speech, and changing the voice of someone speaking on camera won't match their lips (ask first). If a voiceover is mixed with music, or revoice fails, make it again with gen voice --voice from its script (transcribe the old file if you don't have the script), and re-time the captions to the new audio.
 Generated media costs the editor money. If gen exits with "Ask the editor first", stop and ask in plain words what you want to make and roughly what it costs; run it again with --approved only after they agree.
 For the same person, product or character across shots, make one reference image first and pass it to every later image with --ref, and use those images as video first frames (--image), so they stay consistent.
-
+{integrations}
 ## Social captions
 When the editor asks for post captions, write them to work/social.json, in the video's language, as one JSON object:
 {social}
@@ -224,7 +225,7 @@ func harnessPrompt(p map[string]any) string {
 		"{captions}", filepath.Join(files.TenantRoot(p["tenant_id"].(int64)), "assets.json"), "{source}", sourceText(p["tenant_id"].(int64)),
 		"{voices}", voicesText(p["tenant_id"].(int64)), "{performance}", performanceText(p["tenant_id"].(int64)),
 		"{strategy}", cmp.Or(textutil.Head(files.TenantDoc(p["tenant_id"].(int64), "strategy.md"), 4000), "none yet."),
-		"{hf}", config.HFVersion, "{resolution}", cmp.Or(res, "landscape"), "{renderflags}", strings.TrimRight(" "+strings.Join(renderFlags("high"), " "), " "), "{draftflags}", strings.Join(renderFlags("draft"), " "), "{campaign}", campaignText(p["campaign_id"]), "{social}", CaptionSpec,
+		"{hf}", config.HFVersion, "{resolution}", cmp.Or(res, "landscape"), "{renderflags}", strings.TrimRight(" "+strings.Join(renderFlags("high"), " "), " "), "{draftflags}", strings.Join(renderFlags("draft"), " "), "{campaign}", campaignText(p["campaign_id"]), "{social}", CaptionSpec, "{integrations}", integrations.Prompt(),
 	).Replace(harness)
 }
 

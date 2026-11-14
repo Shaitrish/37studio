@@ -13,7 +13,7 @@ cmd/37studio/        main for Docker and servers: starts internal/server, stops 
 cmd/37studio-desktop/ the native desktop app (Wails 3, its own go.mod): the same server in a window
 internal/            the Go backend, one package per area (map: docs/architecture.md#code-map)
   config store httpapi remote files textutil proc   low level: these import nothing of ours
-  keys agent gen transcribe timeline templates source
+  keys integrations agent gen transcribe timeline templates source
   company project social autopilot costs
   mcp assistant update
   server               on top: startup, background loops, every HTTP route (used by both mains)

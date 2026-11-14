@@ -170,6 +170,21 @@ create table if not exists brand_voices( -- ElevenLabs voices a brand speaks in,
   cloned integer not null default 0, -- made here from a recording, so deleting it here deletes it at ElevenLabs too
   created_at text not null default current_timestamp
 );
+create table if not exists integrations( -- services connected without built-in support: any HTTP API with a key (internal/integrations)
+  id text primary key, -- short name the agent calls it by, like cartesia
+  name text not null,
+  base_url text not null, -- https://api.example.com; every call goes under it, and the key goes nowhere else
+  auth text not null default 'Authorization: Bearer {key}', -- a header line or ?param=, with {key} where the key goes
+  headers text not null default '{}', -- JSON: fixed headers every call needs, like an API version
+  kinds text not null default '', -- what it makes, comma separated: voice, image, video, music, sfx, transcribe, other
+  prefer integer not null default 0, -- use it instead of the built-in generator for those kinds
+  guide text not null default '', -- how to call it, for the editor agent: endpoints, example 37studio api calls, models, voices
+  docs_url text not null default '',
+  unit text not null default '', -- what it bills by, like "1,000 characters"
+  unit_price real not null default 0, -- USD per unit
+  key text not null default '', -- sealed with keys.SealText
+  created_at text not null default current_timestamp
+);
 create table if not exists queued_messages( -- typed while the agent was busy; sent when its turn ends
   id integer primary key,
   project_id integer not null references projects(id) on delete cascade,

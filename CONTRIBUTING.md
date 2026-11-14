@@ -79,6 +79,8 @@ Each platform follows the same pattern; LinkedIn, X and Pinterest (OAuth) and Bl
 
 ## Adding a generation provider
 
+Most services don't need code: the Assistant connects any API with a key through `save_integration` (`internal/integrations`), and the agent calls it with `37studio api`. Build one in only when it needs more than plain HTTP calls (polling a queue, uploading a file first) or should be on by default.
+
 The agent only knows `37studio gen image|video|voice|sfx|music`. Which provider answers is the app's choice, so a new one needs no change to the harness prompt.
 
 1. **Key.** Add its env name to `Names` in `internal/keys/keys.go` and to `.env.example`. It has to be an API key: subscriptions to video tools (Runway, Kling, Google AI Pro) don't include API access.

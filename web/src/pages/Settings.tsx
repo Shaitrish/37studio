@@ -310,6 +310,8 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
                   <Field label="Music price" hint="USD per minute">{input("music_price_per_min", { type: "number", min: 0, step: 0.01 })}</Field>
                 </div>
               ))}
+              <h3 className="settings-h">Other services</h3>
+              <OtherServices />
             </>
           )}
 
@@ -528,6 +530,55 @@ function KeyRow({ k, f, onSave }: { k: KeyInfo; f: KeyField; onSave: (name: stri
           <button className="btn sm" onClick={() => setValue("")}>{k.set ? "Replace" : "Add"}</button>
           {k.source === "app" && <button className="btn ghost sm danger" onClick={() => confirm(`Remove the ${f.label}?`) && onSave(k.name, "")}>Remove</button>}
         </span>
+      )}
+    </div>
+  );
+}
+
+interface Service {
+  id: string; name: string; base_url: string; kinds: string; prefer: boolean; guide: string; docs_url: string;
+  unit: string; unit_price: number; set: boolean; last4: string;
+}
+
+/** Services the Assistant connected from their docs (internal/integrations). Connecting one is a chat, so this card
+ * shows what is there and lets you swap a key or remove a service. */
+function OtherServices() {
+  const { data, reload } = useApi<Service[]>("/integrations");
+  async function saveKey(id: string, key: string) {
+    try { await api(`/integrations/${id}`, { method: "PUT", body: { key: key.trim() } }); toast(key ? "Saved" : "Removed"); reload(); return true; } catch (e) { fail(e); return false; }
+  }
+  async function remove(sv: Service) {
+    if (!confirm(`Remove ${sv.name} and its key? Videos stop using it.`)) return;
+    try { await api(`/integrations/${sv.id}`, { method: "DELETE" }); toast("Removed"); reload(); } catch (e) { fail(e); }
+  }
+  const about = (sv: Service) => [sv.kinds.split(",").filter(Boolean).join(", ") || "other", sv.base_url.replace(/^https:\/\//, ""),
+    sv.unit_price > 0 && sv.unit ? `$${sv.unit_price} per ${sv.unit}` : "", sv.prefer ? "used instead of the built-in one" : ""].filter(Boolean).join(" · ");
+  return (
+    <div className="card">
+      <div className="card-h" style={{ display: "block" }}>
+        <h2>Any other service</h2>
+        <p className="small muted">
+          For a service 37Studio has no card for, like Cartesia, Deepgram or Runway, open the <a className="link" href="#/assistant">Assistant</a> and
+          say something like <i>"Connect Cartesia for voiceovers, here is my key: …"</i>. It reads the service's docs, saves how to call it and tests the key; from then on the editor agent can use it.
+        </p>
+      </div>
+      {data && data.length > 0 && (
+        <div className="filelist">
+          {data.map((sv) => (
+            <div key={sv.id}>
+              <KeyRow k={{ name: sv.id, label: sv.name, hint: "", set: sv.set, last4: sv.last4, source: sv.set ? "app" : "" }}
+                f={{ key: sv.id, label: `${sv.name} key`, help: about(sv) }} onSave={saveKey} />
+              <details className="small muted" style={{ padding: "0 16px 12px" }}>
+                <summary>How videos use {sv.name}</summary>
+                <pre className="mono small" style={{ whiteSpace: "pre-wrap", margin: "8px 0" }}>{sv.guide || "No guide yet: ask the Assistant to read its docs and write one."}</pre>
+                <span className="row">
+                  {sv.docs_url && <a className="link" href={sv.docs_url} target="_blank" rel="noreferrer">API docs <ArrowSquareOutIcon size={12} /></a>}
+                  <button className="btn ghost sm danger" onClick={() => remove(sv)}>Remove {sv.name}</button>
+                </span>
+              </details>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

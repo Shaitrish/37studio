@@ -121,11 +121,11 @@ func mediaEstimate(kind string, o genOpts) float64 {
 
 // overMediaLimit says whether this generation would take the project's generated media past the amount the agent may
 // spend without asking (Settings → Spending); "" when it may go ahead.
-func overMediaLimit(pid int64, kind string, o genOpts) string {
+func overMediaLimit(pid int64, kind string, est float64) string {
 	limit := store.SettingF("gen_ask_above_usd")
-	var spent float64
-	store.DB.QueryRow("select coalesce(sum(cost),0) from usage where project_id=? and provider in ('gemini','elevenlabs','fal')", pid).Scan(&spent)
-	if est := mediaEstimate(kind, o); spent+est > limit {
+	var spent float64 // everything but the agents themselves: the built-in generators and the services connected in Settings
+	store.DB.QueryRow("select coalesce(sum(cost),0) from usage where project_id=? and provider not in ('anthropic','opencode','codex')", pid).Scan(&spent)
+	if spent+est > limit {
 		return fmt.Sprintf("This %s would cost about $%.2f, bringing generated media on this project to about $%.2f, over the $%.2f "+
 			"the editor allows without asking (Settings → Spending). Ask the editor first, saying what you want to make and roughly what it costs; "+
 			"if they agree, run the same command again with --approved.", kind, est, spent+est, limit)
@@ -187,7 +187,7 @@ func GenCLI(args []string) int {
 	}
 	os.MkdirAll(filepath.Dir(*out), 0o755)
 	o := genOpts{prompt: *prompt, aspect: *aspect, size: *size, image: *image, refs: refs, seconds: *seconds, voice: *voice, audio: *audio}
-	if msg := overMediaLimit(pid, args[0], o); msg != "" && !*approved {
+	if msg := overMediaLimit(pid, args[0], mediaEstimate(args[0], o)); msg != "" && !*approved {
 		fmt.Fprintln(os.Stderr, msg)
 		return 3
 	}
