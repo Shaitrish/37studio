@@ -91,7 +91,7 @@ export function NewProjectModal({ onClose, tenantId, campaignId }: { onClose: ()
       show: (x) => [x.brief || "Agent decides", x.focus].filter(Boolean).join(" · "),
     },
     {
-      key: "files", label: "Footage", ask: "Any footage to work from?",
+      key: "files", label: "Footage", ask: (x) => (x.kind === "remake" ? "Which reel or ad should it copy? Drop the file or paste its link" : "Any footage to work from?"),
       show: (x) => [x.files?.length && `${x.files.length} file${x.files.length > 1 ? "s" : ""} · ${bytes(x.files.reduce((n, f) => n + f.size, 0))}`, x.link, x.transcribe === "no" && "no transcript"]
         .filter(Boolean).join(" · ") || "None, use brand assets",
     },
@@ -228,7 +228,9 @@ function FormatAnswer({ a, own, suggested, onAnswer }: { a: A; own: string; sugg
   const [f, setF] = useState({ aspect: a.aspect ?? "9:16", seconds: a.seconds ?? suggested ?? 30, count: a.count ?? "1", language: a.language ?? own });
   const video = a.kind !== "thumbnail";
   const opts = [...new Set([...lengths, f.seconds])].sort((x, y) => x - y).map((n) => ({ value: String(n), label: secs(n) }));
-  const langs = languages.filter(([c], i) => i < 2 || c === own).map(([value, label]) => ({ value, label }));
+  // English, the brand's own language and the one picked show as buttons; every other language is in "More".
+  const quick = [...new Set(["en", own, f.language])];
+  const langs = quick.map((c) => ({ value: c, label: languageName(c) }));
   return (
     <div className="stack" style={{ gap: 14 }}>
       <div className="fmt">
@@ -241,7 +243,12 @@ function FormatAnswer({ a, own, suggested, onAnswer }: { a: A; own: string; sugg
           <div><Seg value={f.count} options={counts} onChange={(count) => setF({ ...f, count })} />{f.count !== "1" && <span className="hint">cut from the same footage</span>}</div>
         </>}
         <span>Language</span>
-        <div><Seg value={f.language} options={langs} onChange={(language) => setF({ ...f, language })} />{f.language === own && <span className="hint">the brand's</span>}</div>
+        <div className="row wrap" style={{ gap: 8 }}><Seg value={f.language} options={langs} onChange={(language) => setF({ ...f, language })} />
+          <select className="select sm" value="" aria-label="Other language" onChange={(e) => e.target.value && setF({ ...f, language: e.target.value })} style={{ width: "auto" }}>
+            <option value="">More…</option>
+            {languages.filter(([c]) => !quick.includes(c)).map(([c, l]) => <option key={c} value={c}>{l}</option>)}
+          </select>
+          {f.language === own && <span className="hint">the brand's</span>}</div>
       </div>
       <div className="row"><span className="spacer" /><button className="btn primary sm" autoFocus onClick={() => onAnswer(f)}><ArrowUpIcon size={14} /> Continue</button></div>
     </div>

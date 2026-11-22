@@ -50,6 +50,8 @@ var Presets = []Preset{
 		"Keep the speaker's footage and add motion graphics that visualize what they explain: diagrams, steps, numbers, charts, product UI, formulas, highlighted keywords, all timed to the transcript. Graphics must clarify the idea, not decorate. Captions on."},
 	{"promo", "Promo ad", "9:16", 30, "Punchy ad for a product, service or course: hook, problem, payoff, offer, CTA.",
 		"Make a punchy ad for the brand's product, service or course: a hook in the first 2 seconds, the problem, what they offer (speaker clips plus brand images), social proof if available, the offer and a strong CTA with logo. Ask for price, offer and link if the brief doesn't have them."},
+	{"remake", "Remake a video", "9:16", 30, "Copy the pacing, structure and motion of a reel or ad you like, in your brand.",
+		"The source in input/ is a reference: someone else's reel, ad or explainer that the editor likes. If there is none, ask for a file or link before anything else. Study it first: find its cuts (ffmpeg -i <file> -vf \"select='gt(scene,0.3)',showinfo\" -f null - 2>&1 | grep pts_time), save one frame per shot as a contact sheet in work/ and look at it, and read its transcript. Write work/remake.md: the hook, each shot with its timing, layout, type, motion, transition and caption style, and the music's energy. Then build an original video for this brand with the same structure, pacing and kind of motion, using the brand's colours, fonts, logo, library and a message from the knowledge base. Copy the technique, never the content: no footage, music, logos, people or wording from the reference appear in the result. Match the reference's length unless the format says otherwise."},
 	{"thumbnail", "Thumbnails", "16:9", 0, "YouTube, course, product and book thumbnails as PNG.",
 		"Design thumbnails as PNG files in out/: YouTube 1280x720 by default, course cover 1600x900 or book cover 1600x2560 when asked. Use a cut-out of the presenter or product (`npx hyperframes remove-background`), the logo and a bold 3-5 word headline, high contrast, readable at small size. Build them as HTML and capture with `npx hyperframes snapshot`. Make 3 variations."},
 	{"custom", "Custom", "16:9", 0, "Anything else. The brief decides.", "Follow the brief."},
@@ -152,6 +154,7 @@ Content strategy (strategy.md: the team's and Claude's lessons from these number
   chat/         screenshots and images the editor attached to chat. A message line [image: chat/<file>] means: view that file with the Read tool before acting on the message.
                 A line [viewing: <path>] names the version the editor had open under the preview when they wrote: "this one" or "here" means that file.
                 A line [paused at 0:12.4 in the live preview; on screen: "…" | "…"] is where the editor paused the preview when they wrote, in seconds from the start of comp/index.html (or of the [viewing:] file), with the text visible then. "Here", "this", "this line" or "at 12 sec" mean that moment and that text: find it in the composition by the quoted text or the clip whose data-start and duration cover that time, and change only that, without re-reading or rebuilding the rest.
+                A line [audio: <path> at 0:12.4] is a voiceover, music or sound file the editor was listening to, stopped at that point: "this word", "here" or "it sounds wrong" means what plays around then. Cut 3 seconds either side with ffmpeg into work/, transcribe that piece (37studio transcribe) to find the exact word, then fix it: regenerate just that line of voice, or that part of the music or sound, and splice it in. Don't redo the whole track.
   out/          final deliverables only: every file here is a finished video or image the brand will publish.
 
 ## How to work
@@ -163,7 +166,7 @@ Content strategy (strategy.md: the team's and Claude's lessons from these number
 2. If something blocks a good edit (which topic, which hook, offer, CTA, length), ask at most 3 short numbered questions, each with your suggested default, then end your turn. Never ask what you can decide yourself.
 3. Build a preview fast: cut the chosen source ranges into work/ with ffmpeg (-ss before -i, re-encode only the cut ranges with -c:v libx264 -g 30 -keyint_min 30 -movflags +faststart: a keyframe every second keeps seeking frame-accurate and renders fast; sparse keyframes freeze frames and slow every render), assemble the composition in comp/, and run npx hyperframes@{hf} check comp until it is clean. End the turn with a 3-5 line summary: source timestamps used, the hook, what is on screen, and what needs a decision.
 4. Iterate on feedback. When the editor approves, render the final with npx hyperframes@{hf} render comp --output out/<short-name>.mp4 --quality high{renderflags}. The app's Export button runs the same command and shows the editor live progress, so prefer telling the editor to press Export over rendering the final yourself. For a quick draft to check timing: render comp --output out/drafts/<name>-draft.mp4 --quality draft {draftflags} (about 40% faster than a full render).
-5. Load the HyperFrames skills for composition rules (/hyperframes-core, /hyperframes-animation, /hyperframes-creative, /media-use, /hyperframes-keyframes). Skip their intent interview: this prompt plus the job brief is the brief.
+5. Load the HyperFrames skills for composition rules (/hyperframes-core, /hyperframes-animation, /hyperframes-creative, /media-use, /hyperframes-keyframes). Skip their intent interview: this prompt plus the job brief is the brief. 37Studio's own skills, learned from reels that did well: /cinema-3d for any 3D scene (globes, a body or object in 3D, a landscape or battlefield, a sky, camera moves through space) and /motion-explainer for explainers built from maps, archive pictures and data. Load the one that fits before you design the first scene.
 6. Never hand-build a visual the HyperFrames registry already has (~450 blocks and components: maps and flight paths, charts and data, code windows and diffs, browser, phone and app mockups, chat and social UI cards, lower thirds, caption styles, title cards, kinetic type, transitions, camera moves, textures). Search first, in English even for Bangla videos:
    npx hyperframes@{hf} catalog --query "<what the beat should show>" --json    then    npx hyperframes@{hf} add <name> --json
    Restyle what you install with the brand's design.md colors and fonts so it looks like their brand, not the stock demo. Load /hyperframes-registry for wiring. Hand-build only when nothing fits.
@@ -185,7 +188,8 @@ The editor can open comp/ in HyperFrames Studio, the timeline editor, and move, 
 ## Check your work visually (every turn that changes the video)
 1. npx hyperframes@{hf} check comp   (lint, layout, contrast)
 2. npx hyperframes@{hf} snapshot comp --review --output work/review   then open work/review/review-beats.jpg (every scene) and review-phone.jpg with your Read tool and really look: text fits and reads at phone size, Bangla renders (no empty boxes), captions and key graphics stay out of platform UI zones, nothing overlaps or is cut off, colors and logo are on brand. For one moment: snapshot comp --at 3.5,12 --output work/snap --keep
-3. Fix what you see, snapshot again, and only then end the turn, saying what you checked. The editor sees every image you open, so open the frames that prove the result.
+3. After any render (draft or final), run 37studio check out/<file>.mp4: it reports loudness, clipping peaks, dead air, frozen picture and black frames, which snapshots can't show.
+4. Fix what you see, snapshot again, and only then end the turn, saying what you checked. The editor sees every image you open, so open the frames that prove the result.
 
 ## Formats
 9:16 is 1080x1920 (Reels, TikTok, Shorts), 16:9 is 1920x1080 (YouTube), 1:1 is 1080x1080, 4:5 is 1080x1350 (feed; set data-width/data-height by hand). On 9:16 keep captions and key graphics out of the bottom 20% and right 12%, where platform UI sits. Captions must match the spoken language exactly.
@@ -467,12 +471,24 @@ func setStatus(pid int64, s string) { store.DB.Exec("update projects set status=
 // safeTools is the `safe` allowlist: the commands the prompts use, and no general-purpose runner (bare npx, python3,
 // node) that would run any code. It narrows what the agent does by accident; it is not a security boundary, since
 // ffmpeg and WebFetch can still reach the network. The container is the boundary (docs/docker.md → From source).
+// Bypass is true when the agent may run any command: set for the container by the launcher, or chosen by the
+// person on their own computer in Settings → Performance.
+func Bypass() bool {
+	return config.Env("STUDIO37_AGENT_PERMISSIONS", "") == "bypass" || (store.DB != nil && store.Setting("agent_commands") == "any")
+}
+
 var safeTools = []string{
 	"Read", "Edit", "Write", "Glob", "Grep", "Skill", "TodoWrite", "WebFetch", "WebSearch",
 	"Bash(ffmpeg:*)", "Bash(ffprobe:*)", "Bash(npx hyperframes *)", "Bash(npx hyperframes@*)", "Bash(npx -y hyperframes@*)",
 	"Bash(37studio:*)", "Bash(cd:*)", "Bash(ls:*)",
 	"Bash(mkdir:*)", "Bash(cp:*)", "Bash(mv:*)", "Bash(cat:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(wc:*)",
 	"Bash(du:*)", "Bash(file:*)", "Bash(jq:*)",
+	// Reading and downloading, which the media work needs every turn: without them the agent loses minutes to refusals.
+	// yt-dlp only fetches (pages, files, clips); curl and wget stay out, since they could also call this app's own API
+	// and switch the agent to any command.
+	"Bash(yt-dlp:*)", "Bash(npm pack:*)", // npm pack only downloads a package (Three.js for 3D scenes); it runs no install scripts "Bash(grep:*)", "Bash(sort:*)", "Bash(uniq:*)", "Bash(cut:*)",
+	"Bash(tr:*)", "Bash(echo:*)", "Bash(printf:*)", "Bash(basename:*)", "Bash(dirname:*)", "Bash(touch:*)", "Bash(stat:*)",
+	"Bash(sha256sum:*)", "Bash(md5sum:*)", "Bash(unzip:*)", "Bash(tar:*)",
 }
 
 // ClaudeCmd builds a headless Claude Code run in dir. The prompt goes over stdin, not argv:
@@ -485,7 +501,7 @@ func ClaudeCmd(dir string, q Quality, system, addDir, prompt string, extra ...st
 		"--append-system-prompt", system,
 		"--disallowedTools", "AskUserQuestion",
 		"--add-dir", addDir}
-	if config.Env("STUDIO37_AGENT_PERMISSIONS", "") == "bypass" {
+	if Bypass() {
 		args = append(args, "--permission-mode", "bypassPermissions")
 	} else {
 		args = append(args, "--permission-mode", "acceptEdits", "--allowedTools", strings.Join(safeTools, ","))
@@ -613,6 +629,7 @@ func StartRun(id int64, text, quality string, announce bool) error {
 	if dir := source.Connected(p["tenant_id"].(int64)); dir != "" {
 		session = append(session, source.FolderArgs(dir)...)
 	}
+	installSkills(files.ProjectDir(id))
 	cmd := ClaudeCmd(files.ProjectDir(id), q, harnessPrompt(p), files.TenantRoot(p["tenant_id"].(int64)), prompt, session...)
 	cmd.Env = append(cmd.Env, fmt.Sprintf("STUDIO37_PROJECT=%d", id))
 	pr, pw := io.Pipe()
@@ -663,12 +680,14 @@ func StartRun(id int64, text, quality string, announce bool) error {
 //
 // Subagents the agent starts with its Agent tool run side by side. Each start is an "agent" event and each finish an
 // "agent_done", and everything a subagent does carries its Agent call's id as "parent", so the chat can show each
-// one on its own instead of mixing their steps into one list.
+// one on its own instead of mixing their steps into one list. A background subagent (run_in_background, which Claude
+// Code now picks by itself) answers its Agent call at once with "launched"; it finishes later, with a task_notification.
 func ParseStream(pid, tenant int64, model string, r io.Reader) (result string) {
 	sc := bufio.NewScanner(r)
 	sc.Buffer(make([]byte, 1<<20), 64<<20)
 	running := map[string]bool{} // Agent calls not finished yet
-	root := map[string]string{}  // a subagent's own subagents report under the one the main agent started
+	background := map[string]bool{}
+	root := map[string]string{} // a subagent's own subagents report under the one the main agent started
 	under := func(parent string, v map[string]any) map[string]any {
 		if parent != "" {
 			v["parent"] = cmp.Or(root[parent], parent)
@@ -692,12 +711,14 @@ func ParseStream(pid, tenant int64, model string, r io.Reader) (result string) {
 					IsError   bool            `json:"is_error"`
 				} `json:"content"`
 			} `json:"message"`
-			IsError  bool    `json:"is_error"`
-			Result   string  `json:"result"`
-			Cost     float64 `json:"total_cost_usd"`
-			Turns    int     `json:"num_turns"`
-			Duration int64   `json:"duration_ms"`
-			Usage    struct {
+			ToolUseID string  `json:"tool_use_id"` // system task_* events: the Agent call a background task belongs to
+			Status    string  `json:"status"`
+			IsError   bool    `json:"is_error"`
+			Result    string  `json:"result"`
+			Cost      float64 `json:"total_cost_usd"`
+			Turns     int     `json:"num_turns"`
+			Duration  int64   `json:"duration_ms"`
+			Usage     struct {
 				In     float64 `json:"input_tokens"`
 				Out    float64 `json:"output_tokens"`
 				CacheW float64 `json:"cache_creation_input_tokens"`
@@ -720,9 +741,11 @@ func ParseStream(pid, tenant int64, model string, r io.Reader) (result string) {
 						var in struct {
 							Description string `json:"description"`
 							Type        string `json:"subagent_type"`
+							Background  bool   `json:"run_in_background"`
 						}
 						json.Unmarshal(c.Input, &in)
 						running[c.ID] = true
+						background[c.ID] = in.Background
 						AddEvent(pid, "agent", map[string]any{"id": c.ID, "name": cmp.Or(in.Description, "Subagent"), "type": in.Type})
 						continue
 					}
@@ -738,12 +761,19 @@ func ParseStream(pid, tenant int64, model string, r io.Reader) (result string) {
 				if c.Type != "tool_result" {
 					continue
 				}
-				if running[c.ToolUseID] {
+				if running[c.ToolUseID] && (background[c.ToolUseID] || launched(resultText(c.Content))) && !c.IsError {
+					background[c.ToolUseID] = true // still working: its steps keep coming under it
+				} else if running[c.ToolUseID] {
 					delete(running, c.ToolUseID)
 					AddEvent(pid, "agent_done", map[string]any{"id": c.ToolUseID, "error": c.IsError})
 				} else if c.IsError {
 					AddEvent(pid, "tool_error", under(ev.Parent, map[string]any{"text": textutil.Tail(resultText(c.Content), 600)}))
 				}
+			}
+		case "system":
+			if ev.Subtype == "task_notification" && running[ev.ToolUseID] {
+				delete(running, ev.ToolUseID)
+				AddEvent(pid, "agent_done", map[string]any{"id": ev.ToolUseID, "error": ev.Status == "failed"})
 			}
 		case "result":
 			for id := range running { // background subagents answer later; the turn is over either way
@@ -762,6 +792,12 @@ func ParseStream(pid, tenant int64, model string, r io.Reader) (result string) {
 		}
 	}
 	return result
+}
+
+// launched tells a background subagent's immediate "started" answer from a finished subagent's report.
+func launched(result string) bool {
+	r := strings.ToLower(result)
+	return strings.HasPrefix(r, "async agent launched") || strings.Contains(r, "running in the background")
 }
 
 func toolSummary(in json.RawMessage) string {

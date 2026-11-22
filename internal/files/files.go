@@ -202,7 +202,8 @@ func SaveUploads(r *http.Request, dir string) (any, error) {
 	return saved, nil
 }
 
-var unsafeChars = regexp.MustCompile(`[^\p{L}\p{N}._ -]+`)
+// \p{M} keeps vowel signs and other combining marks: without it Bangla, Hindi, Arabic or Thai titles came out as "ই_র_জ_".
+var unsafeChars = regexp.MustCompile(`[^\p{L}\p{M}\p{N}._ -]+`)
 
 func SafeName(s string) string {
 	s = path.Base(strings.ReplaceAll(s, `\`, "/"))

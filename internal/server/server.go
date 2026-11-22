@@ -39,7 +39,7 @@ import (
 	"github.com/Shaitrish/37studio/internal/update"
 )
 
-// CLI runs the agent's helper commands (gen, api, clip, transcribe, sql, stats, strategy) when args name one. The agent calls them as
+// CLI runs the agent's helper commands (gen, api, check, clip, transcribe, sql, stats, strategy) when args name one. The agent calls them as
 // `37studio …`, so every build of the app, desktop included, has to answer to them.
 func CLI(args []string) (code int, ok bool) {
 	if len(args) == 0 {
@@ -50,6 +50,8 @@ func CLI(args []string) (code int, ok bool) {
 		return agent.GenCLI(args[1:]), true
 	case "api":
 		return agent.APICLI(args[1:]), true
+	case "check":
+		return agent.CheckCLI(args[1:]), true
 	case "clip":
 		return project.ClipCLI(args[1:]), true
 	case "transcribe":
@@ -272,7 +274,7 @@ func getMeta(r *http.Request) (any, error) {
 			// Claude Code on a Pro/Max plan: its cost figures are what the run would cost at API prices, not a bill.
 			"claude_plan": os.Getenv("ANTHROPIC_API_KEY") == "" && (os.Getenv("CLAUDE_CODE_OAUTH_TOKEN") != "" || keys.ClaudeLoggedIn()),
 			"opencode":    agent.ToolInstalled("opencode"),
-			"bypass":      config.Env("STUDIO37_AGENT_PERMISSIONS", "") == "bypass",
+			"bypass":      agent.Bypass(),
 			"password":    config.Env("STUDIO37_PASSWORD", "") != "",
 			"desktop":     Desktop.OpenURL != nil,
 			"reveal":      canReveal(r), // files can be shown in this computer's file manager

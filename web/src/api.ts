@@ -70,7 +70,11 @@ export interface BrandVoice {
   id: number; tenant_id: number; name: string; voice_id: string; language: string; notes: string; is_default: number; cloned: number;
   created_at: string; samples: FileInfo[];
 }
-export const languages: [string, string][] = [["bn", "Bangla"], ["en", "English"], ["hi", "Hindi"], ["ur", "Urdu"], ["ar", "Arabic"], ["es", "Spanish"]];
+// The languages the pickers offer: what Claude writes well and the voice and caption tools handle. Anything else can be typed in a brief.
+export const languages: [string, string][] = [["en", "English"], ["es", "Spanish"], ["pt", "Portuguese"], ["fr", "French"], ["de", "German"], ["it", "Italian"], ["nl", "Dutch"],
+  ["ar", "Arabic"], ["hi", "Hindi"], ["bn", "Bangla"], ["ur", "Urdu"], ["id", "Indonesian"], ["ms", "Malay"], ["tr", "Turkish"], ["ru", "Russian"],
+  ["uk", "Ukrainian"], ["pl", "Polish"], ["ja", "Japanese"], ["ko", "Korean"], ["zh", "Chinese"], ["vi", "Vietnamese"], ["th", "Thai"],
+  ["fil", "Filipino"], ["fa", "Persian"], ["sw", "Swahili"], ["ta", "Tamil"], ["te", "Telugu"], ["mr", "Marathi"], ["ne", "Nepali"]];
 export const languageName = (code: string) => languages.find(([c]) => c === code)?.[1] ?? code;
 export interface Preset { id: string; label: string; aspect: string; seconds: number; blurb: string }
 export interface Quality { id: string; label: string; model: string; effort: string; note: string; harness: string; group?: string }

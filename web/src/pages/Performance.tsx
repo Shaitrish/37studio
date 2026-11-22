@@ -209,7 +209,7 @@ function Strategy({ tenant, reviewing, error, onReview }: { tenant: number; revi
         {error && <p className="small" style={{ color: "var(--danger)", margin: 0 }}>{error}</p>}
         {text !== undefined ? <>
           <textarea className="textarea" rows={12} value={text} onChange={(e) => setText(e.target.value)}
-            placeholder={"## What we post\nExam-tip reels in Bangla, under 60 seconds.\n\n## Notes\n- Map explainers do best on Instagram."} />
+            placeholder={"## What we post\nQuick tip reels, under 60 seconds.\n\n## Notes\n- Map explainers do best on Instagram."} />
           <div className="row" style={{ justifyContent: "flex-end", gap: 8 }}>
             <button className="btn" onClick={() => setText(undefined)}>Cancel</button>
             <button className="btn primary" onClick={save} disabled={text === doc}>Save</button>

@@ -1,6 +1,6 @@
 import { CSSProperties, ReactNode, useEffect, useRef, useState } from "react";
-import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, DownloadSimpleIcon, FileAudioIcon, FileTextIcon, FilmStripIcon, ImageIcon, PencilSimpleIcon, PushPinIcon, TrashIcon, TextTIcon, CloudArrowUpIcon, QuestionIcon, XIcon } from "@phosphor-icons/react";
-import { AssetMeta, bytes, claudePlan, clock, fail, FileInfo, help, Project, Quality, Tenant, toast } from "./api";
+import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, DownloadSimpleIcon, FolderOpenIcon, FileAudioIcon, FileTextIcon, FilmStripIcon, ImageIcon, PencilSimpleIcon, PushPinIcon, TrashIcon, TextTIcon, CloudArrowUpIcon, QuestionIcon, XIcon } from "@phosphor-icons/react";
+import { AssetMeta, bytes, canReveal, claudePlan, clock, fail, FileInfo, help, Project, Quality, showInFolder, Tenant, toast } from "./api";
 
 /** Opens the guide section `to` (its heading's anchor in docs/guide.md) beside the page. Every screen has one. */
 export function HelpButton({ to, label = "Help" }: { to: string; label?: string }) {
@@ -192,6 +192,14 @@ export function AssetEditor({ f, meta, pos, onSave, onStep, onClose }: {
   );
 }
 
+/** The file is already on this computer, so in the desktop app (or a server run here) it opens in its folder; a
+ *  browser on another machine downloads it instead. A download prompt for a file you already have felt broken. */
+export function FileLink({ f, className, size = 14 }: { f: { url: string; name: string }; className?: string; size?: number }) {
+  return canReveal
+    ? <button className={className} onClick={() => showInFolder(f.url)} aria-label={`Show ${f.name} in its folder`} title="Show in folder"><FolderOpenIcon size={size} /></button>
+    : <a className={className} href={f.url} download={f.name} aria-label={`Download ${f.name}`} title="Download"><DownloadSimpleIcon size={size} /></a>;
+}
+
 export function FileTile({ f, onOpen, onDelete, selected, contain, meta, onEdit, moveTo, first }: {
   f: FileInfo; onOpen?: () => void; onDelete?: () => void; selected?: boolean; contain?: boolean;
   meta?: AssetMeta; onEdit?: () => void; moveTo?: { options: { id: string; label: string }[]; onMove: (folder: string) => void };
@@ -223,7 +231,7 @@ export function FileTile({ f, onOpen, onDelete, selected, contain, meta, onEdit,
         )}
         {first && <button className="btn sm icon" aria-label={`${first.label}: ${f.name}`} title={first.label} onClick={first.onClick}><PushPinIcon size={14} /></button>}
         {onEdit && <button className="btn sm icon" aria-label={`Edit ${f.name}`} title="Edit caption" onClick={onEdit}><PencilSimpleIcon size={14} /></button>}
-        <a className="btn sm icon" href={f.url} download={f.name} aria-label={`Download ${f.name}`} title="Download"><DownloadSimpleIcon size={14} /></a>
+        <FileLink f={f} className="btn sm icon" />
         {onDelete && <button className="btn sm icon danger" onClick={onDelete} aria-label={`Delete ${f.name}`} title="Delete"><TrashIcon size={14} /></button>}
       </div>
     </div>

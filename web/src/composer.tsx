@@ -125,9 +125,11 @@ export function Composer({ events, running, queue, onSend, onStop, qualities, qu
           {actions.length > 0 && (
             <button className="cbtn slash-btn" onClick={() => { setText("/"); box.current?.focus(); }} title="Quick actions (type /)" aria-label="Quick actions">/</button>
           )}
-          <span className={`cpill ${agents ? "busy" : ""}`} title="Subagents working for the agent right now">
-            <i className="dot" />{agents} agent{agents === 1 ? "" : "s"}
-          </span>
+          {agents > 0 && (
+            <span className="cpill busy" title="Helpers the agent started, working side by side right now">
+              <i className="dot" />{agents} helper{agents === 1 ? "" : "s"} working
+            </span>
+          )}
           <label className="cpill model" title={q?.note}>
             <span className="ellipsis">{q ? modelLabel(q) : "Model"}</span>
             <select value={quality} onChange={(e) => onQuality(e.target.value)} aria-label="Model for this message">
@@ -149,7 +151,6 @@ export function Composer({ events, running, queue, onSend, onStop, qualities, qu
               </span>
             ))}
           </div>
-          <span className="spacer" />
           {running && <span className="ctime" title="How long the agent has been on this">{clock((Date.now() - since) / 1000)}</span>}
           {running && <button className="cbtn stop" onClick={onStop} title="Stop (Esc)" aria-label="Stop the agent"><SquareIcon size={13} weight="fill" /></button>}
           <button className="cbtn send" disabled={(!text.trim() && !files.length) || blocked} onClick={() => send()}

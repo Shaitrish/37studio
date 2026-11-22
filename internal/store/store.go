@@ -379,6 +379,7 @@ var settingDefaults = map[string]string{
 	"currency":              "USD",
 	"timezone":              "UTC", // replaced by the browser's zone when an autopilot plan is saved
 	"fx_rate":               "1",
+	"agent_commands":        "safe", // "any" lets the agent run any command, like STUDIO37_AGENT_PERMISSIONS=bypass
 }
 
 func Setting(k string) string {

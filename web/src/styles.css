@@ -198,6 +198,7 @@ table.table { width: 100%; border-collapse: collapse; }
   border-radius: var(--radius-sm); padding: 8px 11px; min-height: 36px;
 }
 .textarea { resize: vertical; min-height: 84px; line-height: 1.5; }
+.select.sm { min-height: 32px; padding: 4px 8px; font-size: 13px; }
 .input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
 .form { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .form .full { grid-column: 1 / -1; }
@@ -285,6 +286,9 @@ input[type="color"].input { padding: 3px; height: 36px; cursor: pointer; }
 .filelist { display: flex; flex-direction: column; }
 .filelist .item { display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-bottom: 1px solid var(--border); }
 .filelist .item:last-child { border-bottom: 0; }
+.filelist .item.on { background: var(--primary-soft); }
+.linkish { border: 0; background: none; padding: 0; font: inherit; color: var(--fg); text-align: left; cursor: pointer; min-width: 0; }
+.linkish:hover { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
 /* Settings: section list on the left (a scrolling row on phones), cards per provider, a save bar for unsaved changes. */
 .settings { display: grid; gap: 24px; align-items: start; }
 @media (min-width: 900px) { .settings { grid-template-columns: 200px minmax(0, 1fr); } }
@@ -509,7 +513,7 @@ input[type="color"].input { padding: 3px; height: 36px; cursor: pointer; }
 .composer-box { position: relative; border-radius: 12px; }
 .composer-top { display: flex; align-items: flex-start; }
 .composer-box textarea { display: block; flex: 1; min-width: 0; border: 0; outline: 0; resize: none; background: transparent; padding: 12px 12px 6px 14px; min-height: 48px; max-height: 200px; line-height: 1.5; field-sizing: content; }
-.composer-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 4px 6px 6px; min-width: 0; }
+.composer-bar { display: flex; flex-wrap: nowrap; align-items: center; gap: 4px; padding: 4px 6px 6px; min-width: 0; }
 .composer .mic { flex: none; display: flex; align-items: center; gap: 2px; padding: 6px 6px 0 0; }
 .composer .slash-btn { font: 600 15px/1 "Geist Mono", ui-monospace, monospace; border: 1px solid var(--input); width: 24px; height: 24px; margin: 0 3px; border-radius: 6px; }
 .cpill { flex: none; position: relative; display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 99px; background: var(--muted); color: var(--muted-fg); font-size: 12.5px; font-weight: 500; white-space: nowrap; }
@@ -520,8 +524,8 @@ input[type="color"].input { padding: 3px; height: 36px; cursor: pointer; }
 .cpill.model:hover { background: var(--border); }
 .cpill.model select { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
 .csep { flex: none; width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
-.cfiles { flex: 0 1 auto; display: flex; gap: 4px; min-width: 84px; overflow: hidden; }
-.cfile { flex: 0 1 auto; display: inline-flex; align-items: center; gap: 6px; min-width: 84px; max-width: 200px; height: 28px; padding: 0 4px 0 8px; border-radius: 6px; color: var(--fg); font-size: 12.5px; }
+.cfiles { flex: 1 1 0; display: flex; gap: 4px; min-width: 0; overflow: hidden; }
+.cfile { flex: 0 1 auto; display: inline-flex; align-items: center; gap: 6px; min-width: 60px; max-width: 200px; height: 28px; padding: 0 4px 0 8px; border-radius: 6px; color: var(--fg); font-size: 12.5px; }
 .cfile:hover { background: var(--muted); }
 .cfile img { width: 18px; height: 18px; object-fit: cover; border-radius: 3px; flex: none; }
 .cfile svg { flex: none; color: var(--muted-fg); }
@@ -617,6 +621,7 @@ label.cbtn { cursor: pointer; }
 .asset-ed .pv.checker { background: repeating-conic-gradient(var(--muted) 0 25%, var(--card) 0 50%) 0 0 / 16px 16px; }
 .asset-ed .pv img, .asset-ed .pv video { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
 .asset-ed .pv audio { width: calc(100% - 32px); }
+.asset-ed .pv .pv-audio { display: flex; flex-direction: column; align-items: center; gap: 18px; width: 100%; }
 @media (max-width: 760px) { .asset-ed { grid-template-columns: 1fr; } .asset-ed .pv { position: static; height: 42vh; min-height: 0; } }
 
 /* ---- social accounts */
@@ -811,4 +816,11 @@ a.perf-title:hover { color: var(--primary); }
   .rail { order: 1; width: auto; flex-direction: row; overflow-x: auto; scrollbar-width: thin; }
   .rail button { flex: 1 0 72px; }
   .panel { order: 2; flex: none; }
+}
+
+/* Phones: the project's actions stay one swipeable row instead of three stacked ones over the preview. */
+@media (max-width: 640px) {
+  .row.head-acts { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start !important; width: 100%; scrollbar-width: none; padding-bottom: 2px; }
+  .head-acts::-webkit-scrollbar { display: none; }
+  .head-acts > * { flex: none; }
 }

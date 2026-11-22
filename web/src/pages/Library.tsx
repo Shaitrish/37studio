@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { ArrowSquareOutIcon, BookmarkSimpleIcon, DownloadSimpleIcon, FilmStripIcon, LayoutIcon, TrashIcon } from "@phosphor-icons/react";
-import { api, bytes, clock, compact, date, fail, LibraryItem, pct, PublishedVideo, Template, toast, useApi, useTenants, views } from "../api";
-import { Empty, HelpButton, Field, FileTile, Modal, Seg, TenantPicker } from "../ui";
+import { ArrowSquareOutIcon, BookmarkSimpleIcon, DownloadSimpleIcon, FilmStripIcon, LayoutIcon, TrashIcon, FolderOpenIcon } from "@phosphor-icons/react";
+import { api, bytes, canReveal, clock, compact, date, fail, LibraryItem, pct, PublishedVideo, showInFolder, Template, toast, useApi, useTenants, views } from "../api";
+import { Empty, HelpButton, Field, FileTile, KindIcon, Modal, Seg, TenantPicker } from "../ui";
 import { platforms } from "./Social";
 
 /** Every finished video and image from every project: the ten videos cut from one class sit together here. */
@@ -46,7 +46,7 @@ export default function Library() {
         <HelpButton to="library-and-templates" />
       </div>
       <div className="row wrap">
-        <Seg value={kind} onChange={setKind} options={[{ value: "all", label: "All" }, { value: "video", label: "Videos" }, { value: "image", label: "Images" },
+        <Seg value={kind} onChange={setKind} options={[{ value: "all", label: "All" }, { value: "video", label: "Videos" }, { value: "image", label: "Images" }, { value: "audio", label: "Audio" },
           { value: "published", label: `Published${published?.length ? ` (${published.length})` : ""}` },
           { value: "templates", label: `Templates${templates?.length ? ` (${templates.length})` : ""}` }]} />
         <span className="spacer" />
@@ -87,7 +87,9 @@ export default function Library() {
         <Modal title={open.title} size="xl" onClose={() => setOpen(undefined)}
           sub={[open.tenant_name, open.file.seconds && clock(open.file.seconds), bytes(open.file.size), date(open.file.mod)].filter(Boolean).join(" · ")}
           footer={<>
-            <a className="btn" href={open.file.url} download={open.file.name}><DownloadSimpleIcon size={15} /> Download</a>
+            {canReveal
+              ? <button className="btn" onClick={() => showInFolder(open.file.url)}><FolderOpenIcon size={15} /> Show in folder</button>
+              : <a className="btn" href={open.file.url} download={open.file.name}><DownloadSimpleIcon size={15} /> Download</a>}
             {open.file.kind === "video" && <button className="btn" onClick={() => { setSaving(open); setOpen(undefined); }}><BookmarkSimpleIcon size={15} /> Save as template</button>}
             <button className="btn danger" onClick={() => remove(open)}><TrashIcon size={15} /> Delete</button>
             <span className="spacer" />
@@ -95,7 +97,9 @@ export default function Library() {
           </>}>
           <div className="asset-ed" style={{ gridTemplateColumns: "1fr" }}>
             <div className="pv">
-              {open.file.kind === "video" ? <video src={open.file.url} controls autoPlay playsInline /> : <img src={open.file.url} alt={open.title} />}
+              {open.file.kind === "video" ? <video src={open.file.url} controls autoPlay playsInline />
+                : open.file.kind === "audio" ? <div className="pv-audio"><KindIcon kind="audio" size={40} /><audio src={open.file.url} controls autoPlay /></div>
+                : <img src={open.file.url} alt={open.title} />}
             </div>
           </div>
           {pubOf(open) && <PlatformTable v={pubOf(open)!} />}

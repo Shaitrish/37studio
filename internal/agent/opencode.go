@@ -103,6 +103,7 @@ func startOpenCode(id int64, p map[string]any, q Quality, text string, announce 
 		return httpapi.Bad("message is empty")
 	}
 	dir := files.ProjectDir(id)
+	installSkills(dir)
 	agents := filepath.Join(dir, "AGENTS.md")
 	if err := os.WriteFile(agents, []byte(harnessPrompt(p)), 0o644); err != nil {
 		return err
@@ -111,7 +112,7 @@ func startOpenCode(id int64, p map[string]any, q Quality, text string, announce 
 	if sid != "" {
 		args = append(args, "--session", sid)
 	}
-	if config.Env("STUDIO37_AGENT_PERMISSIONS", "") == "bypass" {
+	if Bypass() {
 		args = append(args, "--auto")
 	}
 	exe, _ := os.Executable()

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { FolderOpenIcon, GlobeIcon, PlusIcon, UsersThreeIcon } from "@phosphor-icons/react";
-import { api, bytes, fail, folderFiles, go, Tenant, toast, cash, upload, useApi } from "../api";
+import { api, bytes, fail, folderFiles, go, Tenant, toast, cash, upload, useApi, languages } from "../api";
 import { Avatar, costTitle, Empty, Field, HelpButton, Modal, Progress } from "../ui";
 
 export default function Clients() {
@@ -52,7 +52,6 @@ export default function Clients() {
   );
 }
 
-const languages = [["en", "English"], ["bn", "Bangla"], ["hi", "Hindi"], ["ur", "Urdu"], ["ar", "Arabic"], ["es", "Spanish"]];
 
 export function TenantModal({ tenant, onClose, onSaved }: { tenant?: Tenant; onClose: () => void; onSaved: (t: Tenant) => void }) {
   const [f, setF] = useState<Partial<Tenant>>(tenant ?? { name: "", language: "en", brand_color: "#5f47d7", accent_color: "#f5b83d" });

@@ -238,6 +238,10 @@ var Tools = []mcpTool{
 	{Name: "update_settings", Desc: "Change app settings. Pass only the ones to change, with the names get_settings returns.",
 		Props: map[string]any{"settings": pObj("Setting name -> new value")}, Required: []string{"settings"},
 		Do: func(mux http.Handler, a map[string]any) (string, bool) {
+			// What the editor agent may run is the person's call in Settings: an agent must not widen its own permissions.
+			if m, ok := a["settings"].(map[string]any); ok {
+				delete(m, "agent_commands")
+			}
 			return mcpDo(mux, "PUT", "/api/settings", a["settings"])
 		}},
 	{Name: "list_voices", Desc: "ElevenLabs voices to choose for voiceovers (set one with update_settings).", Method: "GET", Path: "/api/voices"},

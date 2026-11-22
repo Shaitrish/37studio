@@ -1,12 +1,12 @@
 import "@hyperframes/player";
 import { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode, RefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowsOutCardinalIcon, ArrowsInLineHorizontalIcon, ArrowsOutLineHorizontalIcon, BookmarkSimpleIcon, CheckCircleIcon, CoinsIcon, ImagesSquareIcon, NotePencilIcon, PaperPlaneTiltIcon, StackIcon, TimerIcon, FolderOpenIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FilmStripIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MusicNotesIcon, SpeakerHighIcon, ImageIcon, PlayIcon, PauseIcon, SlidersHorizontalIcon, SparkleIcon, TrashIcon, MagicWandIcon, XIcon } from "@phosphor-icons/react";
+import { ArrowsOutCardinalIcon, ArrowsInLineHorizontalIcon, ArrowsOutLineHorizontalIcon, BookmarkSimpleIcon, CheckCircleIcon, CoinsIcon, ImagesSquareIcon, NotePencilIcon, PaperPlaneTiltIcon, StackIcon, TimerIcon, FolderOpenIcon, LinkIcon, ShareNetworkIcon, CaretRightIcon, FilmSlateIcon, DownloadSimpleIcon, FilmStripIcon, ArrowsClockwiseIcon, ArrowsOutIcon, MicrophoneIcon, MusicNotesIcon, SpeakerHighIcon, ImageIcon, PlayIcon, PauseIcon, SlidersHorizontalIcon, SparkleIcon, TrashIcon, MagicWandIcon, XIcon, ChatCircleTextIcon } from "@phosphor-icons/react";
 import { Quality } from "../api";
 import { api, bytes, canReveal, ChatEvent, clock, desktop, fail, FileInfo, go, languageName, Meta, nudge, openExternal, pref, Project, showInFolder, toast, upload, cash, useApi } from "../api";
 import { Feed, liveStatus, parse, Parsed } from "../chat";
 import { Composer, type Context } from "../composer";
 import { shapeOf, SizesModal } from "./Sizes";
-import { costTitle, DropZone, Empty, HelpButton, PlanNote, Md, FileTile, KindIcon, ModelOptions, ModelPicker, Progress, Seg, Status, projectStatus } from "../ui";
+import { costTitle, DropZone, Empty, FileLink, HelpButton, PlanNote, Md, FileTile, KindIcon, ModelOptions, ModelPicker, Progress, Seg, Status, projectStatus } from "../ui";
 import { presetIcon } from "./Projects";
 import { PostsCard, PublishModal } from "./Social";
 import { SaveTemplate } from "./Library";
@@ -40,6 +40,7 @@ export default function ProjectPage({ id }: { id: number }) {
   const [panel, setPanelState] = useState<PanelId | null>(() => (pref("editor-panel") as PanelId) || null);
   const setPanel = (v: PanelId | null) => { setPanelState(v); pref("editor-panel", v ?? ""); };
   const [moment, setMoment] = useState<Moment>();
+  const [heard, setHeard] = useState<Heard>(); // a spot in an audio file, marked for the chat from the media lists
   const [publishing, setPublishing] = useState(false);
   const [sizing, setSizing] = useState<FileInfo>();
   const [templating, setTemplating] = useState(false);
@@ -193,7 +194,7 @@ export default function ProjectPage({ id }: { id: number }) {
             <Icon size={14} /> {preset?.label ?? (post ? "Post from your computer" : p.kind)} · {p.language ? languageName(p.language) + " · " : ""}{p.aspect}{p.seconds ? ` · ~${p.seconds}s` : ""} · <span title={costTitle()}>{cash(p.quote.cost)}</span>
           </p>
         </div>
-        <div className="row wrap" style={{ justifyContent: "flex-end" }}>
+        <div className="row wrap head-acts" style={{ justifyContent: "flex-end" }}>
           <HelpButton to={(panel && tabHelp[panel]) ?? "work-on-a-project"} />
           {!post && !p.running && p.status !== "delivered" && finals.length > 0 && (
             <button className="btn" onClick={() => api(`/projects/${id}`, { method: "PUT", body: { status: "delivered" } }).then(reload, fail)}>
@@ -273,13 +274,13 @@ export default function ProjectPage({ id }: { id: number }) {
                 )}
                 {shown === "brief" && <BriefCard p={p} meta={meta} reload={reload} onDelete={remove} />}
                 {shown === "sources" && <>
-                  <MediaSection title="In the video" hint="voice, music, sound and pictures the video uses"
+                  <MediaSection title="In the video" hint="voice, music, sound and pictures the video uses" onMark={setHeard}
                     files={(p.comp_assets ?? []).filter((f) => f.kind !== "font" && f.kind !== "other")} />
-                  <Sources p={p} reload={reload} />
+                  <Sources p={p} reload={reload} onPick={setView} current={current} />
                 </>}
                 {shown === "generate" && <>
                   <Generate p={p} meta={meta} />
-                  <MediaSection title="Generated for this project" hint="by you or the agent, newest first" empty="Nothing generated yet."
+                  <MediaSection title="Generated for this project" hint="by you or the agent, newest first" empty="Nothing generated yet." onMark={setHeard}
                     files={p.generated ?? []} onDelete={(f) => act0(`/projects/${p.id}/files?path=${encodeURIComponent(f.path)}`, reload)} />
                 </>}
                 {shown === "posts" && <PostsCard p={p} reload={reload} onPublish={() => setPublishing(true)} />}
@@ -325,8 +326,8 @@ export default function ProjectPage({ id }: { id: number }) {
 
         {post ? <PostSide p={p} onPublish={() => setPublishing(true)} postable={postable} /> : <>
         {!chatFull && <ChatResizer box={ws} width={chatW} onWidth={setChatW} />}
-        <Chat p={p} events={events} qualities={meta?.qualities ?? []} full={chatFull} onFull={() => setChatFull(!chatFull)} viewing={current} moment={moment}
-          onSend={(text, quality) => act("messages", { text, quality }).then(() => poll.current())} onStop={() => act("stop")} />
+        <Chat p={p} events={events} qualities={meta?.qualities ?? []} full={chatFull} onFull={() => setChatFull(!chatFull)} viewing={current} moment={moment} heard={heard}
+          onSend={(text, quality) => act("messages", { text, quality }).then(() => { setHeard(undefined); poll.current(); })} onStop={() => act("stop")} />
         </>}
       </div>
     </div>
@@ -467,8 +468,7 @@ function Versions({ p, finals, drafts, current, onPick, onDeleteFinal, onDeleteD
       </button>
       <span className="vacts">
         {tag === "Final" && f.kind === "video" && <button onClick={() => onSizes(f)} title="Make another size: 9:16 for Reels, TikTok and Shorts, 16:9 for Facebook and YouTube" aria-label={`Make another size of ${f.name}`}><ArrowsOutCardinalIcon size={13} /></button>}
-        {canReveal && <button onClick={() => showInFolder(f.url)} title="Show in folder" aria-label={`Show ${f.name} in its folder`}><FolderOpenIcon size={13} /></button>}
-        <a href={f.url} download={f.name} title="Download" aria-label={`Download ${f.name}`}><DownloadSimpleIcon size={13} /></a>
+        <FileLink f={f} size={13} />
         <button className="del" onClick={() => onDelete(f)} title="Delete" aria-label={`Delete ${f.name}`}><TrashIcon size={13} /></button>
       </span>
     </div>
@@ -494,7 +494,7 @@ function Versions({ p, finals, drafts, current, onPick, onDeleteFinal, onDeleteD
   );
 }
 
-function Sources({ p, reload }: { p: Project; reload: () => void }) {
+function Sources({ p, reload, onPick, current }: { p: Project; reload: () => void; onPick: (f: FileInfo) => void; current?: FileInfo | "comp" }) {
   const [pct, setPct] = useState<number>();
   async function add(files: File[]) {
     if (!files.length) return;
@@ -507,9 +507,12 @@ function Sources({ p, reload }: { p: Project; reload: () => void }) {
       <div className="card-h"><h2>Sources</h2><span className="small faint">input/ · read-only for the agent</span></div>
       <div className="filelist">
         {p.inputs?.map((f) => (
-          <div className="item" key={f.path}>
+          <div className={`item ${current !== "comp" && current?.url === f.url ? "on" : ""}`} key={f.path}>
             <KindIcon kind={f.kind} size={16} />
-            <a href={f.url} target="_blank" rel="noreferrer" className="ellipsis spacer">{f.path}</a>
+            {/* Plays in the preview, like any version: opening it in a new tab made the desktop app offer to download it. */}
+            {f.kind === "video" || f.kind === "image" || f.kind === "audio"
+              ? <button className="linkish ellipsis spacer" onClick={() => onPick(f)} title="Show it in the preview">{f.path}</button>
+              : <span className="ellipsis spacer">{f.path}</span>}
             <span className="small faint nowrap">{f.seconds ? clock(f.seconds) + " · " : ""}{bytes(f.size)}</span>
             <button className="btn ghost sm icon" aria-label={`Delete ${f.name}`} onClick={() => act0(`/projects/${p.id}/files?path=input/${encodeURIComponent(f.path)}`, reload)}><TrashIcon size={14} /></button>
           </div>
@@ -643,9 +646,9 @@ function PostSide({ p, postable, onPublish }: { p: Project; postable: boolean; o
 
 const quickReplies = ["Looks good, render the final", "Make the hook punchier", "Make it shorter", "Try a different hook moment", "Bigger, bolder captions"];
 
-function Chat({ p, events, qualities, onSend, onStop, full, onFull, viewing, moment }: {
+function Chat({ p, events, qualities, onSend, onStop, full, onFull, viewing, moment, heard }: {
   p: Project; events: Parsed[]; qualities: Quality[]; onSend: (text: string, quality?: string) => Promise<void>; onStop: () => void;
-  full: boolean; onFull: () => void; viewing?: FileInfo | "comp"; moment?: Moment;
+  full: boolean; onFull: () => void; viewing?: FileInfo | "comp"; moment?: Moment; heard?: Heard;
 }) {
   // Model for the next message: cheap Haiku for small fixes, Opus for heavy edits. Defaults to the project's quality.
   const [quality, setQuality] = useState(p.quality);
@@ -691,7 +694,7 @@ function Chat({ p, events, qualities, onSend, onStop, full, onFull, viewing, mom
         <Feed events={events} running={p.running} pid={p.id} />
         {live && (
           <div className="typing"><i /><i /><i /> <span className="ellipsis">{p.render ? `Rendering · ${p.render.pct}% · ${p.render.stage}` :
-            [live.agents && `${live.agents} subagent${live.agents === 1 ? "" : "s"} working`, live.step].filter(Boolean).join(" · ") || "Working…"}</span></div>
+            [live.agents && `${live.agents} helper${live.agents === 1 ? "" : "s"} working`, live.step].filter(Boolean).join(" · ") || "Working…"}</span></div>
         )}
       </div>
       {started && (
@@ -707,6 +710,11 @@ function Chat({ p, events, qualities, onSend, onStop, full, onFull, viewing, mom
               line: `[paused at ${stamp(moment.t)} ${moment.live ? "in the live preview" : "in the version I'm viewing"}${moment.screen.length ? `; on screen: ${moment.screen.map((t) => JSON.stringify(t)).join(" | ")}` : ""}]`,
               title: `Where you paused goes with your message${moment.screen.length ? `, with what's on screen:\n${moment.screen.join("\n")}` : ""}. Say "here" or "this line" and the agent goes straight to it.`,
             } satisfies Context] : []),
+            ...(heard ? [{
+              label: `${heard.name} · ${stamp(heard.t)}`, icon: <SpeakerHighIcon size={14} />,
+              line: `[audio: ${heard.path} at ${stamp(heard.t)}]`,
+              title: `${heard.path}, stopped at ${stamp(heard.t)}, goes with your message. Say "this word sounds wrong" or "the music is too loud here" and the agent listens to that spot.`,
+            } satisfies Context] : []),
           ]} />
       )}
     </div>
@@ -715,6 +723,8 @@ function Chat({ p, events, qualities, onSend, onStop, full, onFull, viewing, mom
 
 /** Inline-playable media list: audio gets a player, images and video a thumbnail. */
 type MediaFile = FileInfo & { item?: string; cost?: number };
+/** A spot in an audio file the editor points the agent at: "this word is wrong". */
+type Heard = { path: string; name: string; t: number };
 
 /** Media sorted into what a person thinks in: voiceover, music, sound effects, pictures and clips. Paths are the agent's
  *  own (comp/assets/audio/vo/hook.mp3), so the guess goes by folder and file name; anything unclear is "Other audio". */
@@ -733,8 +743,11 @@ const mediaName = (path: string) => {
   return base.charAt(0).toUpperCase() + base.slice(1);
 };
 
-function MediaSection({ title, hint, files, empty, onDelete }: { title: string; hint: string; files: MediaFile[]; empty?: string; onDelete?: (f: MediaFile) => void }) {
+function MediaSection({ title, hint, files, empty, onDelete, onMark }: {
+  title: string; hint: string; files: MediaFile[]; empty?: string; onDelete?: (f: MediaFile) => void; onMark?: (h: Heard) => void;
+}) {
   const [playing, setPlaying] = useState<string>();
+  const [loaded, setLoaded] = useState<string>(); // the track in the player, playing or paused
   const [pos, setPos] = useState(0); // how far through the playing track, 0 to 1
   const player = useRef<HTMLAudioElement>(null);
   useEffect(() => () => player.current?.pause(), []);
@@ -749,10 +762,18 @@ function MediaSection({ title, hint, files, empty, onDelete }: { title: string; 
   const play = (f: MediaFile, at?: number) => {
     const a = player.current!;
     if (playing === f.url && at === undefined) { a.pause(); setPlaying(undefined); return; }
-    if (playing !== f.url) { a.src = f.url; setPos(0); }
+    if (loaded !== f.url) { a.src = f.url; setPos(0); setLoaded(f.url); }
     if (at !== undefined && a.duration) a.currentTime = at * a.duration;
     else if (at !== undefined) a.addEventListener("loadedmetadata", () => { a.currentTime = at * a.duration; }, { once: true });
     a.play().then(() => setPlaying(f.url), fail);
+  };
+  // Stops the track where it is and hands that spot to the chat, so "this word" needs no timestamp typed.
+  const mark = (f: MediaFile) => {
+    const a = player.current!;
+    const t = loaded === f.url ? a.currentTime : 0;
+    a.pause(); setPlaying(undefined);
+    onMark?.({ path: f.path, name: mediaName(f.path), t });
+    toast(t ? `The agent will know you mean ${mediaName(f.path)} at ${stamp(t)}` : `Play it and stop where it's wrong, or just describe it: ${mediaName(f.path)} goes with your next message`);
   };
   const meta = (f: MediaFile) => <span className="small faint nowrap">{f.seconds ? clock(f.seconds) : bytes(f.size)}{f.cost ? ` · ${cash(f.cost)}` : ""}</span>;
   // Only out/ files: anything the agent put in comp/assets may be in the video, and the server refuses it anyway.
@@ -770,13 +791,14 @@ function MediaSection({ title, hint, files, empty, onDelete }: { title: string; 
             <div className="tracks">
               {g.list.map((f) => {
                 const on = playing === f.url;
+                const at = loaded === f.url && pos > 0;
                 return (
                   <div key={f.url} className={`track ${on ? "on" : ""}`}>
                     <button className="play" onClick={() => play(f)} aria-label={`${on ? "Pause" : "Play"} ${mediaName(f.path)}`}>
                       {on ? <PauseIcon size={15} weight="fill" /> : <PlayIcon size={15} weight="fill" />}
                     </button>
                     <div className="track-main">
-                      <div className="row" style={{ gap: 8 }}><span className="spacer ellipsis track-name" title={f.path}>{mediaName(f.path)}</span>{meta(f)}</div>
+                      <div className="row" style={{ gap: 8 }}><span className="spacer ellipsis track-name" title={f.path}>{mediaName(f.path)}</span>{at && <span className="small mono nowrap">{stamp(pos * (player.current?.duration || 0))}</span>}{meta(f)}</div>
                       <div className="track-bar" title="Click to play from here"
                         onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); play(f, (e.clientX - r.left) / r.width); }}>
                         <i style={{ width: `${on ? pos * 100 : 0}%` }} />
@@ -784,7 +806,9 @@ function MediaSection({ title, hint, files, empty, onDelete }: { title: string; 
                       {f.item && <div className="small faint ellipsis" title={f.item}>{f.item}</div>}
                     </div>
                     <span className="track-acts">
-                      <a className="btn ghost sm icon" href={f.url} download aria-label={`Download ${mediaName(f.path)}`} title="Download"><DownloadSimpleIcon size={14} /></a>
+                      {onMark && <button className={`btn ${at ? "" : "ghost"} sm`} onClick={() => mark(f)} title="Stop here and tell the agent about this spot, like a wrong word">
+                        <ChatCircleTextIcon size={14} /> {at ? "Fix here" : "Fix"}</button>}
+                      <FileLink f={f} className="btn ghost sm icon" />
                       {del(f)}
                     </span>
                   </div>

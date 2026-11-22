@@ -590,11 +590,17 @@ func claudeOnce(dir, prompt string, tools ...string) (text string, cost, tokens 
 }
 
 func languageName(code string) string {
-	if n := map[string]string{"bn": "Bangla", "en": "English", "hi": "Hindi", "ur": "Urdu", "ar": "Arabic", "es": "Spanish"}[code]; n != "" {
+	if n := languageNames[code]; n != "" {
 		return n
 	}
 	return code
 }
+
+// languageNames matches web/src/api.ts languages.
+var languageNames = map[string]string{"en": "English", "es": "Spanish", "pt": "Portuguese", "fr": "French", "de": "German", "it": "Italian",
+	"nl": "Dutch", "ar": "Arabic", "hi": "Hindi", "bn": "Bangla", "ur": "Urdu", "id": "Indonesian", "ms": "Malay", "tr": "Turkish", "ru": "Russian",
+	"uk": "Ukrainian", "pl": "Polish", "ja": "Japanese", "ko": "Korean", "zh": "Chinese", "vi": "Vietnamese", "th": "Thai", "fil": "Filipino",
+	"fa": "Persian", "sw": "Swahili", "ta": "Tamil", "te": "Telugu", "mr": "Marathi", "ne": "Nepali"}
 
 // ListPosts is a project's posts, each with the platform's latest numbers for it once stats.go has read them.
 func ListPosts(id int64) []map[string]any {

@@ -43,7 +43,7 @@ export function AutopilotTab({ tenant }: { tenant: Tenant }) {
       {plans && !plans.length && (
         <div className="card">
           <Empty icon={<LightningIcon size={28} />} title="No content plans yet">
-            For example: "3 reels a week with one exam tip each, in Bangla, posted at 8pm to our Page and Instagram."
+            For example: "3 reels a week with one tip each, posted at 8pm to our Page and Instagram."
             <button className="btn primary" onClick={() => setEditing({})}><PlusIcon size={15} /> New plan</button>
           </Empty>
         </div>
@@ -125,7 +125,7 @@ function PlanModal({ tenant, plan, accounts, onClose, onSaved }: {
         </Field>
         <Field label="What the videos are about" hint="topics, angle, call to action" full>
           <textarea className="textarea" rows={4} value={f.brief} onChange={(e) => set("brief", e.target.value)} autoFocus
-            placeholder="One practical tip per video for BCS candidates, from our question bank and blog. Friendly, fast, Bangla captions. End with: practise daily in the BCS Mate app." />
+            placeholder="One practical tip per video for our customers, from our blog and FAQ. Friendly and fast, with captions. End with: book a free trial on our website." />
         </Field>
         <Field label="Days">
           <div className="toggles">

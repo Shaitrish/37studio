@@ -172,7 +172,7 @@ function ReplyRules({ tenantId, value, onSaved }: { tenantId: number; value: str
     <div className="stack" style={{ gap: 8 }}>
       <Field label="How Claude should reply" hint="followed in every draft and auto-reply">
         <textarea className="textarea" rows={5} value={text} onChange={(e) => setText(e.target.value)}
-          placeholder={"Sign off as \"Team Dhaka Bites\".\nReply in Bangla unless they write in English.\nNever promise delivery times on Fridays.\nComplaints and refunds: say our manager will call them today."} />
+          placeholder={"Sign off as \"Team Dhaka Bites\".\nReply in the customer's language.\nNever promise delivery times on Fridays.\nComplaints and refunds: say our manager will call them today."} />
       </Field>
       <div className="row"><span className="small faint spacer">Facts still come only from the knowledge base.</span>
         <button className="btn sm" disabled={text === value} onClick={save}>Save rules</button></div>

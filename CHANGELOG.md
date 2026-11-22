@@ -4,6 +4,25 @@ What changed in each release of 37Studio, newest first. Your copy shows when a n
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-11-23
+
+### Added
+- **Remake a video**: a new kind of video. Drop in or paste a link to a reel or ad you like, and the agent studies its shots and rebuilds its pacing, structure and motion as an original video in your brand.
+- **Point at a word in the audio**: play a voiceover, music or sound effect in the project's Media or Generate panel and click **Fix here** where it's wrong. The spot goes with your message, and the agent redoes just that line instead of the whole track.
+- **Audio in the Library**: generated voiceovers, music and sound effects are listed under a new Audio filter and play in the preview, instead of showing a broken picture.
+- **About 30 languages** in the New video, Autopilot, brand and voice pickers, from Spanish and Arabic to Japanese and Swahili. English and the brand's own language are one click; the rest are under **More…**. The app's examples no longer assume Bangla.
+- **Choose what the editor agent may run** in Settings → Performance: the safe list, or any command on your computer. The safe list now includes downloads (yt-dlp) and text tools, so the agent stops losing minutes to refused commands.
+- **Better 3D and motion-graphics videos**: the editor agent now comes with two skills of its own, learned from the reels that did best: one for 3D scenes (globes, a 3D head, battlefields, night skies) and one for explainers made from maps, archive pictures and data.
+- **Sound and picture check**: after every render the agent now checks the video for audio that's too quiet or too loud, peaks that crackle on phones, dead air, frozen picture and black frames, and fixes them before handing it over.
+
+### Fixed
+- Helper agents now show while they work. Claude Code runs them in the background, and they used to appear as finished at once with nothing in them; the chat's "0 agents" pill is gone too, and a count shows only while helpers work.
+- Bangla, Hindi, Arabic and Thai titles keep their letters in file names (no more "ই_র_জ_").
+- Clicking a footage file under Sources plays it in the preview, instead of the desktop app offering to download a file that's already on your computer. In the desktop app, every download button is now **Show in folder**.
+- The message box keeps Send on the same line as the model picker.
+- The Overview's setup card lists only what's missing, and optional keys are one quiet line once everything needed works.
+- On phones, a project's buttons are one row you can swipe instead of three rows over the preview.
+
 ## [0.15.0] - 2026-11-15
 
 ### Added

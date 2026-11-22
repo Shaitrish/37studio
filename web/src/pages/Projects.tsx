@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { BookOpenIcon, ClosedCaptioningIcon, FilmSlateIcon, ImageIcon, MegaphoneIcon, PlusIcon, MagicWandIcon, TrashIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react";
+import { BookOpenIcon, ClosedCaptioningIcon, FilmSlateIcon, ImageIcon, MegaphoneIcon, PlusIcon, MagicWandIcon, TrashIcon, PaperPlaneTiltIcon, CopyIcon } from "@phosphor-icons/react";
 import { api, go, Project, cash, fail, toast, useApi, useTenants, ago } from "../api";
 import { costTitle, Empty, HelpButton, Seg, Status, TenantTag, projectStatus } from "../ui";
 import { NewProjectModal } from "./NewProject";
 import { NewPostModal } from "./NewPost";
 
 export const presetIcon: Record<string, typeof FilmSlateIcon> = {
-  "hook-reel": FilmSlateIcon, captions: ClosedCaptioningIcon, explainer: BookOpenIcon, promo: MegaphoneIcon, thumbnail: ImageIcon, custom: MagicWandIcon, post: PaperPlaneTiltIcon,
+  "hook-reel": FilmSlateIcon, captions: ClosedCaptioningIcon, explainer: BookOpenIcon, promo: MegaphoneIcon, remake: CopyIcon, thumbnail: ImageIcon, custom: MagicWandIcon, post: PaperPlaneTiltIcon,
 };
 
 const filters = [

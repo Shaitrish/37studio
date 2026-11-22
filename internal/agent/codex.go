@@ -74,7 +74,7 @@ func startCodex(id int64, p map[string]any, q Quality, text string, announce boo
 	if d := source.Connected(p["tenant_id"].(int64)); d != "" {
 		args = append(args, "--add-dir", d)
 	}
-	if config.Env("STUDIO37_AGENT_PERMISSIONS", "") == "bypass" {
+	if Bypass() {
 		args = append(args, "--dangerously-bypass-approvals-and-sandbox") // the container is the sandbox, as for Claude Code
 	} else {
 		args = append(args, "-s", "workspace-write")

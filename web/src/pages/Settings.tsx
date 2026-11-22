@@ -364,6 +364,13 @@ export default function Settings({ tab: tabParam }: { tab?: string }) {
               </Field>
             </Section>
           )}
+          {tab === "performance" && (
+            <Section title="What the editor agent may run" sub="With the safe list, the agent edits files, uses ffmpeg, HyperFrames and 37Studio, and downloads pictures and clips. Anything else (Python, Node, scripts) stops and it works around it, which can make a turn slower.">
+              <Field label="Commands" hint={s.agent_commands === "any" ? "the agent can run any program on this computer, as you; only turn this on if you trust what you ask it to do" : "recommended"}>
+                <Seg value={s.agent_commands ?? "safe"} options={[{ value: "safe", label: "Safe list" }, { value: "any", label: "Any command" }]} onChange={(v) => setS({ ...s, agent_commands: v })} />
+              </Field>
+            </Section>
+          )}
 
           {tab === "storage" && <StorageSection />}
           {tab === "agents" && <McpSection password={!!meta?.env.password} />}

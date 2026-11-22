@@ -187,7 +187,7 @@ func ListLibrary(r *http.Request) (any, error) {
 	for i, p := range ps {
 		id := p["id"].(int64)
 		for _, f := range lists[i] {
-			if f.Kind == "video" || f.Kind == "image" {
+			if f.Kind == "video" || f.Kind == "image" || f.Kind == "audio" {
 				out = append(out, map[string]any{"file": f, "project_id": id, "title": p["title"], "tenant_id": p["tenant_id"], "tenant_name": p["tenant_name"]})
 			}
 		}

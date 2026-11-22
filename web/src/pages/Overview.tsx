@@ -69,9 +69,9 @@ export default function Overview() {
     tool("ffmpeg", meta.env.ffmpeg, "ffmpeg installed, for cutting and encoding video"),
     tool("node", meta.env.node, "Node.js 22 or newer, for rendering and the timeline editor"),
     tool("python", meta.env.python, "Python 3, for transcription and YouTube or Drive imports"),
-    { ok: meta.env.gemini, label: "Gemini key for image and video generation (optional)", fix: "Settings → AI services" },
-    { ok: meta.env.eleven, label: "ElevenLabs key for voiceover, sound effects and music (optional)", fix: "Settings → AI services" },
   ] : [];
+  // Optional keys aren't setup to finish: once everything needed works, they are one quiet line, not a warning card.
+  const extras = meta ? [!meta.env.gemini && "Gemini for images and video clips", !meta.env.eleven && "ElevenLabs for voiceover and music"].filter(Boolean) : [];
 
   return (
     <div className="page">
@@ -88,7 +88,7 @@ export default function Overview() {
       </div>
 
       <div className="card kpis">
-        <Kpi label="Active projects" value={String(active.length)} sub={`${count("running")} with the agent now`} />
+        <Kpi label="Active projects" value={String(active.length)} sub={count("running") ? `${count("running")} with the agent now` : "the agent is free"} />
         <Kpi label="Delivered" value={String(count("delivered"))} sub={`of ${all.length} project${all.length === 1 ? "" : "s"}`} />
         <Kpi label="Spent this month" value={cash(costs?.this_month ?? 0)} sub={claudePlan ? "at API prices; your Claude plan covers Claude" : "all your AI services"} />
         <Kpi label="Spent in total" value={cash(costs?.total ?? 0)} sub="see Costs for the breakdown" />
@@ -96,9 +96,10 @@ export default function Overview() {
 
       {checks.some((c) => !c.ok) && (
         <div className="card">
-          <div className="card-h"><WarningIcon size={16} color="var(--warn)" /><h2 className="spacer">Finish setup</h2><HelpButton to="install-37studio" label="Setup guide" /></div>
+          <div className="card-h"><WarningIcon size={16} color="var(--warn)" /><h2 className="spacer">Finish setup</h2>
+            <span className="small muted">{checks.filter((c) => c.ok).length} of {checks.length} ready</span><HelpButton to="install-37studio" label="Setup guide" /></div>
           <div className="filelist">
-            {checks.map((c) => (
+            {checks.filter((c) => !c.ok).map((c) => (
               <div className="item" key={c.label}>
                 {c.ok ? <CheckCircleIcon size={16} color="var(--success)" /> : <WarningIcon size={16} color="var(--warn)" />}
                 <span className="spacer">{c.label}</span>
@@ -125,6 +126,11 @@ export default function Overview() {
             );
           })()}
         </div>
+      )}
+      {!checks.some((c) => !c.ok) && extras.length > 0 && (
+        <p className="row small muted" style={{ margin: "0 0 4px", gap: 6 }}>
+          <SparkleIcon size={14} /> Optional: add {extras.join(" or ")} to let the agent make media it can't find. <a href="#/settings/ai">AI services</a>
+        </p>
       )}
 
       <div className="home-grid">

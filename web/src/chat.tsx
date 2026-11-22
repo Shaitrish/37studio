@@ -104,7 +104,7 @@ function AgentGroup({ subs, running }: { subs: Sub[]; running: boolean }) {
     <div className="agents">
       <div className="agents-h">
         <TreeStructureIcon size={14} />
-        <b className="spacer">{subs.length === 1 ? "Subagent" : `${subs.length} subagents${parallel ? " in parallel" : ""}`}</b>
+        <b className="spacer">{subs.length === 1 ? "Helper agent" : `${subs.length} helper agents${parallel ? " in parallel" : ""}`}</b>
         {subs.length > 1 && <span>{done === subs.length ? "all done" : `${done} of ${subs.length} done`}</span>}
       </div>
       {subs.map((s) => <AgentRow key={s.id} s={s} live={running} />)}

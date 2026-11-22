@@ -10,7 +10,8 @@ import (
 )
 
 // Two subagents started in one message: each gets a start and a finish, and their steps are filed under them, not
-// in the main agent's list. One left running when the turn ends is closed then.
+// in the main agent's list. A background one stays open past its "launched" answer until its task_notification.
+// One left running when the turn ends is closed then.
 func TestParseStreamSubagents(t *testing.T) {
 	config.DataDir = t.TempDir()
 	store.Open()
@@ -24,6 +25,11 @@ func TestParseStreamSubagents(t *testing.T) {
 		`{"type":"user","parent_tool_use_id":"toolu_a","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_1","is_error":true,"content":"no such file"}]}}`,
 		`{"type":"user","parent_tool_use_id":null,"message":{"content":[{"type":"tool_result","tool_use_id":"toolu_a","content":[{"type":"text","text":"report"}]}]}}`,
 		`{"type":"assistant","parent_tool_use_id":null,"message":{"content":[{"type":"tool_use","id":"toolu_2","name":"Read","input":{"file_path":"comp/index.html"}}]}}`,
+		// A subagent Claude Code put in the background: its Agent call answers "launched" at once and it finishes later.
+		`{"type":"assistant","parent_tool_use_id":null,"message":{"content":[{"type":"tool_use","id":"toolu_c","name":"Agent","input":{"description":"Fetch photos","prompt":"..."}}]}}`,
+		`{"type":"user","parent_tool_use_id":null,"message":{"content":[{"type":"tool_result","tool_use_id":"toolu_c","content":[{"type":"text","text":"Async agent launched successfully. agentId: a1"}]}]}}`,
+		`{"type":"assistant","parent_tool_use_id":"toolu_c","message":{"content":[{"type":"tool_use","id":"toolu_3","name":"WebFetch","input":{"url":"https://commons.wikimedia.org"}}]}}`,
+		`{"type":"system","subtype":"task_notification","task_id":"a1","tool_use_id":"toolu_c","status":"completed"}`,
 		`{"type":"result","total_cost_usd":0.5,"num_turns":3,"duration_ms":1000}`,
 	}, "\n")
 	ParseStream(7, 1, "claude-sonnet-5-5", strings.NewReader(stream))
@@ -49,6 +55,9 @@ func TestParseStreamSubagents(t *testing.T) {
 		"tool_error parent=toolu_a",
 		"agent_done id=toolu_a error=false",
 		"tool name=Read",
+		"agent id=toolu_c name=Fetch photos",
+		"tool name=WebFetch parent=toolu_c",
+		"agent_done id=toolu_c error=false",
 		"agent_done id=toolu_b",
 		"result error=false",
 	}

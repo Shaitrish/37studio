@@ -204,12 +204,13 @@ Click **New video** on the Overview, Projects, brand or campaign page. A few que
 | Captioned clip | 9:16 | A clean cut with accurate, styled subtitles |
 | Motion-graphics explainer | 16:9 | The speaker on screen with graphics that show the idea |
 | Promo ad | 9:16 | A short ad: hook, problem, payoff, offer, call to action |
+| Remake a video | 9:16 | Drop in or link a reel or ad you like; the agent copies its pacing, structure and motion in your brand, never its footage or words |
 | Thumbnails | 16:9 | YouTube, course, product and book thumbnails as PNG |
 | Custom | 16:9 | Anything else. The brief decides |
 
 Shapes: **9:16** for Reels, TikTok and Shorts, **16:9** for YouTube and websites, **4:5** for Instagram and Facebook feeds, **1:1** for square feed posts.
 
-Languages in the app: Bangla, English, Hindi, Urdu, Arabic and Spanish.
+Languages: English, Bangla and the brand's own language are one click; **More…** has about 30 others, from Spanish and Arabic to Japanese and Swahili.
 
 ### Quality
 
@@ -235,6 +236,7 @@ Ask for changes in plain words, like "make the hook shorter" or "use the second 
 - Dictate in English instead of typing: click the microphone in the corner of the box, talk, and click it again to stop. Words show as you speak. In the desktop app and Firefox it runs on this computer, free (needs Python 3); each phrase is written down properly when you pause. The first time it downloads the speech models, about 550 MB.
 - Type **/** or click the **/** button for quick actions such as "Looks good, render the final".
 - Pick a version under the preview and it goes with your message, so the agent knows which one "this" means. Click × on it to leave it out.
+- Point at a word in a voiceover, or a spot in the music: open **Media** or **Generate**, play the track, and click **Fix here** where it's wrong. That spot goes with your message, so "this word is mispronounced" is enough; the agent cuts that piece, finds the word and redoes only that line.
 - Pause the preview where something is wrong, and that moment goes with your message with the text on screen then, shown as a clock and a time such as **0:12.0**. Say "fix the caption here" and the agent goes straight to it, which is quicker and costs less than describing it. Click × on it to leave it out.
 - Keep typing while the agent works. Your message is marked as sent while working.
 - Press **Up** in the message box to bring back what you sent before, and **Down** to come back to what you were typing. **Enter** sends, **Shift+Enter** starts a new line.
@@ -243,7 +245,7 @@ Ask for changes in plain words, like "make the hook shorter" or "use the second 
 - Drag the gap between the preview and the chat to resize the chat. Double-click it to reset.
 - Click the arrows beside **Editor agent** to widen the chat to the whole page, and again to bring the preview back.
 
-When jobs don't depend on each other, the agent hands them to subagents that work at the same time, such as finding hook moments while another picks brand assets. Each shows as a row in the chat with a spinner while it works, its latest step, and a tick when it's done. Click a row to see everything it did.
+When jobs don't depend on each other, the agent hands them to helper agents that work at the same time, such as finding hook moments while another picks brand assets. Each shows as a row in the chat with a spinner while it works, its latest step, and a tick when it's done. Click a row to see everything it did.
 
 ### Preview, drafts and export
 
@@ -265,7 +267,7 @@ The rail on the left of the preview opens a panel beside it. Click the same icon
 | --- | --- |
 | Videos | The videos cut from this source. Only shows when there are some |
 | Brief | The brief, focus page and quality, plus **Delete project** |
-| Media | Everything the video uses, by voiceover, music, sound effects and pictures, each with a play button. Then your sources: add footage or subtitles here |
+| Media | Everything the video uses, by voiceover, music, sound effects and pictures, each with a play button and **Fix here**. Then your sources: click one to play it in the preview, or add footage or subtitles |
 | Generate | Make images, clips, voiceover, sound effects and music by hand |
 | Posts | Every post of this video and where it stands |
 | Cost | What this project has cost so far. The rail shows the total |
@@ -479,6 +481,8 @@ It asks before it deletes anything, publishes, approves an Autopilot video or re
 
 Claude Code, Claude Desktop, Cursor and other apps that support MCP can run 37Studio from their own chat, with the same tools as the Assistant. **Settings → Other AI apps** shows your address and command.
 
+To teach an agent how to use it too, add the 37Studio skill: `npx skills add Shaitrish/37studio`.
+
 ```bash
 claude mcp add --transport http 37studio http://localhost:8080/mcp
 ```
@@ -524,7 +528,7 @@ Costs are recorded in US dollars and shown in your currency, which you set in th
 | AI services | Claude, other agent models, and the image, video, voice and music services, with their models and prices |
 | Social apps | Your developer app for each platform |
 | Spending | Spending limits, your currency and exchange rate |
-| Performance | Export speed: parallel workers, draft frame rate, graphics card encoding |
+| Performance | Export speed: parallel workers, draft frame rate, graphics card encoding; what the editor agent may run (the safe list, or any command) |
 | Storage | What fills your disk, clearing old drafts, and backups |
 | Other AI apps | Your MCP address, for connecting other AI apps |
 | About | Version, updates and a system check |
